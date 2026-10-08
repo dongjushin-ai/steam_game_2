@@ -132,7 +132,8 @@ export class Game {
       this.resolveBoss();
     }
 
-    if (!s.pendingChoice && !s.pendingQuiz) {
+    // 보스전 중에는 이벤트·퀴즈를 띄우지 않는다 (창을 닫는 동안 보스 시간이 흐르므로)
+    if (!s.pendingChoice && !s.pendingQuiz && !s.boss) {
       s.nextEventIn -= dt;
       if (s.nextEventIn <= 0) {
         this.triggerRandomEvent();
@@ -499,7 +500,12 @@ export class Game {
     const s = this.state;
     const capMult = this.stats.mult.offline >= 2 ? 2 : 1;
     const secs = Math.min(Math.max(0, (now - s.lastSaved) / 1000), OFFLINE_CAP_SEC * capMult);
-    if (secs < 30) return [0, 0, 0];
+    if (secs < 30) {
+      // 잠깐 다른 앱을 보고 온 정도는 그냥 그 시간만큼 정상 속도로 진행한다
+      for (let t = Math.floor(secs); t > 0; t--) this.tick(1);
+      s.lastSaved = now;
+      return [0, 0, 0];
+    }
     s.boss = null;
     s.golden = null;
     for (const a of s.active) a.remaining -= secs;

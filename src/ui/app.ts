@@ -356,6 +356,8 @@ export class App {
 
   private offline(): void {
     const [secs, credits, rp] = this.game.applyOffline();
+    // 보상을 받았으면 기준 시각을 지금으로 (안 그러면 다음 복귀 때 같은 시간을 또 받는다)
+    this.game.state.lastSaved = Date.now();
     if (secs <= 0) return;
     showModal({
       icon: "💤",

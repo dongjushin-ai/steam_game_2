@@ -290,4 +290,26 @@ test("아레나: 플레이어가 표에 포함되고 Elo 순으로 정렬", () =
   for (let i = 1; i < rows.length; i++) assert.ok(rows[i - 1].elo >= rows[i].elo);
 });
 
+test("보스전 중에는 이벤트·퀴즈가 뜨지 않는다", () => {
+  const g = new Game(newState());
+  g.state.buildings.x_params = 10;
+  g.refresh();
+  assert.ok(g.startBoss());
+  g.state.nextEventIn = 0.5;
+  g.tick(1);
+  assert.equal(g.state.pendingChoice, null);
+  assert.equal(g.state.pendingQuiz, null);
+  assert.equal(g.state.nextEventIn, 0.5, "보스전 동안 이벤트 타이머 정지");
+});
+
+test("30초 미만 자리 비움은 정상 속도로 진행된다", () => {
+  const s = newState();
+  s.lastSaved = Date.now() - 20_000;
+  const g = new Game(s);
+  const [secs] = g.applyOffline();
+  assert.equal(secs, 0, "오프라인 창은 안 뜬다");
+  assert.ok(Math.abs(g.state.stats.playSeconds - 20) < 1.01, "20초만큼 진행");
+  assert.ok(g.state.credits > 0);
+});
+
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

@@ -5,6 +5,8 @@
 
 AI 역사 80년(+고대 신화)을 11개 시대로 압축했다. 튜링 테스트, ELIZA, 두 번의 AI 겨울, 딥블루, AlexNet, 알파고, 트랜스포머, ChatGPT, MCP, 바이브 코딩, 그리고 2026년 Claude 5 패밀리까지. AI를 아는 사람이라면 곳곳에서 웃을 수 있는 팬메이드 게임이다.
 
+🌐 **한국어 / English** — 첫 실행 때 브라우저 언어로 자동 선택, 도감 → 설정에서 바꿀 수 있다. (English title: *Grow Your AI*)
+
 ## 플레이
 
 ```bash
@@ -44,7 +46,7 @@ npm run dev        # http://localhost:5173
 ## 개발
 
 ```bash
-npm test            # 데이터 검사 + 핵심 로직 테스트 + 봇 전체 플레이 시뮬레이션
+npm test            # 데이터 검사 + 번역 검사 + 핵심 로직 테스트 + 봇 전체 플레이 시뮬레이션
 npm run sim         # 봇이 처음부터 엔딩까지 플레이 (30분마다 로그)
 npm run calibrate   # 시대별 비용·보스 체력 자동 보정 → src/data/balance.ts
 npm run build
@@ -55,13 +57,14 @@ src/
   core/      게임 로직 (DOM 없음 — 시뮬레이터가 그대로 import)
   data/      콘텐츠: 시대·건물·업그레이드·티어·이벤트·도감 + 밸런스 배수
   ui/        화면 (바닐라 TS + DOM, 프레임워크 없음)
+  i18n/      언어 전환: L("한국어", "English") + 영어 번역표(en/*.ts, id 키)
 scripts/     시뮬레이션 봇, 보정, 테스트
 research/    Obscura로 수집한 AI 역사 자료 195건과 정리 문서
 docs/GDD.md  수식과 시스템 설계
 ```
 
 ### 콘텐츠 추가하기
-새 사건이나 모델은 `src/data/*.ts`에 한 항목만 추가하면 된다. `npm test`가 id 중복, 선행 연구, 시대 범위, 보스 요구치 달성 가능 여부를 검사하고, 봇이 엔딩까지 도달하는지 확인한다. 비용 곡선이 크게 바뀌면 `npm run calibrate`.
+새 사건이나 모델은 `src/data/*.ts`에 한 항목을 추가하고, 같은 id로 `src/i18n/en/*.ts`에 영어를 넣는다 (빠뜨리면 `npm test`가 알려준다). `npm test`가 id 중복, 선행 연구, 시대 범위, 보스 요구치 달성 가능 여부를 검사하고, 봇이 엔딩까지 도달하는지 확인한다. 비용 곡선이 크게 바뀌면 `npm run calibrate`.
 
 ## 밸런스 (봇 기준, 초당 1탭)
 
