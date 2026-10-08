@@ -205,7 +205,7 @@ export const ERAS: Era[] = [
     boss: {
       name: "인류의 마지막 시험",
       emoji: "📜",
-      year: "2026",
+      year: "2025",
       desc: "Humanity's Last Exam. 각 분야 최고 전문가들이 낸 가장 어려운 문제 수천 개.",
       intelReq: 6e5,
       ctxReq: 1e6,

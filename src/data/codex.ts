@@ -81,7 +81,7 @@ export const CODEX: CodexEntry[] = [
   { id: "resnet", era: 5, year: "2015", emoji: "🪜", title: "ResNet", text: "지름길(잔차 연결)을 달아 152층 신경망을 학습했다. ImageNet에서 사람보다 낮은 오류율." },
   { id: "tensorflow", era: 5, year: "2015", emoji: "🔶", title: "TensorFlow · PyTorch", text: "딥러닝 프레임워크 전쟁의 시작. 결국 연구자들은 PyTorch로 모였다." },
   { id: "alphazero", era: 6, year: "2017", emoji: "♾️", title: "AlphaZero", text: "인간 기보 없이 규칙만으로 바둑·체스·쇼기를 몇 시간 만에 정복했다." },
-  { id: "hf", era: 6, year: "2019", emoji: "🤗", title: "허깅페이스", text: "챗봇 앱으로 시작해서 오픈 모델의 광장이 됐다. 이모지 회사 이름의 승리." },
+  { id: "hf", era: 6, year: "2016", emoji: "🤗", title: "허깅페이스", text: "챗봇 앱으로 시작해서 오픈 모델의 광장이 됐다. 이모지 회사 이름의 승리." },
   { id: "copilot", era: 6, year: "2021", emoji: "⌨️", title: "코드 자동완성", text: "에디터 안의 AI 짝 프로그래머. 'Tab 키 누르기'가 새로운 코딩 기술이 됐다." },
   { id: "dalle", era: 6, year: "2021", emoji: "🥑", title: "아보카도 의자", text: "텍스트로 그림을 그리는 모델이 '아보카도 모양 의자'를 그려내며 이미지 생성 시대를 알렸다." },
   { id: "rlhf_card", era: 7, year: "2022", emoji: "👍", title: "InstructGPT", text: "사람이 고른 좋은 답으로 보상 모델을 만들어 학습했다. 13억 파라미터 모델이 1,750억 모델보다 선호됐다." },
@@ -93,6 +93,6 @@ export const CODEX: CodexEntry[] = [
   { id: "alphaevolve", era: 8, year: "2025", emoji: "🧩", title: "AlphaEvolve", text: "4×4 복소 행렬곱을 곱셈 48번으로. 슈트라센 이후 56년 만의 개선." },
   { id: "subagents", era: 9, year: "2025", emoji: "🪆", title: "서브에이전트", text: "큰 작업을 작은 에이전트들에게 나눠 맡기고, 결과만 모아 받는다." },
   { id: "hbm4", era: 9, year: "2025", emoji: "🧱", title: "HBM4", text: "2,048비트 인터페이스의 고대역폭 메모리. 2025년 4월 표준 발표." },
-  { id: "jepa", era: 10, year: "2022~", emoji: "🌍", title: "월드 모델", text: "다음 단어가 아니라 세상의 다음 상태를 예측하는 모델. 르쿤은 이를 위해 2025년 새 회사를 세웠다." },
+  { id: "jepa", era: 10, year: "2022~", emoji: "🌍", title: "월드 모델", text: "다음 단어가 아니라 세상의 다음 상태를 예측하는 모델. 르쿤은 2025년 11월 이를 위한 새 회사를 세우겠다며 메타를 떠난다고 밝혔다." },
   { id: "singularity", era: 10, year: "1993", emoji: "✨", title: "특이점", text: "버너 빈지가 대중화한 개념. 기술 발전이 너무 빨라져 그 너머를 예측할 수 없게 되는 지점." },
 ];

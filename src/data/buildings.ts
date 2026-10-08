@@ -41,7 +41,7 @@ const DEMAND: Building[] = [
   { id: "d_portal", kind: "demand", name: "웹 포털", emoji: "🌍", era: 4, baseCost: 2.4e6, growth: 1.15, demand: 250, desc: "검색창에 질문을 치는 시대. 하루 수억 건의 질의." },
   { id: "d_app", kind: "demand", name: "스마트폰 비서", emoji: "📱", era: 5, baseCost: 5e7, growth: 1.15, demand: 1600, desc: "주머니 속 AI 비서. \"죄송해요, 잘 이해하지 못했어요.\"" },
   { id: "d_api", kind: "demand", name: "개발자 API", emoji: "🔑", era: 6, baseCost: 1.1e9, growth: 1.15, demand: 9000, desc: "API 키 하나면 누구나 AI를 앱에 붙인다. 플레이그라운드가 북적인다." },
-  { id: "d_chatapp", kind: "demand", name: "채팅 앱", emoji: "💬", era: 7, baseCost: 2.5e10, growth: 1.15, demand: 5e4, desc: "5일 만에 100만 명. 역사상 가장 빨리 성장한 소비자 앱." },
+  { id: "d_chatapp", kind: "demand", name: "채팅 앱", emoji: "💬", era: 7, baseCost: 2.5e10, growth: 1.15, demand: 5e4, desc: "5일 만에 100만 명. 당시 역사상 가장 빨리 성장한 소비자 앱." },
   { id: "d_agents", kind: "demand", name: "에이전트 마켓", emoji: "🛒", era: 8, baseCost: 6e11, growth: 1.15, demand: 2.8e5, desc: "사람 대신 에이전트가 질문한다. 에이전트가 에이전트에게 묻기도 한다." },
   { id: "d_os", kind: "demand", name: "OS 통합", emoji: "🪟", era: 9, baseCost: 1.6e13, growth: 1.15, demand: 1.5e6, desc: "모든 기기, 모든 앱에 AI가 기본 탑재된다." },
   { id: "d_planet", kind: "demand", name: "행성 네트워크 (팬픽)", emoji: "🪐", era: 10, baseCost: 5e14, growth: 1.15, demand: 8e6, desc: "화성 기지에서도 질문이 온다. 왕복 지연 40분." },

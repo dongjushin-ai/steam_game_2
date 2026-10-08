@@ -240,8 +240,8 @@ export const EVENTS: GameEvent[] = [
     ],
   },
   {
-    id: "neurips_lottery", name: "학회 등록 추첨", emoji: "🎟️", minEra: 6, weight: 2, year: "2018",
-    desc: "AI 학회 등록이 몇 분 만에 마감됐다. 추첨에 당첨됐다! 인맥을 넓힌다.",
+    id: "neurips_lottery", name: "학회 등록 추첨", emoji: "🎟️", minEra: 6, weight: 2, year: "2019",
+    desc: "등록이 몇 분 만에 마감되던 AI 학회가 추첨제를 도입했다. 당첨! 인맥을 넓힌다.",
     effects: fx({ rp: 1.5, demand: 1.2 }), duration: 60,
   },
   {

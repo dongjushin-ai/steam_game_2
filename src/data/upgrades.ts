@@ -23,7 +23,7 @@ const RESEARCH: Upgrade[] = [
 
   research("u_logic", 1, "1956", "📐", "Logic Theorist", 120, "arch", { intel: 2 }, "뉴얼과 사이먼의 '최초의 AI 프로그램'. 수학 정리를 스스로 증명했다."),
   research("u_lisp", 1, "1958", "🧷", "LISP", 220, "dev", { rp: 1.5 }, "매카시가 만든 AI의 언어. 괄호(((가))) 많다."),
-  research("u_dartmouth", 1, "1956", "🏷️", "'인공지능' 명명", 400, "service", { demand: 1.5 }, "다트머스 워크숍 제안서에서 'Artificial Intelligence'라는 말이 처음 쓰였다."),
+  research("u_dartmouth", 1, "1955", "🏷️", "'인공지능' 명명", 400, "service", { demand: 1.5 }, "다트머스 워크숍 제안서에서 'Artificial Intelligence'라는 말이 처음 쓰였다."),
 
   research("u_perceptron", 2, "1958", "➕", "퍼셉트론", 1000, "arch", { intel: 2 }, "로젠블랫의 학습하는 기계. 뉴욕타임스는 '걷고 말하고 스스로를 인식할 것'이라 보도했다."),
   research("u_eliza", 2, "1966", "🛋️", "패턴 매칭 대화", 1500, "service", { demand: 1.8 }, "ELIZA는 단순한 규칙으로 상담사를 흉내냈다. 사람들은 진짜 이해한다고 믿었다."),
