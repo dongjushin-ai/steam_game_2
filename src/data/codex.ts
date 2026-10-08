@@ -31,7 +31,7 @@ export const CODEX: CodexEntry[] = [
   { id: "cat_neuron", era: 5, year: "2012", emoji: "🐱", title: "고양이 뉴런", text: "구글 브레인이 유튜브 영상을 보여주자 '고양이'에 반응하는 뉴런이 저절로 생겼다." },
   { id: "watson", era: 5, year: "2011", emoji: "🎙️", title: "왓슨", text: "IBM 왓슨이 퀴즈쇼 제퍼디!에서 역대 챔피언들을 이겼다." },
   { id: "gan", era: 5, year: "2014", emoji: "🎭", title: "GAN", text: "생성자와 판별자가 서로 속고 속이며 배운다. 이언 굿펠로가 술집에서 떠올렸다고 한다." },
-  { id: "alphago", era: 5, year: "2016", emoji: "⚫", title: "알파고", text: "이세돌 9단과의 대국 4:1. 4국 78수는 인간이 거둔 마지막 승리로 기억된다." },
+  { id: "alphago", era: 5, year: "2016", emoji: "⚫", title: "알파고", text: "이세돌 9단과의 대국 4:1. 4국 78수는 알파고를 상대로 인간이 거둔 유일한 공식 승리로 남았다." },
 
   { id: "bert", era: 6, year: "2018", emoji: "🧸", title: "BERT", text: "문장을 양방향으로 읽는 트랜스포머. 구글 검색에 들어갔다." },
   { id: "gpt3", era: 6, year: "2020", emoji: "📗", title: "GPT-3", text: "1,750억 파라미터. 예시 몇 개만으로 새 과제를 해내는 '인컨텍스트 학습'이 드러났다." },
