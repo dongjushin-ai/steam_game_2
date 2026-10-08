@@ -1,0 +1,12 @@
+{
+  "name": "AI 키우기 — Attention Is All You Idle",
+  "short_name": "AI 키우기",
+  "description": "질문에 답하며 AI를 키우는 방치형 게임",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1116",
+  "theme_color": "#0e1116",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

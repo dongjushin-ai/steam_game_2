@@ -1,0 +1,21 @@
+{
+  "name": "ai-kiugi",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "sim": "tsx scripts/sim.ts",
+    "calibrate": "tsx scripts/calibrate.ts",
+    "test": "tsx scripts/check-data.ts && tsx scripts/test-core.ts && tsx scripts/sim.ts --quiet"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}
