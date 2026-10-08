@@ -1,0 +1,23 @@
+Source: https://en.wikipedia.org/wiki/Devin_AI
+Devin AI - Wikipedia
+Devin AI is an AI-assisted software development tool created by Cognition Labs. It is designed to autonomously complete software development tasks. Devin AI has received both praise and skepticism regarding its capabilities and its implications for the future of artificial intelligence and software development.
+
+## Background
+Devin AI was created by Cognition Labs, a startup company consisting of ten members including CEO Scott Wu and chief technology officer Steven Hao, with funding from Peter Thiel's Founders Fund firm. Several of the members had participated in competitive coding contests before forming the company. The members developed the software via a combination of training large language models akin to OpenAI's GPT-4 with aspects from reinforcement learning.
+
+## Abilities
+Devin AI performs AI-assisted software development tasks autonomously, and can code and debug via machine learning techniques. Devin AI works through a user prompting the software with a task in natural language, with the software responding by generating a plan and the code. It searches online resources during the process. The software also takes prompts from users during the implementation process and adjusts its plans accordingly, such as when a user notices an issue or bug.
+A test conducted by Bloomberg revealed that the tool could create a website within ten minutes and could recreate a Pong website in a similar timeframe. Other examples include building a project to display images from a blog post, and compiling a computer vision model from an Upwork project.
+In September 2026, Cognition engineer Eric Lu announced the factorization of RSA-260, the largest RSA challenge number publicly factored, using a GPU implementation developed and operated with Devin.
+
+## Reception
+Devin AI has been met with praise, concern and skepticism from journalists and software engineers. Its announcement on X led to praise from investors and software engineers while spawning various memes. Along with the company, the tool has seen optimism amongst AI enthusiasts and anticipation for its public availability. The tool has also been noted for potentially allowing users of a non-technical background to create projects, and aiding developers in solving more complex tasks. The Indian Express claimed that its capabilities could streamline the software development process while avoiding human error. CEO Aravind Srinivas of Perplexity.ai offered praise to Devin, claiming that it "seemed to be 'the first demo of any agent, leave alone coding, that seems to cross the threshold' of human capability."
+After the release of Devin AI, Cognition Labs experienced increasing growth and interest. Early 2024, the startup raised $21 million in a deal valuing it at $350 million. It then turned down offers valuing it at $1 billion. According to the Wall Street Journal, the company has been in talks with investors for a deal that would value it at up to $2 billion.
+Concern for the software includes its implications for the future of AI and the software development industry. In the wake of layoffs within the tech industry throughout 2023 and 2024, discourse of the tool involves concerns that it may replace engineers and remove lower-level jobs. On social media, various developers expressed criticism for the software's capabilities and potential to incite job layoffs.
+Skepticism also emerged that the tool may struggle to complete tasks with more intricate requirements and scenarios that would necessitate human creativity, along with its efficiency. Further skepticism regarding its accuracy has emerged following the tool's promotional videos, such as its performance of Devin AI's execution of the Upwork project; YouTube channels such as Internet of Bugs and Computer Vision Project criticized the tool for failing to deliver on the project request, instead writing, testing, and debugging code irrelevant to the Upwork request.
+However, the tool has also been regarded to encourage software engineers to perform more creative work. Following Devin's debut, various AI software engineering models have been released, such as free and open source replacements like OpenDevin (now called OpenHands) and Devika, and Genie by San Francisco-based startup Cosine.
+- List of integrated development environments
+- List of AI-assisted software development tools
+- No-code development platform
+- Vibe coding
+- Official website

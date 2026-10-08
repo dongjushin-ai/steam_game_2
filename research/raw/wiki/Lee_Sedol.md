@@ -1,0 +1,57 @@
+Source: https://en.wikipedia.org/wiki/Lee_Sedol
+Lee Sedol - Wikipedia
+Lee Sedol (Korean: 이세돌; born 2 March 1983), or Lee Se-dol, is a South Korean former professional Go player of 9 dan rank. As of February 2016, he ranked second in international titles (18), behind only Lee Chang-ho (21). His nickname is "The Strong Stone" ("Ssen-dol"). In March 2016, he played a series of matches against the program AlphaGo that ended in Lee losing 1–4.
+Lee announced his retirement from professional play in November 2019, saying he could never be the top overall player of Go due to the increasing dominance of artificial intelligence (AI), which he called "an entity that cannot be defeated". In a 2024 interview, he said "losing to AI, in a sense, meant my entire world was collapsing. ... I could no longer enjoy the game. So I retired."
+
+## Biography
+Lee was born in South Korea in 1983. He was born and grew up on Bigeumdo Island. He studied at the Korea Baduk Association. He became a professional Go player at the age of 12 years 4 months, making him the fifth-youngest Go professional in South Korean history behind Cho Hun-hyun (9 years 7 months), Lee Chang-ho (11 years 1 months), Cho Hye-yeon (11 years 10 months) and Choi Cheol-han (12 years 2 months).
+He ranks second in international titles (18), behind only Lee Chang-ho (21). Despite this, he describes his opening play as "very weak". In February 2013, Lee announced that he planned to retire within three years and move to the U.S. to promote Go. He plays on Tygem as "gjopok".
+He is married to Kim Hyun-jin, and has a daughter, Lee Hye-rim. His older brother Lee Sang-hoon [ko] is also a 9 dan professional go player.
+
+## Broken ladder game
+On 23 April 2003, in a game against Hong Chang-sik during the 2003 KAT cup, Lee used a broken ladder formation.
+Normally, playing out a broken ladder is a mistake, associated with beginner play, because the chasing stones are left weak. Between experts it should be decisive, leading to a lost game. Lee, playing black, defied conventional wisdom, using the broken ladder to capture a large group of Hong's stones in the lower-right side of the board. This brought black's stones in the corner which were previously considered dead back to life. White ultimately resigned.
+| .mw-parser-output .goban{display:table;line-height:1;color:#000;background:#E8C27A;font-family:sans-serif;font-style:normal;font-weight:normal;text-indent:0;letter-spacing:normal;user-select:none}.mw-parser-output .goban *,.mw-parser-output .goban *::before,.mw-parser-output .goban *::after{box-sizing:border-box}.mw-parser-output .goban-grid{display:block}.mw-parser-output .goban-row{display:flex}.mw-parser-output .goban-pt{position:relative;display:flex;flex:none;align-items:center;justify-content:center;width:1em;height:1em;background-image:linear-gradient(#000,#000),linear-gradient(#000,#000);background-repeat:no-repeat;background-size:100%0.04em,0.04em 100%;background-position:50%50%,50%50%}.mw-parser-output .goban-u{background-size:100%0.04em,0.04em calc(50% + 0.02em);background-position:50%50%,50%100%}.mw-parser-output .goban-d{background-size:100%0.04em,0.04em calc(50% + 0.02em);background-position:50%50%,50%0}.mw-parser-output .goban-l{background-size:calc(50% + 0.02em)0.04em,0.04em 100%;background-position:100%50%,50%50%}.mw-parser-output .goban-r{background-size:calc(50% + 0.02em)0.04em,0.04em 100%;background-position:0 50%,50%50%}.mw-parser-output .goban-ul{background-size:calc(50% + 0.02em)0.04em,0.04em calc(50% + 0.02em);background-position:100%50%,50%100%}.mw-parser-output .goban-ur{background-size:calc(50% + 0.02em)0.04em,0.04em calc(50% + 0.02em);background-position:0 50%,50%100%}.mw-parser-output .goban-dl{background-size:calc(50% + 0.02em)0.04em,0.04em calc(50% + 0.02em);background-position:100%50%,50%0}.mw-parser-output .goban-dr{background-size:calc(50% + 0.02em)0.04em,0.04em calc(50% + 0.02em);background-position:0 50%,50%0}.mw-parser-output .goban-hoshi::before{content:"";position:absolute;left:50%;top:50%;width:0.2em;height:0.2em;margin:-0.1em 0 0 -0.1em;border-radius:50%;background:#000}.mw-parser-output .goban-c::after{content:"";position:absolute;left:50%;top:50%;width:0.6em;height:0.6em;margin:-0.3em 0 0 -0.3em;border:0.08em solid #f00;border-radius:50%}.mw-parser-output .goban-stone{display:flex;align-items:center;justify-content:center;width:98%;height:98%;border-radius:50%;font-size:0.512em;padding-top:0.14em;white-space:nowrap}.mw-parser-output .goban-b{color:#fff;background:radial-gradient(circle at 30%30%,#777,#222 24%,#000 81%)}.mw-parser-output .goban-w{color:#000;background:radial-gradient(circle at 47%49%,#fff 46%,#ddd 59%,#777 65%)}.mw-parser-output .goban-T,.mw-parser-output .goban-S{padding-top:0}.mw-parser-output .goban-T{font-size:0.7em}.mw-parser-output .goban-S::before{content:"";width:56%;height:56%;border:0.07em solid currentColor}.mw-parser-output .goban-mark{display:flex;align-items:center;justify-content:center;width:80%;height:80%;background:#E8C27A;font-size:0.614em;font-style:italic;text-transform:lowercase}.mw-parser-output .goban-X{font-size:0.89em;font-style:normal;text-transform:none;padding-top:0.14em}.mw-parser-output .goban-bare{background-image:none}.mw-parser-output .goban-label{font-family:monospace;font-size:0.632em;font-style:normal;padding-top:0.14em}.mw-parser-output .goban-3{font-size:0.4em}.mw-parser-output .goban-unknown{font-size:0.4em;font-style:normal;text-transform:none;overflow:hidden}.mw-parser-output .sr-only{border:0;clip:rect(0,0,0,0);clip-path:polygon(0px 0px,0px 0px,0px 0px);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;white-space:nowrap}Go board, 19 by 19. Black stones: C18, D17, E17, O17, F16, Q16, D14, E14, C13, S10, P9, R9, O8, Q8, O7, P7, Q6, R6, S6, M5, N5, O5, P5, S5, S4, J3, O3, P3, Q3, S3, T3, T2. White stones: B18, D18, C17, D16, C15, D15, C14, D13, S9, S8, T8, L7, N7, Q7, R7, S7, N6, O6, P6, T6, C5, Q5, R5, T5, N4, Q4, R4, D3, R3, R2, S2, S1. Moves: 67 black D12; 68 white E13; 69 black F13; 70 white E12; 71 black E11; 72 white F12; 73 black M7; 74 white N8; 75 black G12; 76 white F11; 77 black F10; 78 white G11; 79 black H11; 80 white G10; 81 black G9; 82 white H10; 83 black J10; 84 white H9; 85 black H8; 86 white J9; 87 black K9; 88 white J8; 89 black J7; 90 white K8; 91 black L8; 92 white K7; 93 black K6; 94 white L6; 95 black M6; 96 white L5; 97 black N9.68696770727571767879778082838184868797858890917489927393949596
+| Moves 67 to 97 (Black: Lee Sedol; White: Hong Chang-sik). Black wins when White resigns at move 211.
+
+## Match against AlphaGo
+Starting 9 March 2016, Lee played a five-game match, broadcast live, against the computer program AlphaGo, developed by a London-based artificial intelligence firm Google DeepMind, for a $1 million match prize. He said “I have heard that Google DeepMind’s AI is surprisingly strong and getting stronger, but I am confident that I can win at least this time”. In an interview with Sohn Suk-hee of JTBC Newsroom on 22 February 2016, he showed confidence in his chances again, while saying that even beating AlphaGo by 4–1 may allow the Google DeepMind team to claim its de facto victory and the defeat of him, or even humanity. In this interview he pointed out the time rule in this match, which seems well-balanced so that both he and the AI would fairly undergo time pressure. In another interview at Yonhap News, Lee Se-dol said that he was confident of beating AlphaGo by a score of 5–0, at least 4–1 and accepted the challenge in only five minutes. He also said "Of course, there would have been many updates in the last four or five months, but that isn’t enough time to challenge me".
+On 9 March, Lee played black and lost the first game by resignation. On 10 March, he played white and lost the second game by resignation. On 12 March, he played black and lost the third game as well. On 13 March, he played white and won the fourth game, following an unexpected move at White 78 described as "a brilliant tesuji", and by Gu Li 9 dan as a "divine move" and completely unforeseen by him. GoGameGuru commented that this game was "a masterpiece for Lee Sedol and will almost certainly become a famous game in the history of Go". Lee commented after the victory that he considered AlphaGo was strongest when playing white (second). For this reason, and because he thought winning a second time with black would be more valuable than winning with white, he requested that he play black in the final fifth game, which is considered more risky when following Chinese Go rules. On 15 March, he played black and lost the fifth game, to lose the Go series 1–4.
+| Go board, 19 by 19. Black stones: O18, D17, F17, H17, O17, C16, E16, H16, N16, O16, Q16, H15, N15, G14, M14, G13, N13, F12, M12, N12, F11, K11, M11, O11, E10, H10, O10, P10, Q10, C9, D9, F9, L9, C6, E4, N4, P4, J3, O3. White stones: E17, M17, N17, F16, J16, G15, O15, F14, N14, O14, C13, F13, K13, O13, E12, G12, O12, E11, N11, P11, Q11, R11, B10, C10, D10, N10, R10, J9, N9, E5, Q5, B4, D4, F4, R4, F3, P3, Q3. Moves: 78 white L11.78
+| Game 4, Lee Sedol (white) v. AlphaGo (black).First 78 moves
+After his fourth-game victory, Lee was overjoyed: "I don't think I've ever felt so good after winning just one game. I remember when I said I will win all or lose just one game in the beginning. If this had really happened ― I won 3 rounds and lost this round ― it would have had a great bearing on my reputation. However, since I won after losing 3 games in a row, I am so happy. I will never exchange this win for anything in the world." He added: "I, Lee Se-dol, lost, but mankind did not." After the last game, however, Lee was saddened: "I failed. I feel sorry that the match is over and it ended like this. I wanted it to end well." He also confessed that "As a professional Go player, I never want to play this kind of match again. I endured the match because I accepted it."
+
+## Retirement from professional play
+On 19 November 2019, Lee announced his retirement from professional play, saying "Even if I become the number one, there is an entity that cannot be defeated."
+However, in December he agreed to play a three-game match against the HanDol AI system, developed by Korean NHN Entertainment Corporation. Playing with a two-stone handicap (advantage) for the first and third games of the match and no handicap for the second game, Lee defeated the machine in the first game. HanDol subsequently won the remaining two games of the match, with a final score of 2-1, winning the overall contest.
+
+## Promotion record
+Lee turned pro in 1995 as 1 dan, and reached 9 dan in 2003.
+| Promoted to professional dan rank after passing qualifying test.
+| Won the 7th LG Cup against Lee Changho (4 dan and 5 dan were skipped over due to the Hanguk Kiwon promotion rules).
+| Runner up in the KT Cup against Yoo Changhyuk.
+| Won 16th Fujitsu Cup against Song Taekon (8 dan was skipped over due to the Hanguk Kiwon promotion rules).
+
+## Career record
+
+## Titles and runners-up
+Lee ranks #3 in total number of titles in Korea and #2 in international titles.
+
+## Korean Baduk League
+
+## Chinese A League
+
+## Filmography
+
+## Television
+- Lee Sedol on Facebook
+- Yi Se-Tol on Sensei's Library
+- Korea Baduk Association profile (in Korean)
+
+## On YouTube
+- 1st match against AlphaGo
+- 2nd match against AlphaGo
+- 3rd match against AlphaGo
+- 4th match against AlphaGo
+- 5th match against AlphaGo
+- AlphaGo (documentary featuring Lee)

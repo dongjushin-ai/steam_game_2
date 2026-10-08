@@ -1,0 +1,37 @@
+Source: https://en.wikipedia.org/wiki/Colossus_(supercomputer)
+Colossus (data center) - Wikipedia
+| This article needs more citations. Please help improve this article by adding citations to reliable sources. Unsourced material may be challenged and removed.Find sources: "Colossus" data center – news · newspapers · books · scholar · JSTOR (June 2026) (Learn how and when to remove this message)
+Colossus is the name used for a cluster of data centers developed by xAI (later SpaceXAI) in the Memphis, Tennessee–Southaven, Mississippi area. The original facility, Colossus 1, began construction in 2024 at a former Electrolux plant in South Memphis and became operational in July–September 2024. Its primary purpose was to train the company's chatbot Grok; it also supported other projects associated with Elon Musk, including the social network X and SpaceX.
+A second major facility, Colossus 2 (also referred to as Macrohard), was developed beginning in 2025 at 5420 Tulane Road in the Whitehaven area of Memphis, with associated power generation across the state line in Southaven, Mississippi. Additional nearby buildings (sometimes called Minihard and Macrohardrr / Colossus 3) expanded the cluster. As of mid-2026 the combined sites provided on the order of 1 gigawatt of AI compute capacity.
+In May 2026 Anthropic agreed to rent essentially all compute capacity at Colossus 1. On June 5, 2026, Google agreed to rent access to approximately 110,000 GPUs from SpaceX beginning October 2026 through June 2029 for $920 million per month; the specific facility was not publicly identified by SpaceX. Training of newer Grok models shifted primarily to Colossus 2 and related sites.
+
+## Colossus 1
+Colossus 1 was built at the former Electrolux factory (3231 Paul R. Lowry Road / Riverport area) in South Memphis. The abandoned industrial building allowed rapid conversion. Construction of the initial cluster of approximately 100,000 Nvidia H100 GPUs was completed in 122 days; the system went live in mid-to-late 2024. Capacity was later expanded to include H200 and early B200 GPUs. Partners included Dell Technologies and Supermicro.
+Because the local grid connection was initially limited (~8 MW, later upgraded toward 150 MW), xAI deployed temporary natural-gas turbines and Tesla Megapack battery systems. Environmental concerns over the turbines and water use led to local opposition and regulatory scrutiny.
+
+## Colossus 2 and cluster expansion
+In February 2025 an xAI affiliate purchased a large warehouse and adjacent parcels at 5420 Tulane Road (Whitehaven, Memphis) for roughly $80 million. This became the core of Colossus 2 (branded Macrohard on the rooftop). The first major GPU cluster (~110,000 Nvidia GB200-class processors, ~210 MW) came online around January 2026 after a reported build of about 91 days; a subsequent cluster of GB300-class processors followed. By mid-2026 the site held on the order of 300,000–350,000+ GPUs and several hundred megawatts of IT load, with further expansion under way. By late September 2026, 440,000 GB300 GPUs were in use, with a further 660,000 GPUs expected to come online by the end of 2026.
+Power for Colossus 2 and nearby buildings has relied heavily on a “behind-the-meter” gas-turbine plant in Southaven, Mississippi (former Duke Energy site at Stanton Road / 2875 Stanton Road South), operated by an xAI affiliate (MZX Tech). Temporary/mobile turbines were installed and expanded (dozens of units, eventually reported in the 50–70 range), generating substantial NOx and other emissions. A permanent ~1.2 GW simple-cycle plant (41 turbines) received a Mississippi Prevention of Significant Deterioration permit in March 2026; temporary units were scheduled for phased removal as the permanent plant came online (target completion of removal by mid-2027 under a 2026 agreement with state regulators).
+Additional nearby facilities form part of the broader cluster:
+- A denser “Minihard” building under construction at ~5414 Tulane Road.
+- A site at 2400 Stateline Road West in Southaven (sometimes called Macrohardrr or Colossus 3), acquired later in 2025.
+Together the Memphis–Southaven sites have been described as approaching or exceeding 1 GW of AI compute power, with continued expansion planned. After the Anthropic arrangement for Colossus 1, newer model training and many internal workloads moved to Colossus 2 and related buildings. External customers (including Anthropic on Colossus 1 and later deals involving Google, Reflection AI, and others) have also used capacity from the cluster.
+
+## Environmental impact and community response
+Rapid deployment relied on temporary gas turbines while grid and permanent generation were incomplete. In the Memphis area this raised concerns about air quality (NOx, formaldehyde, smog), water demand (millions of gallons per day), and strain on the local grid. Shelby County initially treated many units as portable/temporary and therefore outside certain permitting rules; later federal guidance and state actions tightened requirements.
+In April 2026 the NAACP, represented by the Southern Environmental Law Center and Earthjustice, sued xAI / MZX Tech in federal court in Mississippi, alleging operation of the Southaven “Colossus Gas Plant” without required Clean Air Act permits and disproportionate impact on nearby Black communities. The suit sought injunctions and penalties. In June 2026 the U.S. Department of Justice under the second Trump administration moved to intervene and dismiss the case, arguing it threatened national, economic, and energy security (including support for military use of AI). Temporary turbines continued to operate while a permanent plant was built; a 2026 agreed order with Mississippi regulators set a timeline for their removal by July 2027.
+Local residents and environmental groups criticized the lack of early public notice, potential health impacts, and prioritization of data-center power over residential reliability. Plans for an $80 million wastewater / greywater recycling plant near Colossus 1 were paused in 2026 while the company focused on completing and stabilizing Colossus 2.
+
+## Current status (as of mid-2026)
+- Colossus 1: Largely leased to Anthropic; older H100/H200-heavy configuration.
+- Colossus 2 / Macrohard and nearby buildings: Primary site for newer Grok training and internal workloads; GB200/GB300-class systems; hundreds of MW of IT load with continued build-out.
+- Power: Mix of temporary turbines (being phased out), permanent gas plant under construction in Southaven (~1.2 GW permitted), Tesla Megapacks, limited grid interconnection, and exploratory solar.
+- Customers / users: SpaceXAI (Grok and internal), Anthropic (Colossus 1), Google, Reflection AI, and others via capacity leases.
+- Further expansion of the Memphis–Southaven cluster and longer-term interest in orbital / space-based compute have been discussed by the company.
+- List of the top supercomputers in the United States
+- SpaceXAI
+- Grok (chatbot)
+- Environmental impact of artificial intelligence
+- Official website
+- Epoch AI profile of Colossus 2
+.mw-parser-output .geo-default,.mw-parser-output .geo-dms,.mw-parser-output .geo-dec{display:inline}.mw-parser-output .geo-nondefault,.mw-parser-output .geo-multi-punct,.mw-parser-output .geo-inline-hidden{display:none}.mw-parser-output .longitude,.mw-parser-output .latitude{white-space:nowrap}35°03′36″N 90°09′23″W / 35.06000°N 90.15639°W / 35.06000; -90.15639

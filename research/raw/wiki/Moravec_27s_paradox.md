@@ -1,0 +1,41 @@
+Source: https://en.wikipedia.org/wiki/Moravec%27s_paradox
+Moravec's paradox - Wikipedia
+Moravec's paradox is the observation that, as Hans Moravec wrote in 1988, "it is comparatively easy to make computers exhibit adult level performance on intelligence tests or playing checkers, and difficult or impossible to give them the skills of a one-year-old when it comes to perception and mobility". This counterintuitive pattern may happen because skills that appear effortless to humans, such as recognizing faces or walking, required millions of years of evolution to develop, while abstract reasoning abilities like mathematics are evolutionarily recent. This observation was articulated in the 1980s by Moravec, Rodney Brooks, Marvin Minsky and others.
+Similarly, Minsky emphasized that the most difficult human skills to reverse engineer are those that are below the level of conscious awareness. "In general, we're least aware of what our minds do best", he wrote, and added: "we're more aware of simple processes that don't work well than of complex ones that work flawlessly". Steven Pinker wrote in 1994 that "the main lesson of thirty-five years of AI research is that the hard problems are easy and the easy problems are hard".
+
+## Biological basis of human skills
+| This section includes a list of references, related reading, or external links, but its sources remain unclear because it lacks inline citations. Please help improve this section by introducing more precise citations. (March 2026) (Learn how and when to remove this message)
+One possible explanation of the paradox, offered by Moravec, is based on evolution. All human skills are implemented biologically, using machinery designed by the process of natural selection. In the course of their evolution, natural selection has tended to preserve design improvements and optimizations. The older a skill is, the more time natural selection has had to improve the design. Abstract thought developed only very recently, and consequently, we should not expect its implementation to be particularly efficient. As Moravec writes:
+Encoded in the large, highly evolved sensory and motor portions of the human brain is a billion years of experience about the nature of the world and how to survive in it. The deliberate process we call reasoning is, I believe, the thinnest veneer of human thought, effective only because it is supported by this much older and much more powerful, though usually unconscious, sensorimotor knowledge. We are all prodigious olympians in perceptual and motor areas, so good that we make the difficult look easy. Abstract thought, though, is a new trick, perhaps less than 100 thousand years old. We have not yet mastered it. It is not all that intrinsically difficult; it just seems so when we do it.
+A compact way to express this argument would be:
+- We should expect the difficulty of reverse-engineering any human skill to be roughly proportional to the amount of time that skill has been evolving in animals.
+- The oldest human skills are largely unconscious and so appear to us to be effortless.
+- Therefore, we should expect skills that appear effortless to be difficult to reverse-engineer, but skills that require effort may not necessarily be difficult to engineer at all.
+Some examples of skills that have been evolving for millions of years: recognizing a face, moving around in space, judging people's motivations, catching a ball, recognizing a voice, setting appropriate goals, paying attention to things that are interesting; anything to do with perception, attention, visualization, motor skills, social skills and so on.
+Some examples of skills that have appeared more recently: mathematics, engineering, games, logic and scientific reasoning. These are hard for us because they are not what our bodies and brains were primarily evolved to do. These are skills and techniques that were acquired recently, in historical time, and have had at most a few thousand years to be refined, mostly by cultural evolution.
+
+## Historical influence on artificial intelligence
+In the early days of artificial intelligence research, leading researchers often predicted that they would be able to create thinking machines in just a few decades (see history of artificial intelligence). Their optimism stemmed in part from the fact that they had been successful at writing programs that used logic, solved algebra and geometry problems and played games like checkers and chess. Logic and algebra are difficult for people and are considered a sign of intelligence. Many prominent researchers[a] assumed that, having (almost) solved the "hard" problems, the "easy" problems of vision and commonsense reasoning would soon fall into place. They were wrong (see also AI winter), and one reason is that these problems are not easy at all, but incredibly difficult. The fact that they had solved problems like logic and algebra was irrelevant, because these problems are extremely easy for machines to solve.[b]
+Rodney Brooks explains that, according to early AI research, intelligence was "best characterized as the things that highly educated male scientists found challenging", such as chess, symbolic integration, proving mathematical theorems and solving complicated word algebra problems. "The things that children of four or five years could do effortlessly, such as visually distinguishing between a coffee cup and a chair, or walking around on two legs, or finding their way from their bedroom to the living room were not thought of as activities requiring intelligence. Nor were any aesthetic judgments included in the repertoire of intelligence-based skills." In the 1980s, this would lead Brooks to pursue a new direction in artificial intelligence and robotics research. He decided to build intelligent machines that had "No cognition. Just sensing and action. That is all I would build and completely leave out what traditionally was thought of as the intelligence of artificial intelligence." He called this new direction "Nouvelle AI".
+
+## Commentary
+In a 1983 chapter on the history of artificial intelligence, AI pioneer Allen Newell criticized the idea as a "myth".[clarification needed] Arvind Narayanan describes Moravec's paradox as "a statement about what the AI community finds it worthwhile to work on" instead of "predictive power about which problems are going to be easy or hard for AI."
+
+## Cultural references
+Linguist and cognitive scientist Steven Pinker argues that this is the main lesson uncovered by AI researchers in his 1994 book The Language Instinct.
+- AI effect
+- Embodied cognition
+- History of artificial intelligence
+- Subsumption architecture
+- Brooks, Rodney (1986), Intelligence Without Representation, MIT Artificial Intelligence Laboratory
+- Brooks, Rodney (2002), Flesh and Machines, Pantheon Books
+- Brynjolfsson, Erik; Mitchell, Tom (22 December 2017). "What can machine learning do? Workforce implications". Science. 358 (6370): 1530–1534. Bibcode:2017Sci...358.1530B. doi:10.1126/science.aap8062. PMID 29269459. Retrieved 7 May 2018.
+- Lee, Amanda (14 June 2017). "Will your job still exist in 10 years when the robots arrive?". South China Morning Post. Retrieved 7 May 2018.
+- Minsky, Marvin (1986), The Society of Mind, Simon and Schuster, p. 29
+- Moravec, Hans (1976), The Role of Raw Power in Intelligence, archived from the original on 3 March 2016, retrieved 16 October 2008
+- Moravec, Hans (1988), Mind Children, Harvard University Press
+- McCorduck, Pamela (2004), Machines Who Think (2nd ed.), Natick, Massachusetts: A. K. Peters, ISBN 1-5688-1205-1, p. 456.
+- Newell, Allen (1983). "Intellectual issues in the history of artificial intelligence". The study of information: interdisciplinary messages (PDF). USA: John Wiley & Sons, Inc. pp. 187–294. ISBN 978-0-471-88717-1. Archived from the original (PDF) on 2023-12-21.
+- Pinker, Steven (September 4, 2007) , The Language Instinct, Perennial Modern Classics, Harper, ISBN 978-0-06-133646-1
+- Zador, Anthony (2019-08-21). "A critique of pure learning and what artificial neural networks can learn from animal brains". Nature Communications. 10 (1): 3770. Bibcode:2019NatCo..10.3770Z. doi:10.1038/s41467-019-11786-6. PMC 6704116. PMID 31434893.
+- Explanation of the XKCD comic about Moravec's paradox

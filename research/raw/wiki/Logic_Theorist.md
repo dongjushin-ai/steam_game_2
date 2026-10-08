@@ -1,0 +1,57 @@
+Source: https://en.wikipedia.org/wiki/Logic_Theorist
+Logic Theorist - Wikipedia
+Logic Theorist is a computer program completed in 1956 by Allen Newell, Herbert A. Simon, and Cliff Shaw. It was the first program deliberately engineered to perform automated reasoning, and has been described as "the first artificial intelligence program".[a] Logic Theorist proved 38 of the first 52 theorems in chapter two of Whitehead and Bertrand Russell's Principia Mathematica, and found a new and shorter proof for Theorem 2.85.
+
+## History
+In 1955, when Newell and Simon began to work on the Logic Theorist, the field of artificial intelligence did not yet exist; the term "artificial intelligence" would not be coined until the following summer.[b]
+Simon was a political scientist who had previously studied the way bureaucracies function as well as developing his theory of bounded rationality (for which he would later win the Nobel Memorial Prize in Economic Sciences in 1978). He believed the study of business organizations requires, like artificial intelligence, an insight into the nature of human problem solving and decision making. Simon has stated that when consulting at RAND Corporation in the early 1950s, he saw a printer typing out a map, using ordinary letters and punctuation as symbols. This led him to think that a machine that could manipulate symbols could simulate decision making and possibly even the process of human thought.
+The program that printed the map had been written by Newell, a RAND scientist studying logistics and organization theory. For Newell, the decisive moment was in 1954 when Oliver Selfridge came to RAND to describe his work on pattern matching. Watching the presentation, Newell suddenly understood how the interaction of simple, programmable units could accomplish complex behavior, including the intelligent behavior of human beings. "It all happened in one afternoon," he would later say. It was a rare moment of scientific epiphany.
+"I had such a sense of clarity that this was a new path, and one I was going to go down. I haven't had that sensation very many times. I'm pretty skeptical, and so I don't normally go off on a toot, but I did on that one. Completely absorbed in it—without existing with the two or three levels consciousness so that you're working, and aware that you're working, and aware of the consequences and implications, the normal mode of thought. No. Completely absorbed for ten to twelve hours."
+Newell and Simon began to talk about the possibility of teaching machines to think. Their first project was a program that could prove mathematical theorems like the ones used in Bertrand Russell and Alfred North Whitehead's Principia Mathematica. They enlisted the help of computer programmer Cliff Shaw, also from RAND, to develop the program. (Newell says "Cliff was the genuine computer scientist of the three".)
+The first version was hand-simulated: they wrote the program onto 3x5 cards and, as Simon recalled:
+In January 1956, we assembled my wife and three children together with some graduate students. To each member of the group, we gave one of the cards, so that each one became, in effect, a component of the computer program ... Here was nature imitating art imitating nature.
+They succeeded in showing that the program could successfully prove theorems as well as a talented mathematician. Eventually Shaw was able to run the program on the computer at RAND's Santa Monica facility.
+In the summer of 1956, John McCarthy, Marvin Minsky, Claude Shannon and Nathan Rochester organized a conference on the subject of what they called "artificial intelligence" (a term coined by McCarthy for the occasion). Newell and Simon proudly presented the group with the Logic Theorist. It was met with a lukewarm reception. Pamela McCorduck writes "the evidence is that nobody save Newell and Simon themselves sensed the long-range significance of what they were doing." Simon confides that "we were probably fairly arrogant about it all" and adds:
+They didn't want to hear from us, and we sure didn't want to hear from them: we had something to show them! ... In a way it was ironic because we already had done the first example of what they were after; and second, they didn't pay much attention to it.
+Logic Theorist soon proved 38 of the first 52 theorems in chapter 2 of the Principia Mathematica. The proof of theorem 2.85 was actually more elegant than the proof produced laboriously by hand by Russell and Whitehead. Simon was able to show the new proof to Russell himself who "responded with delight". They attempted to publish the new proof in The Journal of Symbolic Logic, but it was rejected on the grounds that a new proof of an elementary mathematical theorem was not notable, apparently overlooking the fact that one of the authors was a computer program.
+Newell and Simon formed a lasting partnership, founding one of the first AI laboratories at the Carnegie Institute of Technology and developing a series of influential artificial intelligence programs and ideas, including the General Problem Solver, Soar, and their unified theory of cognition.
+
+## Architecture
+The Logic Theorist is a program that performs logical processes on logical expressions. The Logic Theorist operates on the following principles:
+
+## Expressions
+- An expression is made of elements.
+- There are two kinds of memories: working and storage.
+- Each working memory contains a single element. The Logic Theorist usually uses 1 to 3 working memories.
+- Each storage memory is a list representing a full expression or a set of elements. In particular, it contains all the axioms and proven logical theorems.
+- An expression is an abstract syntax tree, each node being an element with up to 11 attributes.
+For example, the logical expression ¬ P → ( Q ∧ ¬ P ) {\displaystyle \neg P\to (Q\wedge \neg P)} is represented as a tree with a root element representing → {\displaystyle \to } . Among the attributes of the root element are pointers to the two elements representing the subexpressions ¬ P {\displaystyle \neg P} and Q ∧ ¬ P {\displaystyle Q\wedge \neg P} .
+
+## Processes
+There are four kinds of processes, from the lowest to the highest level.
+- Instruction: These are similar to assembly code. They may, for example, perform a primitive operation on an expression in working memory, or perform a conditional jump. An example is "put the right sub-element of working memory 1 in working memory 2".
+- Elementary process: These are similar to subroutines and are a sequence of instructions that can be called.
+- Method: Built out of elementary processes and instructions. There are 4 methods: substitution: given an expression, it attempts to find a proven theorem or axiom which can be transformed to it by substitutions of variables and logical connectives. detachment: given expression B {\displaystyle B} , it attempts to find a proven theorem or axiom which can be put in the form A → B {\displaystyle A\to B} after substitution. It then attempts to prove A {\displaystyle A} by substitution; if this fails, A {\displaystyle A} becomes a new subproblem to solve. chaining forward: given expression A → C {\displaystyle A\to C} , it attempts to find for a proven theorem or axiom which can be put in the form A → B {\displaystyle A\to B} via substitution. It then attempts to prove B → C {\displaystyle B\to C} by substitution; if this fails, B → C {\displaystyle B\to C} becomes a new subproblem to solve. chaining backward: given expression A → C {\displaystyle A\to C} , it attempts to find for a proven theorem or axiom which can be put in the form B → C {\displaystyle B\to C} via substitution. It then attempts to prove A → B {\displaystyle A\to B} by substitution; if this fails, A → B {\displaystyle A\to B} becomes a new subproblem to solve.
+- substitution: given an expression, it attempts to find a proven theorem or axiom which can be transformed to it by substitutions of variables and logical connectives.
+- detachment: given expression B {\displaystyle B} , it attempts to find a proven theorem or axiom which can be put in the form A → B {\displaystyle A\to B} after substitution. It then attempts to prove A {\displaystyle A} by substitution; if this fails, A {\displaystyle A} becomes a new subproblem to solve.
+- chaining forward: given expression A → C {\displaystyle A\to C} , it attempts to find for a proven theorem or axiom which can be put in the form A → B {\displaystyle A\to B} via substitution. It then attempts to prove B → C {\displaystyle B\to C} by substitution; if this fails, B → C {\displaystyle B\to C} becomes a new subproblem to solve.
+- chaining backward: given expression A → C {\displaystyle A\to C} , it attempts to find for a proven theorem or axiom which can be put in the form B → C {\displaystyle B\to C} via substitution. It then attempts to prove A → B {\displaystyle A\to B} by substitution; if this fails, A → B {\displaystyle A\to B} becomes a new subproblem to solve.
+- executive control method: This method applies each of the 4 methods in sequence to each theorem to be proved.
+
+## Logic Theorist's influence on AI
+Logic Theorist introduced several concepts that would be central to AI research:
+
+## Philosophical implications
+Pamela McCorduck writes that the Logic Theorist was "proof positive that a machine could perform tasks heretofore considered intelligent, creative and uniquely human". And, as such, it represents a milestone in the development of artificial intelligence and our understanding of intelligence in general.
+Simon told a graduate class in January 1956, "Over Christmas, Al Newell and I invented a thinking machine," and would write:
+[We] invented a computer program capable of thinking non-numerically, and thereby solved the venerable mind-body problem, explaining how a system composed of matter can have the properties of mind.
+This statement, that machines can have minds just as people do, would be later named "Strong AI" by philosopher John Searle. It remains a serious subject of debate up to the present day.
+Pamela McCorduck also sees in the Logic Theorist the debut of a new theory of the mind, the information processing model (sometimes called computationalism or cognitivism). She writes that "this view would come to be central to their later work, and in their opinion, as central to understanding mind in the 20th century as Darwin's principle of natural selection had been to understanding biology in the 19th century." Newell and Simon would later formalize this proposal as the physical symbol systems hypothesis.
+- Crevier, Daniel (1993). AI: The Tumultuous Search for Artificial Intelligence. New York, NY: BasicBooks. ISBN 0-465-02997-3., pp. 44–46.
+- McCorduck, Pamela (2004), Machines Who Think (2nd ed.), Natick, Massachusetts: A. K. Peters, ISBN 1-5688-1205-1, pp. 161–170.
+- Russell, Stuart J.; Norvig, Peter. (2021). Artificial Intelligence: A Modern Approach (4th ed.). Hoboken: Pearson. ISBN 9780134610993. LCCN 20190474.
+- Newell and Simon's RAND Corporation report on the Logic Theorist
+- Full length version of Newell and Simon's RAND Corporation report on the Logic Theorist
+- CMU Libraries: Human and Machine Minds
+- Source code as PDF on Github
+- 2026 implementation of IPL-V in Common Lisp that runs the original Logic Theorist code

@@ -1,0 +1,16 @@
+Source: https://en.wikipedia.org/wiki/Humanity%27s_Last_Exam
+Humanity's Last Exam - Wikipedia
+Humanity's Last Exam (HLE) is a language model benchmark consisting of 2,500 questions across a broad range of subjects. It was created jointly by the Center for AI Safety and Scale AI and publicly released in January 2025.
+
+## Creation
+Stanford HAI's AI Index 2025 Annual Report cites Humanity's Last Exam as one of the "more challenging benchmarks" developed in response to the popular AI benchmarks having reached "saturation". The test has been described as the brainchild of Dan Hendrycks, a machine learning researcher and the director of the Center for AI Safety, who stated that he was inspired to create the test after a conversation with Elon Musk, who thought the existing language model benchmarks, such as the MMLU, were too easy. Hendrycks worked with Scale AI to compile the questions. The questions were crowdsourced from subject matter experts from various institutions across the world. The questions were first filtered by the leading AI models; if the models failed to answer the question or did worse than random guessing on the multiple-choice questions, they were reviewed by human experts in two rounds and approved for inclusion in the dataset. The submitters of the top-rated questions were given prize money from a pool of 500,000 U.S. dollars—$5,000 for each of the top 50 questions and $500 for the next 500. After the initial release, a "community feedback bug bounty program" was opened to "identify and remove major errors in the dataset".
+
+## Composition
+The benchmark consists of 2,500 questions in the publicly released set. The questions "typically require graduate-level expertise or test knowledge of highly specific topics." The paper classifies the questions into the following broad subjects: mathematics (41%), physics (9%), biology/medicine (11%), humanities/social science (9%), computer science/artificial intelligence (10%), engineering (4%), chemistry (7%), and other (9%). Around 14% of the questions require the ability to understand both text and images, i.e., multi-modality. 24% of the questions are multiple-choice; the rest are short-answer, exact-match questions. A private set is also maintained to test for benchmark overfitting.
+An example question:
+Hummingbirds within Apodiformes uniquely have a bilaterally paired oval bone, a sesamoid embedded in the caudolateral portion of the expanded, cruciate aponeurosis of insertion of m. depressor caudae. How many paired tendons are supported by this sesamoid bone? Answer with a number.
+An independent investigation by FutureHouse, published in July 2025, suggested that around 30% of the HLE answers for text-only chemistry and biology questions could be incorrect; the benchmark's team partially replicated the findings, and said they hope to institute a continuous revision process. The team subsequently launched HLE-Rolling, a version of the benchmark that is "regularly updated to address community feedback and integrate new questions".
+
+## Results
+- Humanity's Last Exam at the Center for AI Safety
+- Humanity's Last Exam at Scale AI

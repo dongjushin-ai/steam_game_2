@@ -1,0 +1,12 @@
+Source: https://en.wikipedia.org/wiki/Context_window
+Context window - Wikipedia
+The context window of a large language model (LLM) is the maximum amount of text or other tokenized input that can be used by the model at one time when generating an output, including the output itself.
+
+## Definition
+It is usually measured in tokens, which are units produced by the model's tokenizer rather than words or characters. In practical terms, the context window is the material the model can "see" while producing response; anything outside that window is not directly available unless it is summarized, retrieved, or provided again. A longer context window can allow a model to work with longer prompts, conversations, documents, codebases, or retrieved passages without first compressing or discarding as much information. It has been compared to working memory.
+
+## Increase in size
+The practical size of context windows has increased rapidly as LLM systems have developed. Some models are limited by the sequence lengths used during training, while attention variants and positional-encoding methods can allow models to operate on longer sequences than those seen during training. By the mid-2020s, long-context systems had reported context windows ranging from hundreds of thousands to millions of tokens; Google researchers reported Gemini 1.5 evaluations on retrieval tasks at up to 10 million tokens.
+
+## Diminishing marginal utility
+As context windows grow there is often a diminishing marginal utility as larger context window does not necessarily mean that a model can use the entire context equally well. In "Lost in the Middle", Liu et al. found that performance on long-context tasks was often worse when relevant information appeared in the middle of an input rather than near the beginning or end. Some studies indicate that the "effective context length" can be smaller than the advertised one, the former being the point in which the performance of the model starts to deteriorate when the answer isn't very easy to spot. Other benchmarks have assessed long- context capability using tasks that go beyond simple retrieval, including multi-document question answering, long-dialogue understanding, code repository understanding, and structured-data reasoning.
