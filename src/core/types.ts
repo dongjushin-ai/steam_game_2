@@ -266,6 +266,6 @@ export interface GameState {
     thinkSeconds: number;
   };
   ended: boolean;
-  settings: { format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean };
+  settings: { format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean; lang: "ko" | "en" };
   lastSaved: number;
 }

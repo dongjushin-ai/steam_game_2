@@ -1,6 +1,7 @@
 // 임무: 항상 3개가 걸려 있고, 달성하면 자동으로 보상을 받고 새 임무가 나온다.
 import type { Stats } from "./formulas";
 import type { GameState, Quest, QuestKind } from "./types";
+import { L } from "../i18n/lang";
 
 export const QUEST_SLOTS = 3;
 
@@ -25,14 +26,14 @@ export function questProgress(s: GameState, q: Quest): number {
 
 export function questText(q: Quest, fmt: (n: number) => string): string {
   switch (q.kind) {
-    case "answer": return `질문 ${fmt(q.target)}개 더 답변하기`;
-    case "earn": return `💵 ${fmt(q.target)} 더 벌기`;
-    case "buy": return `건물 ${q.target}개 더 구매하기`;
-    case "research": return `연구 ${q.target}개 완료하기`;
-    case "taps": return `직접 ${q.target}번 답변하기 (탭)`;
-    case "think": return `생각 모드로 ${q.target}초 운영하기`;
-    case "golden": return `⭐VIP 질문 ${q.target}개 잡기`;
-    case "combo": return `${q.target}콤보 달성하기`;
+    case "answer": return L(`질문 ${fmt(q.target)}개 더 답변하기`, `Answer ${fmt(q.target)} more questions`);
+    case "earn": return L(`💵 ${fmt(q.target)} 더 벌기`, `Earn 💵 ${fmt(q.target)} more`);
+    case "buy": return L(`건물 ${q.target}개 더 구매하기`, `Buy ${q.target} more buildings`);
+    case "research": return L(`연구 ${q.target}개 완료하기`, `Complete ${q.target} research`);
+    case "taps": return L(`직접 ${q.target}번 답변하기 (탭)`, `Answer ${q.target} by hand (tap)`);
+    case "think": return L(`생각 모드로 ${q.target}초 운영하기`, `Run Thinking Mode for ${q.target}s`);
+    case "golden": return L(`⭐VIP 질문 ${q.target}개 잡기`, `Catch ${q.target} ⭐VIP question${q.target > 1 ? "s" : ""}`);
+    case "combo": return L(`${q.target}콤보 달성하기`, `Reach a ${q.target} combo`);
   }
 }
 

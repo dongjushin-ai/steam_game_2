@@ -1,4 +1,5 @@
 import type { NumberFormat } from "./types";
+import { L } from "../i18n/lang";
 
 const SHORT = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
 const KOREAN = ["", "만", "억", "조", "경", "해", "자", "양", "구", "간", "정", "재", "극"];
@@ -47,9 +48,9 @@ export function fmtDuration(sec: number): string {
   const s = Math.max(0, Math.floor(sec));
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
-  if (h > 0) return `${h}시간 ${m}분`;
-  if (m > 0) return `${m}분 ${s % 60}초`;
-  return `${s}초`;
+  if (h > 0) return L(`${h}시간 ${m}분`, `${h}h ${m}m`);
+  if (m > 0) return L(`${m}분 ${s % 60}초`, `${m}m ${s % 60}s`);
+  return L(`${s}초`, `${s}s`);
 }
 
 export function fmtMult(m: number): string {

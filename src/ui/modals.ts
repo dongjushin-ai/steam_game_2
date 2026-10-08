@@ -1,4 +1,5 @@
 import { $, clear, h } from "./dom";
+import { L } from "../i18n/lang";
 
 export interface ModalButton {
   label: string | Node;
@@ -41,7 +42,7 @@ function next(): void {
   }
   open = true;
   const close = () => next();
-  const buttons = (spec.buttons ?? [{ label: "확인" }]).map((b) =>
+  const buttons = (spec.buttons ?? [{ label: L("확인", "OK") }]).map((b) =>
     h(
       "button",
       {

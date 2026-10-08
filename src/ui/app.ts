@@ -6,11 +6,12 @@ import { loadGame, saveGame } from "../core/save";
 import type { Effect, GameState } from "../core/types";
 import { $, clear, h, setText } from "./dom";
 import { modalOpen, showModal, toast } from "./modals";
-import { Panels, TABS, shareSummary, type TabId } from "./panels";
+import { Panels, TABS, shareSummary, statLabel, type TabId } from "./panels";
 import { Scene } from "./scene";
 import { questText } from "../core/quests";
 import type { QuizQuestion } from "../core/types";
 import { setSound, setVibrate, sfx } from "./sound";
+import { L, applyLanguage, detectLang } from "../i18n";
 
 const SAVE_EVERY = 10;
 const UI_EVERY = 0.2;
@@ -41,9 +42,16 @@ export class App {
   private saveAcc = 0;
 
   start(): void {
-    this.buildChrome();
     const saved = loadGame();
-    this.boot(saved ?? newState(), !saved);
+    const lang = saved?.settings.lang ?? detectLang();
+    applyLanguage(lang);
+    document.documentElement.lang = lang;
+    document.title = L("AI 키우기", "Grow Your AI");
+    $("#scene").setAttribute("aria-label", L("질문 처리 화면", "Question answering scene"));
+    this.buildChrome();
+    const fresh = saved ?? newState(L("나의 AI", "My AI"));
+    fresh.settings.lang = lang;
+    this.boot(fresh, !saved);
     requestAnimationFrame((t) => this.frame(t));
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) saveGame(this.game.state);
@@ -59,6 +67,8 @@ export class App {
     const g = this.game;
     if (modalOpen()) return;
     if (e.code === "Space" || e.key === "Enter") {
+      // 버튼에 포커스가 있으면 그 버튼이 눌려야 한다 (탭과 동시에 눌리지 않게)
+      if (t.closest("button, a, summary")) return;
       e.preventDefault();
       g.tap();
       sfx("tap");
@@ -101,7 +111,9 @@ export class App {
       this.panels.update();
     }, (tab) => this.selectTab(tab));
     this.panels = new Panels($("#panel"), this.game, (st) => {
-      this.boot((st as GameState | null) ?? newState(), !st);
+      const next = (st as GameState | null) ?? newState(L("나의 AI", "My AI"));
+      next.settings.lang = this.game.state.settings.lang;
+      this.boot(next, !st);
       saveGame(this.game.state);
     }, () => this.history);
     this.selectTab("service");
@@ -183,11 +195,11 @@ export class App {
     setText(hd.ver, `v${s.releases + 1}${s.checkpoints ? ` · 💾${fmt(s.checkpoints)}` : ""}`);
     setText(hd.era, `${era.avatar} ${era.years}`);
     setText(hd.money, `💵 ${fmt(s.credits)}`);
-    setText(hd.moneySub, `${st.net >= 0 ? "+" : ""}${fmt(st.net)}/초`);
+    setText(hd.moneySub, `${st.net >= 0 ? "+" : ""}${fmt(st.net)}/${L("초", "s")}`);
     setText(hd.rp, `🧠 ${fmt(s.rp)}`);
-    setText(hd.rpSub, `+${fmt(st.rpRate)}/초`);
+    setText(hd.rpSub, `+${fmt(st.rpRate)}/${L("초", "s")}`);
     setText(hd.power, `⚡ ${fmt(st.powerUse)}`);
-    setText(hd.powerSub, `/ ${fmt(st.powerCap)} 공급`);
+    setText(hd.powerSub, `/ ${fmt(st.powerCap)} ${L("공급", "supply")}`);
     hd.powerBox.classList.toggle("low", st.powerEff < 0.999);
   }
 
@@ -220,7 +232,7 @@ export class App {
           showModal({
             icon: ev.emoji, title: ev.name, sub: ev.year,
             body: [ev.desc, effectsLine(ev.effects, ev.duration)],
-            buttons: [{ label: "버텨보자" }],
+            buttons: [{ label: L("버텨보자", "We'll survive") }],
           });
         } else {
           toast(`${ev.emoji} ${ev.name} (${ev.year})`, `${ev.desc} ${effectsLine(ev.effects, ev.duration)}`);
@@ -240,7 +252,7 @@ export class App {
         break;
       case "quest":
         sfx("quest");
-        toast("📋 임무 완료!", `${questText(n.quest, fmt)} → 💵 +${fmt(n.credits)} · 🧠 +${fmt(n.rp)}`, "ach");
+        toast(L("📋 임무 완료!", "📋 Quest complete!"), `${questText(n.quest, fmt)} → 💵 +${fmt(n.credits)} · 🧠 +${fmt(n.rp)}`, "ach");
         break;
       case "choice": {
         const ev = n.event;
@@ -258,13 +270,13 @@ export class App {
       case "bossWin": {
         const boss = ERAS[n.era].boss;
         sfx("win");
-        showModal({ icon: boss.emoji, title: `${boss.name} 클리어!`, sub: boss.year, body: [boss.winText], buttons: [{ label: "다음으로" }] });
+        showModal({ icon: boss.emoji, title: L(`${boss.name} 클리어!`, `${boss.name} cleared!`), sub: boss.year, body: [boss.winText], buttons: [{ label: L("다음으로", "Next") }] });
         break;
       }
       case "bossLose": {
         const boss = ERAS[n.era].boss;
         sfx("lose");
-        toast(`${boss.emoji} ${boss.name} 실패`, "처리량을 늘리고 다시 도전하세요. 도전 중에 장면을 탭하면 점수가 올라요.");
+        toast(L(`${boss.emoji} ${boss.name} 실패`, `${boss.emoji} ${boss.name} failed`), L("처리량을 늘리고 다시 도전하세요. 도전 중에 장면을 탭하면 점수가 올라요.", "Add throughput and try again. Tapping the scene during a challenge adds score."));
         break;
       }
       case "era": {
@@ -272,8 +284,8 @@ export class App {
         setTimeout(() => sfx("era"), 600);
         const era = ERAS[n.era];
         showModal({
-          icon: era.avatar, title: era.name, sub: era.years, body: [era.intro, "🔓 새 유닛·연구·질문이 열렸어요!"],
-          buttons: [{ label: "시작하기", onClick: () => { this.panels.update(); } }],
+          icon: era.avatar, title: era.name, sub: era.years, body: [era.intro, L("🔓 새 유닛·연구·질문이 열렸어요!", "🔓 New units, research and questions unlocked!")],
+          buttons: [{ label: L("시작하기", "Let's go"), onClick: () => { this.panels.update(); } }],
         });
         saveGame(g.state);
         break;
@@ -282,7 +294,7 @@ export class App {
         const a = ACHIEVEMENTS.find((x) => x.id === n.id);
         if (a) {
           sfx("quest");
-          toast(`🏅 업적: ${a.emoji} ${a.name}`, a.desc, "ach");
+          toast(`🏅 ${L("업적", "Achievement")}: ${a.emoji} ${a.name}`, a.desc, "ach");
         }
         break;
       }
@@ -296,8 +308,8 @@ export class App {
     const g = this.game;
     showModal({
       icon: "🧠",
-      title: "AI 역사 퀴즈",
-      sub: `${ERAS[q.era].name} · 맞히면 수익 2분 + 연구 1분치`,
+      title: L("AI 역사 퀴즈", "AI History Quiz"),
+      sub: `${ERAS[q.era].name} · ${L("맞히면 수익 2분 + 연구 1분치", "Correct = 2 min of income + 1 min of research")}`,
       body: [q.q],
       buttons: q.options.map((opt, i) => ({
         label: `${"ABCD"[i]}. ${opt}`,
@@ -309,10 +321,10 @@ export class App {
           sfx(r.correct ? "correct" : "wrong");
           showModal({
             icon: r.correct ? "⭕" : "❌",
-            title: r.correct ? "정답!" : `아쉬워요! 정답은 ${"ABCD"[q.answer]}`,
-            sub: r.correct ? `💵 +${fmt(r.credits)} · 🧠 +${fmt(r.rp)}` : "틀린 문제는 나중에 다시 나와요",
+            title: r.correct ? L("정답!", "Correct!") : L(`아쉬워요! 정답은 ${"ABCD"[q.answer]}`, `So close! The answer is ${"ABCD"[q.answer]}`),
+            sub: r.correct ? `💵 +${fmt(r.credits)} · 🧠 +${fmt(r.rp)}` : L("틀린 문제는 나중에 다시 나와요", "Missed questions come back later"),
             body: [`${q.options[q.answer]} — ${q.explain}`],
-            buttons: [{ label: "계속" }],
+            buttons: [{ label: L("계속", "Continue") }],
           });
         },
       })),
@@ -320,22 +332,22 @@ export class App {
   }
 
   private welcome(): void {
-    const input = h("input", { type: "text", maxlength: "20", value: "나의 AI", "aria-label": "AI 이름" }) as HTMLInputElement;
+    const input = h("input", { type: "text", maxlength: "20", value: L("나의 AI", "My AI"), "aria-label": L("AI 이름", "AI name") }) as HTMLInputElement;
     const era = ERAS[0];
     showModal({
       icon: "🤖",
-      title: "AI 키우기",
+      title: L("AI 키우기", "Grow Your AI"),
       sub: "Attention Is All You Idle",
       body: [
-        "사람들의 질문에 답하며 AI를 키우세요. 고대의 톱니바퀴에서 시작해 2026년 프런티어, 그리고 그 너머까지.",
-        "• 질문 말풍선을 탭하면 즉시 답변\n• 💬서비스: 유저 · 🖥️인프라: 컴퓨트와 전력 · 🧠연구: 지능과 기술\n• 🏆벤치마크를 깨면 다음 시대로!",
-        h("div", { class: "stack" }, h("div", { class: "hint" }, "AI 이름을 지어주세요"), input),
+        L("사람들의 질문에 답하며 AI를 키우세요. 고대의 톱니바퀴에서 시작해 2026년 프런티어, 그리고 그 너머까지.", "Grow an AI by answering people's questions. From ancient gears to the 2026 frontier, and beyond."),
+        L("• 질문 말풍선을 탭하면 즉시 답변\n• 💬서비스: 유저 · 🖥️인프라: 컴퓨트와 전력 · 🧠연구: 지능과 기술\n• 🏆벤치마크를 깨면 다음 시대로!", "• Tap a question bubble to answer it instantly\n• 💬Service: users · 🖥️Infra: compute & power · 🧠Research: intelligence & tech\n• 🏆Beat the benchmark to reach the next era!"),
+        h("div", { class: "stack" }, h("div", { class: "hint" }, L("AI 이름을 지어주세요", "Name your AI")), input),
       ],
       buttons: [{
-        label: "시작!",
+        label: L("시작!", "Start!"),
         onClick: () => {
-          this.game.state.aiName = input.value.trim() || "나의 AI";
-          showModal({ icon: era.avatar, title: era.name, sub: era.years, body: [era.intro], buttons: [{ label: "첫 질문 받기" }] });
+          this.game.state.aiName = input.value.trim() || L("나의 AI", "My AI");
+          showModal({ icon: era.avatar, title: era.name, sub: era.years, body: [era.intro], buttons: [{ label: L("첫 질문 받기", "Take the first question") }] });
         },
       }],
     });
@@ -347,12 +359,12 @@ export class App {
     if (secs <= 0) return;
     showModal({
       icon: "💤",
-      title: "자리를 비운 동안",
+      title: L("자리를 비운 동안", "While you were away"),
       sub: fmtDuration(secs),
-      body: [`AI가 쉬지 않고 질문에 답했어요.`, h("div", { class: "card kv" },
-        h("span", null, "번 크레딧"), h("b", null, `💵 ${fmt(credits)}`),
-        h("span", null, "연구 포인트"), h("b", null, `🧠 ${fmt(rp)}`))],
-      buttons: [{ label: "좋아!" }],
+      body: [L("AI가 쉬지 않고 질문에 답했어요.", "Your AI kept answering questions."), h("div", { class: "card kv" },
+        h("span", null, L("번 크레딧", "Credits earned")), h("b", null, `💵 ${fmt(credits)}`),
+        h("span", null, L("연구 포인트", "Research points")), h("b", null, `🧠 ${fmt(rp)}`))],
+      buttons: [{ label: L("좋아!", "Nice!") }],
     });
   }
 
@@ -360,21 +372,21 @@ export class App {
     const g = this.game;
     const end = (text: string) => () => {
       showModal({
-        icon: "✨", title: "Q.E.D.", sub: `${g.state.aiName} · 플레이 ${fmtDuration(g.state.stats.playSeconds)}`,
-        body: [text, "끝까지 함께해줘서 고마워요. 이제 무한 모드입니다. 계속 키워도 좋아요!"],
-        buttons: [{ label: "📤 기록 자랑하기", kind: "ghost", onClick: () => { shareSummary(g); return false; } }, { label: "계속 플레이" }],
+        icon: "✨", title: "Q.E.D.", sub: `${g.state.aiName} · ${L("플레이", "played")} ${fmtDuration(g.state.stats.playSeconds)}`,
+        body: [text, L("끝까지 함께해줘서 고마워요. 이제 무한 모드입니다. 계속 키워도 좋아요!", "Thanks for playing to the end. Endless mode is on now, so feel free to keep growing!")],
+        buttons: [{ label: L("📤 기록 자랑하기", "📤 Share my run"), kind: "ghost", onClick: () => { shareSummary(g); return false; } }, { label: L("계속 플레이", "Keep playing") }],
       });
     };
     showModal({
       icon: "♾️",
-      title: "마지막 질문",
+      title: L("마지막 질문", "The Last Question"),
       body: [
-        "밀레니엄 난제가 풀렸다. 전 세계 화면에 같은 질문이 떠오른다.",
-        `"${g.state.aiName}, 이제 우리는 무엇을 해야 하지?"`,
+        L("밀레니엄 난제가 풀렸다. 전 세계 화면에 같은 질문이 떠오른다.", "The Millennium Problems are solved. The same question appears on every screen in the world."),
+        L(`"${g.state.aiName}, 이제 우리는 무엇을 해야 하지?"`, `"${g.state.aiName}, what should we do now?"`),
       ],
       buttons: [
-        { label: "🚀 \"함께 더 멀리 가요.\"", onClick: end("AI와 인류는 별을 향해 나아갔다. 다이슨 스웜이 태양을 감싸고, 질문은 은하 저편에서도 날아온다. 가장 좋은 질문은 언제나 다음 질문이다.") },
-        { label: "🌱 \"천천히, 같이 이해해요.\"", kind: "ghost", onClick: end("AI는 답을 서두르지 않았다. 증명 하나하나를 사람들과 함께 읽고 이해했다. 수학자들은 다시 칠판 앞에 섰고, 이번엔 혼자가 아니었다.") },
+        { label: L("🚀 \"함께 더 멀리 가요.\"", "🚀 \"Let's go further, together.\""), onClick: end(L("AI와 인류는 별을 향해 나아갔다. 다이슨 스웜이 태양을 감싸고, 질문은 은하 저편에서도 날아온다. 가장 좋은 질문은 언제나 다음 질문이다.", "AI and humanity set out for the stars. A Dyson swarm wraps the Sun, and questions arrive from across the galaxy. The best question is always the next one.")) },
+        { label: L("🌱 \"천천히, 같이 이해해요.\"", "🌱 \"Slowly. Let's understand it together.\""), kind: "ghost", onClick: end(L("AI는 답을 서두르지 않았다. 증명 하나하나를 사람들과 함께 읽고 이해했다. 수학자들은 다시 칠판 앞에 섰고, 이번엔 혼자가 아니었다.", "The AI didn't rush its answers. It read through every proof together with people until they understood. Mathematicians went back to their chalkboards, and this time they weren't alone.")) },
       ],
     });
   }
@@ -382,12 +394,8 @@ export class App {
 
 function effectsLine(effects: Effect[], duration: number): string {
   if (!effects.length) return "";
-  return `[${effects.map((e) => `${STAT_SHORT[e.stat] ?? e.stat} ${fmtMult(e.mul)}`).join(", ")}${duration ? ` · ${duration}초` : ""}]`;
+  return `[${effects.map((e) => `${statLabel(e.stat)} ${fmtMult(e.mul)}`).join(", ")}${duration ? ` · ${duration}${L("초", "s")}` : ""}]`;
 }
 
-const STAT_SHORT: Record<string, string> = {
-  tps: "처리량", intel: "지능", hall: "할루시네이션", price: "토큰 단가", reward: "보상", demand: "유입",
-  rp: "연구", power: "전력", powerUse: "전력 사용", cost: "구매 비용", tap: "탭", offline: "오프라인", think: "생각 토큰",
-};
 
 const RESEARCH_IDS = UPGRADES.filter((u) => u.currency === "rp").map((u) => u.id);

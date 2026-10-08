@@ -1,10 +1,12 @@
 // 메인 장면: 질문 말풍선이 AI에게 날아가고, 탭하면 즉시 답변한다.
-import { ERAS, GOLDENS, TIERS } from "../data";
+import { ERAS, EVENTS, GOLDENS, TIERS } from "../data";
 import { fmt, fmtPct, fmtTokens } from "../core/format";
 import { COMBO_WINDOW, bossDps, comboMult } from "../core/formulas";
 import type { Game } from "../core/game";
+import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
 import { $, clear, h, setText } from "./dom";
+import { L } from "../i18n/lang";
 
 export class Scene {
   private root = $("#scene");
@@ -91,7 +93,7 @@ export class Scene {
       this.chomp();
       const wrong = Math.random() < st.hall;
       const perBubble = st.net / Math.max(0.4, Math.min(1.2, st.answered));
-      this.pop(to * 0.8, y, wrong ? "❌ 할루시네이션" : `+${fmt(Math.max(0, perBubble))}`, wrong ? "bad" : "");
+      this.pop(to * 0.8, y, wrong ? L("❌ 할루시네이션", "❌ Hallucination") : `+${fmt(Math.max(0, perBubble))}`, wrong ? "bad" : "");
     });
     this.root.append(b);
   }
@@ -126,7 +128,7 @@ export class Scene {
       if (gold) {
         const def = GOLDENS.find((d) => d.kind === gold.kind)!;
         const ask = def.asks[Math.floor(Math.random() * def.asks.length)];
-        const el = h("button", { class: "golden", style: { top: `${gold.y * 100}%` }, "aria-label": `VIP 질문: ${def.name}` },
+        const el = h("button", { class: "golden", style: { top: `${gold.y * 100}%` }, "aria-label": `${L("VIP 질문", "VIP question")}: ${def.name}` },
           h("span", { class: "g-ico" }, def.emoji), h("span", null, h("b", null, `⭐ ${def.name}`), h("small", null, ask)));
         el.addEventListener("pointerdown", (e) => {
           e.stopPropagation();
@@ -150,8 +152,8 @@ export class Scene {
     const st = g.stats;
     const era = ERAS[g.state.era];
     setText(this.avatar, era.avatar);
-    setText(this.tierChip, `${st.tier.emoji} ${st.tier.name} · ${fmtTokens(st.tokensPerQ)}토큰`);
-    setText(this.hallChip, `🌀 할루시네이션 ${fmtPct(st.hall)}`);
+    setText(this.tierChip, `${st.tier.emoji} ${st.tier.name} · ${fmtTokens(st.tokensPerQ)}${L("토큰", " tokens")}`);
+    setText(this.hallChip, `🌀 ${L("할루시네이션", "Hallucination")} ${fmtPct(st.hall)}`);
     this.hallChip.className = `chip ${st.hall > 0.3 ? "bad" : st.hall < 0.08 ? "good" : ""}`;
 
     // 가이드가 켜져 있으면 '다음 할 일'을, 아니면 병목을 보여준다 (탭하면 해당 화면으로)
@@ -161,20 +163,20 @@ export class Scene {
       this.bottleneck.className = "chip hint";
       this.hintTab = hint.tab;
     } else if (st.bottleneck === "power") {
-      setText(this.bottleneck, `⚡ 전력 부족 ${fmtPct(st.powerEff)}`);
+      setText(this.bottleneck, `⚡ ${L("전력 부족", "Low power")} ${fmtPct(st.powerEff)}`);
       this.bottleneck.className = "chip bad";
       this.hintTab = "infra";
     } else if (st.bottleneck === "demand") {
-      setText(this.bottleneck, "📉 질문 부족 → 💬서비스");
+      setText(this.bottleneck, L("📉 질문 부족 → 💬서비스", "📉 Need questions → 💬Service"));
       this.bottleneck.className = "chip warn";
       this.hintTab = "service";
     } else {
-      setText(this.bottleneck, "🖥️ 처리량 부족 → 인프라");
+      setText(this.bottleneck, L("🖥️ 처리량 부족 → 인프라", "🖥️ Need throughput → Infra"));
       this.bottleneck.className = "chip warn";
       this.hintTab = "infra";
     }
     if (st.net < 0) {
-      setText(this.bottleneck, "💸 적자! 토큰 단가를 낮추세요");
+      setText(this.bottleneck, L("💸 적자! 토큰 단가를 낮추세요", "💸 Losing money! Lower your token price"));
       this.bottleneck.className = "chip bad";
       this.hintTab = "research";
     }
@@ -186,18 +188,18 @@ export class Scene {
     }
 
     this.autoChip.style.display = st.autoTap > 0 ? "" : "none";
-    setText(this.autoChip, `🤖 자동 ${fmt(st.autoTap)}/초`);
+    setText(this.autoChip, `🤖 ${L("자동", "Auto")} ${fmt(st.autoTap)}/${L("초", "s")}`);
 
     // 콤보
     const s = g.state;
     const live = s.combo >= 3 && s.stats.playSeconds - s.lastTapAt <= COMBO_WINDOW;
     this.comboEl.classList.toggle("show", live);
-    if (live) setText(this.comboEl, `🔥 ${s.combo} 콤보 · 탭 ×${comboMult(s.combo).toFixed(2)}`);
+    if (live) setText(this.comboEl, L(`🔥 ${s.combo} 콤보 · 탭 ×${comboMult(s.combo).toFixed(2)}`, `🔥 ${s.combo} combo · tap ×${comboMult(s.combo).toFixed(2)}`));
 
     this.updateGolden();
 
     this.thinkBtn.style.display = g.hasThinking() ? "" : "none";
-    setText(this.thinkBtn, g.state.thinking ? "🤔 생각 모드 ON" : "🤔 생각 모드 OFF");
+    setText(this.thinkBtn, `🤔 ${L("생각 모드", "Thinking")} ${g.state.thinking ? "ON" : "OFF"}`);
     this.thinkBtn.classList.toggle("on", g.state.thinking);
 
     // 진행 중 이벤트 / 보스
@@ -208,9 +210,9 @@ export class Scene {
       const pct = Math.min(1, fight.dealt / boss.hp);
       clear(this.bossBar);
       this.bossBar.append(
-        h("div", null, `${boss.emoji} ${boss.name} — ${fmtPct(pct)} · 남은 시간 ${Math.ceil(fight.remaining)}초 · 탭하면 추가 점수!`),
+        h("div", null, `${boss.emoji} ${boss.name} — ${fmtPct(pct)} · ${L(`남은 시간 ${Math.ceil(fight.remaining)}초 · 탭하면 추가 점수!`, `${Math.ceil(fight.remaining)}s left · tap for bonus score!`)}`),
         h("div", { class: "bar red" }, h("i", { style: { width: `${pct * 100}%` } })),
-        h("div", { class: "hint" }, `초당 ${fmt(bossDps(st))} 정답 토큰 / 목표 ${fmt(boss.hp)}`),
+        h("div", { class: "hint" }, L(`초당 ${fmt(bossDps(st))} 정답 토큰 / 목표 ${fmt(boss.hp)}`, `${fmt(bossDps(st))} correct tokens/s / goal ${fmt(boss.hp)}`)),
       );
       if (!this.bossBar.isConnected) this.root.append(this.bossBar);
     } else {
@@ -220,11 +222,22 @@ export class Scene {
         this.top.dataset.key = key;
         clear(this.top);
         for (const a of g.state.active) {
-          this.top.append(h("span", { class: "chip event" }, `${a.emoji} ${a.name.split(":")[0]} ${Math.ceil(a.remaining)}s`));
+          this.top.append(h("span", { class: "chip event" }, `${a.emoji} ${activeName(a)} ${Math.ceil(a.remaining)}s`));
         }
       }
     }
   }
+}
+
+/**
+ * 진행 중 효과의 표시 이름. 세이브에는 만들 당시 언어로 이름이 저장되므로,
+ * 원본 이벤트·VIP 질문을 id로 찾아 현재 언어 이름을 쓴다.
+ */
+function activeName(a: ActiveEffect): string {
+  const ev = EVENTS.find((e) => e.id === a.id);
+  if (ev) return ev.name;
+  const gold = GOLDENS.find((g) => `golden_${g.kind}` === a.id);
+  return gold?.name ?? a.name.split(":")[0];
 }
 
 /** 시대별 배경 소품 */

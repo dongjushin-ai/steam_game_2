@@ -7,6 +7,7 @@ import {
 } from "./formulas";
 import { QUEST_SLOTS, makeQuest, questProgress } from "./quests";
 import type { EventChoice, GameEvent, GameState, Quest, QuizQuestion } from "./types";
+import { L } from "../i18n/lang";
 
 export const SAVE_VERSION = 2;
 const START_KIT: Record<string, number> = { c_diff: 1, p_dorm: 1, d_neighbors: 1 };
@@ -63,7 +64,7 @@ export function newState(aiName = "나의 AI"): GameState {
       quizAsked: 0, questsDone: 0, maxCombo: 0, bought: 0, researched: 0, thinkSeconds: 0,
     },
     ended: false,
-    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true },
+    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko" },
     lastSaved: Date.now(),
   };
 }
@@ -244,7 +245,8 @@ export class Game {
     const total = GOLDENS.reduce((t, g) => t + g.weight, 0);
     let r = this.rng() * total;
     const def = GOLDENS.find((g) => (r -= g.weight) < 0) ?? GOLDENS[0];
-    s.golden = { kind: def.kind, remaining: GOLDEN_LIFETIME, y: 0.15 + this.rng() * 0.5 };
+    // 하단 상태 칩을 가리지 않도록 장면 위쪽 절반 안에서만
+    s.golden = { kind: def.kind, remaining: GOLDEN_LIFETIME, y: 0.12 + this.rng() * 0.33 };
     this.emit({ kind: "golden" });
   }
 
@@ -315,11 +317,11 @@ export class Game {
 
   bossReady(): { ok: boolean; reason?: string } {
     const s = this.state;
-    if (s.ended && s.era >= ERAS.length - 1 && s.bossesBeaten.includes(s.era)) return { ok: false, reason: "이미 모든 벤치마크를 정복했습니다" };
+    if (s.ended && s.era >= ERAS.length - 1 && s.bossesBeaten.includes(s.era)) return { ok: false, reason: L("이미 모든 벤치마크를 정복했습니다", "Every benchmark conquered") };
     const boss = ERAS[s.era].boss;
-    if (s.boss) return { ok: false, reason: "도전 중" };
-    if (this.stats.intel < boss.intelReq) return { ok: false, reason: `지능 ${boss.intelReq} 필요` };
-    if (this.stats.ctx < boss.ctxReq) return { ok: false, reason: `컨텍스트 ${boss.ctxReq} 필요` };
+    if (s.boss) return { ok: false, reason: L("도전 중", "In progress") };
+    if (this.stats.intel < boss.intelReq) return { ok: false, reason: L(`지능 ${boss.intelReq} 필요`, `Needs intelligence ${boss.intelReq}`) };
+    if (this.stats.ctx < boss.ctxReq) return { ok: false, reason: L(`컨텍스트 ${boss.ctxReq} 필요`, `Needs context ${boss.ctxReq}`) };
     return { ok: true };
   }
 

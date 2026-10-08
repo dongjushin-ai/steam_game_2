@@ -10,19 +10,9 @@ import { ACHIEVEMENTS_EN, GOLDENS_EN, RIVALS_EN } from "./en/misc";
 import { NEWS_EN } from "./en/news";
 import { QUIZ_EN } from "./en/quiz";
 import { UPGRADES_EN, YEARS_EN } from "./en/upgrades";
+import { setLangValue, type Lang } from "./lang";
 
-export type Lang = "ko" | "en";
-
-let lang: Lang = "ko";
-
-export function getLang(): Lang {
-  return lang;
-}
-
-/** UI 문구: 현재 언어에 맞는 쪽을 고른다 */
-export function L(ko: string, en: string): string {
-  return lang === "en" ? en : ko;
-}
+export { L, getLang, type Lang } from "./lang";
 
 /** 브라우저 언어로 기본값 추측 */
 export function detectLang(): Lang {
@@ -61,7 +51,7 @@ function pick<T>(table: Record<string | number, T>, id: string | number, where: 
 }
 
 export function applyLanguage(next: Lang): void {
-  lang = next;
+  setLangValue(next);
   missing.length = 0;
   const en = next === "en";
 

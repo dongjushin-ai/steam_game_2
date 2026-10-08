@@ -2,6 +2,7 @@
 import { ERAS, RIVALS } from "../data";
 import { arenaElo, type Stats } from "./formulas";
 import type { GameState } from "./types";
+import { L } from "../i18n/lang";
 
 export interface ArenaRow {
   id: string;
@@ -20,7 +21,7 @@ export function arenaTable(s: GameState, st: Stats): ArenaRow[] {
     id: r.id, emoji: r.emoji, name: r.name, lab: r.lab, me: false,
     elo: Math.round(r.base + r.perEra * (s.era + 0.25 + inEra * 0.5)),
   }));
-  rows.push({ id: "me", emoji: ERAS[s.era].avatar, name: `${s.aiName} v${s.releases + 1}`, lab: "우리 연구소", me: true, elo: arenaElo(s.era, st, boss.hp, boss.time) });
+  rows.push({ id: "me", emoji: ERAS[s.era].avatar, name: `${s.aiName} v${s.releases + 1}`, lab: L("우리 연구소", "Our lab"), me: true, elo: arenaElo(s.era, st, boss.hp, boss.time) });
   return rows.sort((a, b) => b.elo - a.elo);
 }
 
