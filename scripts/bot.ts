@@ -14,6 +14,7 @@ export interface SimResult {
   /** 매 초 보스 DPS (현재 시대 기준) */
   dps: number[];
   net: number[];
+  rpRate: number[];
   dpsEra: number[];
   log: string[];
 }
@@ -40,8 +41,10 @@ export function runSim(opts: SimOptions = {}): SimResult {
   const game = new Game(newState("sim"), rng);
   game.onNotice((n) => {
     if (n.kind === "choice") game.choose(0);
+    // 퀴즈는 절반 정도 맞힌다고 가정
+    if (n.kind === "quiz") game.answerQuiz(rng() < 0.5 ? n.quiz.answer : (n.quiz.answer + 1) % n.quiz.options.length);
   });
-  const res: SimResult = { game, eraReached: [0], entryNet: [0], entryRp: [0], dps: [], net: [], dpsEra: [], log: [] };
+  const res: SimResult = { game, eraReached: [0], entryNet: [0], entryRp: [0], dps: [], net: [], rpRate: [], dpsEra: [], log: [] };
   const param = BUILDINGS.find((b) => b.kind === "param")!;
 
   const clone = (s: GameState): GameState => ({ ...s, buildings: { ...s.buildings }, upgrades: [...s.upgrades] });
@@ -113,6 +116,7 @@ export function runSim(opts: SimOptions = {}): SimResult {
     }
     res.dps.push(bossDps(game.stats));
     res.net.push(game.stats.net);
+    res.rpRate.push(game.stats.rpRate);
     res.dpsEra.push(s.era);
     if (logEvery && t % logEvery === 0) {
       const st = game.stats;

@@ -16,6 +16,15 @@ export const THINK_HALL = 0.35;
 export const CP_BONUS = 0.01;
 export const OFFLINE_BASE = 0.5;
 export const OFFLINE_CAP_SEC = 8 * 3600;
+/** 같은 건물을 이만큼 모으면 그 건물 생산량 ×2 */
+export const MILESTONES = [25, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000];
+/** 자동 답변 1회 = 순이익 N초분 */
+export const AUTO_TAP_SECONDS = 0.05;
+/** 콤보 1당 탭 보상 +2%, 최대 50콤보(×2) */
+export const COMBO_STEP = 0.02;
+export const COMBO_MAX = 50;
+/** 이 시간(초) 안에 다시 탭하면 콤보 유지 */
+export const COMBO_WINDOW = 1.2;
 
 export const BUILDING_MAP: Record<string, Building> = Object.fromEntries(BUILDINGS.map((b) => [b.id, b]));
 export const UPGRADE_MAP: Record<string, Upgrade> = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));
@@ -44,6 +53,8 @@ export interface Stats {
   cost: number;
   net: number;
   rpRate: number;
+  /** 초당 자동 답변 */
+  autoTap: number;
   bottleneck: Bottleneck;
 }
 
@@ -67,6 +78,17 @@ export function checkpointsFor(totalEarned: number): number {
   return mag > 0 ? Math.floor(10 * Math.pow(mag, 1.5)) : 0;
 }
 
+/** 보유 수에 따른 마일스톤 배수 */
+export function milestoneMult(owned: number): number {
+  let m = 1;
+  for (const t of MILESTONES) if (owned >= t) m *= 2;
+  return m;
+}
+
+export function nextMilestone(owned: number): number | null {
+  return MILESTONES.find((t) => t > owned) ?? null;
+}
+
 export function contextWindow(state: GameState): number {
   let ctx = 0;
   for (const id of state.upgrades) ctx = Math.max(ctx, UPGRADE_MAP[id]?.ctx ?? 0);
@@ -81,11 +103,12 @@ export function computeStats(state: GameState): Stats {
   for (const [id, n] of Object.entries(state.buildings)) {
     const b = BUILDING_MAP[id];
     if (!b || n <= 0) continue;
-    tpsRaw += (b.tps ?? 0) * n;
+    const ms = milestoneMult(n);
+    tpsRaw += (b.tps ?? 0) * n * ms;
     powerUseRaw += (b.powerUse ?? 0) * n;
-    powerRaw += (b.power ?? 0) * n;
-    demandRaw += (b.demand ?? 0) * n;
-    rpRaw += (b.rp ?? 0) * n;
+    powerRaw += (b.power ?? 0) * n * ms;
+    demandRaw += (b.demand ?? 0) * n * ms;
+    rpRaw += (b.rp ?? 0) * n * ms;
     if (b.intelPerLevel) intel *= Math.pow(b.intelPerLevel, n);
   }
   intel *= mult.intel;
@@ -121,7 +144,7 @@ export function computeStats(state: GameState): Stats {
   return {
     mult, cpMult, intel, ctx, tier, nextTier, powerCap, powerUse, powerEff, tps, demand, tokensPerQ,
     capacityQ, answered, hall, price, rewardPerQ, gross, cost, net,
-    rpRate: rpRaw * mult.rp * cpMult, bottleneck,
+    rpRate: rpRaw * mult.rp * cpMult, autoTap: autoTapRate(state), bottleneck,
   };
 }
 
@@ -138,6 +161,30 @@ export function maxAffordable(state: GameState, b: Building, costMult = multipli
   const first = b.baseCost * Math.pow(b.growth, owned) * costMult;
   if (state.credits < first) return 0;
   return Math.floor(Math.log((state.credits * (b.growth - 1)) / first + 1) / Math.log(b.growth));
+}
+
+export function autoTapRate(state: GameState): number {
+  let n = 0;
+  for (const id of state.upgrades) n += UPGRADE_MAP[id]?.autoTap ?? 0;
+  return n;
+}
+
+/** 자동 답변 1회 보상 */
+export function autoTapValue(stats: Stats): number {
+  return Math.max(stats.rewardPerQ * 0.5, stats.net * AUTO_TAP_SECONDS);
+}
+
+export function comboMult(combo: number): number {
+  return 1 + COMBO_STEP * Math.min(combo, COMBO_MAX);
+}
+
+/**
+ * 아레나 Elo. 시대가 오를수록, 현재 보스를 이길 준비가 될수록, 정답률이 높을수록 오른다.
+ * 라이벌은 rivals.ts의 base + perEra × (시대 + 0.5).
+ */
+export function arenaElo(era: number, stats: Stats, bossHp: number, bossTime: number): number {
+  const ready = Math.min(1.25, (bossDps(stats) * bossTime) / bossHp);
+  return Math.round(1000 + 118 * era + 140 * ready + 60 * (1 - stats.hall) - 30);
 }
 
 export function bossDps(stats: Stats): number {

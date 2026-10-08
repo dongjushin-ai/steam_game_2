@@ -78,6 +78,8 @@ export interface Upgrade {
   ctx?: number;
   /** 생각 모드 해금 */
   unlockThinking?: boolean;
+  /** 초당 자동 답변(자동 탭) 횟수 */
+  autoTap?: number;
   requires?: string[];
   desc: string;
 }
@@ -174,6 +176,44 @@ export interface BossFight {
 
 export type NumberFormat = "short" | "korean" | "sci";
 
+export type GoldenKind = "investor" | "viral" | "reviewer" | "hackathon" | "eureka" | "jackpot";
+
+/** 화면에 잠깐 나타나는 ⭐VIP 질문 */
+export interface Golden {
+  kind: GoldenKind;
+  remaining: number;
+  /** 화면상 세로 위치 (0~1) */
+  y: number;
+}
+
+export type QuestKind = "answer" | "earn" | "buy" | "research" | "taps" | "think" | "golden" | "combo";
+
+export interface Quest {
+  id: number;
+  kind: QuestKind;
+  /** 시작 시점 카운터 값 */
+  base: number;
+  target: number;
+  /** 보상: 수익 N초분 */
+  incomeSeconds: number;
+  /** 보상: RP N초분 */
+  rpSeconds: number;
+}
+
+export interface QuizQuestion {
+  id: string;
+  era: number;
+  q: string;
+  options: string[];
+  answer: number;
+  explain: string;
+}
+
+export interface NewsItem {
+  era: number;
+  text: string;
+}
+
 export interface GameState {
   version: number;
   aiName: string;
@@ -192,6 +232,21 @@ export interface GameState {
   active: ActiveEffect[];
   nextEventIn: number;
   pendingChoice: string | null;
+  /** 진행 중인 퀴즈 id */
+  pendingQuiz: string | null;
+  golden: Golden | null;
+  nextGoldenIn: number;
+  quests: Quest[];
+  questSeq: number;
+  /** 연속 탭 콤보 */
+  combo: number;
+  lastTapAt: number;
+  /** 맞힌 퀴즈 id */
+  quizSolved: string[];
+  /** 현재 시대에 들어온 시각(플레이 초) */
+  eraStartedAt: number;
+  /** 각 시대에 처음 들어온 시각(플레이 초) */
+  eraTimes: number[];
   boss: BossFight | null;
   bossesBeaten: number[];
   achievements: string[];
@@ -201,8 +256,16 @@ export interface GameState {
     taps: number;
     playSeconds: number;
     eventsSeen: number;
+    goldens: number;
+    quizCorrect: number;
+    quizAsked: number;
+    questsDone: number;
+    maxCombo: number;
+    bought: number;
+    researched: number;
+    thinkSeconds: number;
   };
   ended: boolean;
-  settings: { format: NumberFormat };
+  settings: { format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean };
   lastSaved: number;
 }

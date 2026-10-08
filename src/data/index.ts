@@ -19,3 +19,7 @@ export function applyBalance(b: Balance): void {
 }
 
 applyBalance(BALANCE);
+export { GOLDENS } from "./golden";
+export { QUIZ } from "./quiz";
+export { NEWS } from "./news";
+export { RIVALS } from "./rivals";

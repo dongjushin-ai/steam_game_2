@@ -186,4 +186,115 @@ export const EVENTS: GameEvent[] = [
     desc: "필즈상 수상자들이 '미해결 문제를 벤치마크처럼 다루지 말라'고 호소했다. 이해를 함께 나누는 답변을 하자.",
     effects: fx({ hall: 0.7, reward: 1.2 }), duration: 120,
   },
+  {
+    id: "babbage_funding", name: "의회 예산 삭감", emoji: "🏛️", minEra: 0, maxEra: 1, weight: 2, year: "1842",
+    desc: "영국 정부가 차분기관 예산을 끊었다. \"그 돈이면 다른 걸 하겠다.\" 그래도 연구는 계속된다.",
+    effects: fx({ rp: 0.6 }), duration: 40,
+  },
+  {
+    id: "punchcard_drop", name: "펀치카드 대참사", emoji: "🗂️", minEra: 1, maxEra: 2, weight: 2, year: "1950s",
+    desc: "대학원생이 펀치카드 2,000장을 계단에 쏟았다. 다시 정렬할 때까지 처리량이 떨어진다.",
+    effects: fx({ tps: 0.6 }), duration: 30,
+  },
+  {
+    id: "eliza_secretary", name: "비서는 나가주세요", emoji: "🛋️", minEra: 2, maxEra: 3, weight: 2, year: "1966",
+    desc: "ELIZA와 대화하던 비서가 개발자에게 자리를 비켜달라고 했다. 사람들이 기계에 마음을 열기 시작한다!",
+    effects: fx({ demand: 1.8 }), duration: 60,
+  },
+  {
+    id: "darpa_money", name: "DARPA의 백지수표", emoji: "💸", minEra: 2, maxEra: 2, weight: 2, year: "1960s",
+    desc: "\"사람에게 투자하지, 프로젝트에 투자하지 않는다.\" 연구비가 넉넉하게 들어온다.",
+    effects: [], duration: 0, rpSeconds: 90, incomeSeconds: 30,
+  },
+  {
+    id: "rule_explosion", name: "규칙 폭발", emoji: "📚", minEra: 3, maxEra: 3, weight: 2, year: "1985",
+    desc: "규칙이 1만 개를 넘자 서로 충돌하기 시작했다. 유지보수 비용이 치솟는다. 어떻게 할까?",
+    effects: [], duration: 0,
+    choices: [
+      { label: "규칙을 정리한다", desc: "수익 30초분 지불, 90초간 할루시네이션 ×0.7", effects: fx({ hall: 0.7 }), duration: 90, incomeSeconds: -30 },
+      { label: "그냥 덮어둔다", desc: "60초간 할루시네이션 ×1.4", effects: fx({ hall: 1.4 }), duration: 60 },
+    ],
+  },
+  {
+    id: "dotcom", name: "닷컴 버블", emoji: "🫧", minEra: 4, maxEra: 4, weight: 2, year: "2000",
+    desc: "이름에 '.com'만 붙이면 투자가 들어온다! …그리고 거품이 꺼졌다. 덕분에 서버는 헐값이다.",
+    effects: fx({ cost: 0.7 }), duration: 60,
+  },
+  {
+    id: "kaggle", name: "캐글 대회 우승", emoji: "🥇", minEra: 5, maxEra: 6, weight: 2, year: "2010s",
+    desc: "데이터 과학 대회에서 그래디언트 부스팅으로 1등! 상금과 명성을 얻었다.",
+    effects: [], duration: 0, incomeSeconds: 60, rpSeconds: 30,
+  },
+  {
+    id: "cat_paper", name: "고양이 논문", emoji: "🐱", minEra: 5, maxEra: 6, weight: 2, year: "2012",
+    desc: "\"유튜브 1,000만 프레임을 보여줬더니 고양이를 알아봤다.\" 언론이 열광한다.",
+    effects: fx({ demand: 1.6 }), duration: 60,
+  },
+  {
+    id: "reviewer2", name: "리뷰어 2", emoji: "😤", minEra: 4, weight: 2, year: "언제나",
+    desc: "\"이 논문은 참신성이 부족합니다. 베이스라인을 20개 더 추가하세요.\" 반박문을 쓸까?",
+    effects: [], duration: 0,
+    choices: [
+      { label: "밤새 반박문을 쓴다", desc: "연구 포인트 60초분, 30초간 처리량 ×0.8", effects: fx({ tps: 0.8 }), duration: 30, rpSeconds: 60 },
+      { label: "다른 학회에 낸다", desc: "60초간 연구 ×1.3", effects: fx({ rp: 1.3 }), duration: 60 },
+    ],
+  },
+  {
+    id: "neurips_lottery", name: "학회 등록 추첨", emoji: "🎟️", minEra: 6, weight: 2, year: "2018",
+    desc: "AI 학회 등록이 몇 분 만에 마감됐다. 추첨에 당첨됐다! 인맥을 넓힌다.",
+    effects: fx({ rp: 1.5, demand: 1.2 }), duration: 60,
+  },
+  {
+    id: "avocado_chair", name: "아보카도 의자", emoji: "🥑", minEra: 6, maxEra: 7, weight: 2, year: "2021",
+    desc: "\"아보카도 모양 의자\"를 그려달라는 요청에 AI가 진짜 그려냈다. 이미지 생성 붐!",
+    effects: fx({ demand: 1.8, reward: 1.1 }), duration: 60,
+  },
+  {
+    id: "fake_case", name: "가짜 판례", emoji: "⚖️", minEra: 7, weight: 2, year: "2023",
+    desc: "변호사가 AI가 지어낸 판례를 법원에 냈다가 망신을 당했다. 할루시네이션 경계령!",
+    effects: [], duration: 0,
+    choices: [
+      { label: "출처 표기 기능을 넣는다", desc: "120초간 할루시네이션 ×0.7", effects: fx({ hall: 0.7 }), duration: 120 },
+      { label: "'AI는 실수할 수 있습니다' 문구만 단다", desc: "60초간 유입 ×0.8", effects: fx({ demand: 0.8 }), duration: 60 },
+    ],
+  },
+  {
+    id: "prompt_engineer", name: "프롬프트 엔지니어 열풍", emoji: "🧙", minEra: 7, maxEra: 8, weight: 2, year: "2023",
+    desc: "\"질문만 잘해도 억대 연봉\" 기사가 쏟아진다. 다들 프롬프트를 연구한다.",
+    effects: fx({ reward: 1.3, tap: 2 }), duration: 60,
+  },
+  {
+    id: "context_rot", name: "중간에서 길을 잃다", emoji: "🧭", minEra: 7, weight: 2, year: "2023",
+    desc: "긴 문서의 가운데 내용을 모델이 자꾸 놓친다는 논문이 나왔다. 'Lost in the Middle'.",
+    effects: fx({ hall: 1.2 }), duration: 45,
+  },
+  {
+    id: "open_weights_day", name: "오픈 웨이트 공개의 날", emoji: "🎁", minEra: 7, weight: 2, year: "2024",
+    desc: "거대 모델 가중치가 통째로 공개됐다. 모두가 증류하고 파인튜닝한다.",
+    effects: fx({ price: 0.75 }), duration: 90,
+  },
+  {
+    id: "mcp_explosion", name: "MCP 서버 폭증", emoji: "🔌", minEra: 8, weight: 2, year: "2025",
+    desc: "하루에 수백 개씩 새 MCP 서버가 올라온다. 이제 냉장고도 MCP를 지원한다(?).",
+    effects: fx({ demand: 1.5, reward: 1.15 }), duration: 75,
+  },
+  {
+    id: "rate_limit", name: "레이트 리밋", emoji: "🚦", minEra: 7, weight: 2, year: "2024",
+    desc: "\"429 Too Many Requests.\" 요청이 너무 몰렸다. 한도를 올릴까?",
+    effects: [], duration: 0,
+    choices: [
+      { label: "한도를 올린다", desc: "60초간 유입 ×1.5, 전력 사용 ×1.3", effects: fx({ demand: 1.5, powerUse: 1.3 }), duration: 60 },
+      { label: "대기열을 건다", desc: "60초간 유입 ×0.8, 토큰 단가 ×0.8", effects: fx({ demand: 0.8, price: 0.8 }), duration: 60 },
+    ],
+  },
+  {
+    id: "hbm_shortage", name: "HBM 품귀", emoji: "🧱", minEra: 9, weight: 2, year: "2026",
+    desc: "고대역폭 메모리가 없어서 못 판다. 새 가속기 가격이 오른다.",
+    effects: fx({ cost: 1.4 }), duration: 60,
+  },
+  {
+    id: "agent_overnight", name: "밤샘 에이전트", emoji: "🌙", minEra: 9, weight: 2, year: "2026",
+    desc: "퇴근 전에 맡긴 일을 에이전트가 밤새 끝내놨다. 아침에 PR 37개가 기다린다.",
+    effects: fx({ tps: 1.5, reward: 1.2 }), duration: 75,
+  },
 ];

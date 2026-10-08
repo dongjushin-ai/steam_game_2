@@ -18,34 +18,46 @@ const INNER = 4;
 
 const b: Balance = { cost: [...BALANCE.cost], rp: [...BALANCE.rp], bossHp: [...BALANCE.bossHp] };
 
-for (let e = 0; e < ERAS.length; e++) {
-  for (let i = 0; i < INNER; i++) {
-    const saved = b.bossHp[e];
-    b.bossHp[e] = Infinity;
-    applyBalance(b);
-    b.bossHp[e] = saved;
-    const res = runSim({ maxHours: 12, release: false, stopAfter: { era: e, seconds: TARGET_MIN[e] * 60 } });
-    const entry = res.eraReached[e];
-    if (entry === undefined) {
-      console.log(`Era ${e}: 도달 실패 (이전 시대에서 막힘)`);
-      break;
-    }
-    const at = (arr: number[], t: number) => arr[Math.min(t, arr.length) - 1];
-    const st = res.game.stats;
-    if (st.intel < ERAS[e].boss.intelReq || st.ctx < ERAS[e].boss.ctxReq) {
-      console.log(`  ⚠ Era ${e}: 목표 시간에 지능/컨텍스트 미달 (지능 ${st.intel.toExponential(2)} / 필요 ${ERAS[e].boss.intelReq})`);
-    }
-    b.bossHp[e] = at(res.dps, entry + TARGET_MIN[e] * 60) * ERAS[e].boss.time * 0.9;
+function measure(e: number) {
+  const saved = b.bossHp[e];
+  b.bossHp[e] = Infinity;
+  applyBalance(b);
+  b.bossHp[e] = saved;
+  const res = runSim({ maxHours: 12, release: false, stopAfter: { era: e, seconds: TARGET_MIN[e] * 60 } });
+  return { res, entry: res.eraReached[e] };
+}
+/** 구간 중앙값 — 일시적인 이벤트 버프에 끌려가지 않는다 */
+const median = (arr: number[], from: number, to: number) => {
+  const xs = arr.slice(Math.max(0, from), Math.max(from + 1, Math.min(to, arr.length))).sort((x, y) => x - y);
+  return xs[Math.floor(xs.length / 2)];
+};
+/** 한 번에 10배 넘게 움직이지 않게 */
+const clampRatio = (x: number) => Math.min(10, Math.max(0.1, x));
 
-    if (e > 0) {
-      const net = at(res.net, entry + 30);
-      const firstUnit = BUILDINGS.filter((x) => x.era === e && x.kind === "compute").sort((x, y) => x.baseCost - y.baseCost)[0];
-      if (net > 0) b.cost[e] *= (net * FIRST_UNIT_SECONDS) / firstUnit.baseCost;
-      const rpRate = res.game.stats.rpRate;
-      const firstResearch = UPGRADES.filter((u) => u.era === e && u.currency === "rp").sort((x, y) => x.cost - y.cost)[0];
-      if (rpRate > 0) b.rp[e] *= (rpRate * FIRST_RESEARCH_SECONDS) / firstResearch.cost;
-    }
+for (let e = 0; e < ERAS.length; e++) {
+  // 1) 비용·연구 배수를 먼저 수렴시킨다
+  for (let i = 0; e > 0 && i < INNER; i++) {
+    const { res, entry } = measure(e);
+    if (entry === undefined) break;
+    const net = median(res.net, entry + 15, entry + 90);
+    const firstUnit = BUILDINGS.filter((x) => x.era === e && x.kind === "compute").sort((x, y) => x.baseCost - y.baseCost)[0];
+    if (net > 0) b.cost[e] *= clampRatio((net * FIRST_UNIT_SECONDS) / firstUnit.baseCost);
+    const rpRate = median(res.rpRate, entry + 15, entry + 90);
+    const firstResearch = UPGRADES.filter((u) => u.era === e && u.currency === "rp").sort((x, y) => x.cost - y.cost)[0];
+    if (rpRate > 0) b.rp[e] *= clampRatio((rpRate * FIRST_RESEARCH_SECONDS) / firstResearch.cost);
   }
+  // 2) 고정된 비용으로 한 번 더 돌려서 보스 체력을 정한다
+  const { res, entry } = measure(e);
+  if (entry === undefined) {
+    console.log(`Era ${e}: 도달 실패 (이전 시대에서 막힘)`);
+    break;
+  }
+  const st = res.game.stats;
+  if (st.intel < ERAS[e].boss.intelReq || st.ctx < ERAS[e].boss.ctxReq) {
+    console.log(`  ⚠ Era ${e}: 목표 시간에 지능/컨텍스트 미달 (지능 ${st.intel.toExponential(2)}/${ERAS[e].boss.intelReq}, 컨텍스트 ${st.ctx}/${ERAS[e].boss.ctxReq})`);
+  }
+  const target = entry + TARGET_MIN[e] * 60;
+  b.bossHp[e] = median(res.dps, target - 180, target) * ERAS[e].boss.time * 0.85;
   console.log(`Era ${e} cost×${b.cost[e].toPrecision(2)} rp×${b.rp[e].toPrecision(2)} hp=${b.bossHp[e].toExponential(1)}`);
 }
 

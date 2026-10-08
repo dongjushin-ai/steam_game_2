@@ -1,3 +1,4 @@
+import { arenaRank } from "./arena";
 import type { Stats } from "./formulas";
 import type { GameState } from "./types";
 
@@ -35,5 +36,26 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "trillion", emoji: "💎", name: "시총 1조", desc: "누적 1조 크레딧", check: (s) => s.totalEarned >= 1e12 },
   { id: "events_20", emoji: "📰", name: "뉴스 중독", desc: "이벤트 20번 겪기", check: (s) => s.stats.eventsSeen >= 20 },
   { id: "frontier", emoji: "🌌", name: "현재에 도착", desc: "2026 프런티어 시대 도달", check: (s) => s.era >= 9 },
+  { id: "golden_1", emoji: "⭐", name: "VIP 손님", desc: "⭐VIP 질문 처음 잡기", check: (s) => s.stats.goldens >= 1 },
+  { id: "golden_25", emoji: "🌟", name: "VIP 라운지", desc: "⭐VIP 질문 25개 잡기", check: (s) => s.stats.goldens >= 25 },
+  { id: "quiz_1", emoji: "🤓", name: "AI 덕후", desc: "AI 역사 퀴즈 첫 정답", check: (s) => s.stats.quizCorrect >= 1 },
+  { id: "quiz_10", emoji: "🎓", name: "AI 역사학자", desc: "퀴즈 10개 정답", check: (s) => s.stats.quizCorrect >= 10 },
+  { id: "quiz_30", emoji: "📚", name: "걸어 다니는 위키", desc: "퀴즈 30개 정답", check: (s) => s.stats.quizCorrect >= 30 },
+  { id: "combo_25", emoji: "🥁", name: "연타의 신", desc: "25콤보", check: (s) => s.stats.maxCombo >= 25 },
+  { id: "combo_50", emoji: "🔥", name: "인간 오토클리커", desc: "50콤보 (최대 보너스)", check: (s) => s.stats.maxCombo >= 50 },
+  { id: "quests_5", emoji: "📋", name: "성실한 인턴", desc: "임무 5개 완료", check: (s) => s.stats.questsDone >= 5 },
+  { id: "quests_50", emoji: "🗂️", name: "에이스 직원", desc: "임무 50개 완료", check: (s) => s.stats.questsDone >= 50 },
+  { id: "milestone_100", emoji: "💯", name: "백 대 돌파", desc: "한 건물을 100개 보유", check: (s) => Object.values(s.buildings).some((n) => n >= 100) },
+  { id: "buildings_1000", emoji: "🏗️", name: "물량전", desc: "건물 합계 1,000개", check: (s) => Object.values(s.buildings).reduce((a, b) => a + b, 0) >= 1000 },
+  { id: "auto", emoji: "🤖", name: "자동화의 시작", desc: "자동 답변 상품 구매", check: (_s, st) => st.autoTap > 0 },
+  { id: "think_600", emoji: "🧘", name: "깊은 생각", desc: "생각 모드 누적 10분", check: (s) => s.stats.thinkSeconds >= 600 },
+  { id: "hall_1", emoji: "✅", name: "팩트 체커", desc: "할루시네이션 1% 이하", check: (_s, st) => st.hall <= 0.01 },
+  { id: "deficit", emoji: "📉", name: "적자 경영", desc: "순이익이 마이너스가 되어보기", check: (_s, st) => st.net < 0 },
+  { id: "tier_11", emoji: "♾️", name: "마지막 질문", desc: "밀레니엄 난제 질문 받기", check: (_s, st) => st.tier.id >= 11 },
+  { id: "ctx_10m", emoji: "🌌", name: "평생 기억", desc: "컨텍스트 10M 달성", check: (_s, st) => st.ctx >= 1e7 },
+  { id: "speedrun", emoji: "⏱️", name: "스피드런", desc: "플레이 1시간 안에 딥러닝 혁명 도달", check: (s) => s.era >= 5 && s.stats.playSeconds <= 3600 },
+  { id: "arena_1", emoji: "🏟️", name: "아레나 1위", desc: "챗봇 아레나 리더보드 1위", check: (s, st) => arenaRank(s, st) === 1 },
+  { id: "dyson", emoji: "☀️", name: "카르다쇼프 2단계", desc: "다이슨 스웜 건설", check: (s) => (s.buildings.p_dyson ?? 0) >= 1 },
+  { id: "quintillion", emoji: "🪐", name: "천문학적 숫자", desc: "누적 1e24 크레딧", check: (s) => s.totalEarned >= 1e24 },
   { id: "ending", emoji: "✨", name: "Q.E.D.", desc: "밀레니엄 난제 해결", check: (s) => s.ended },
 ];

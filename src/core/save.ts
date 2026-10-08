@@ -18,6 +18,9 @@ export function migrate(raw: unknown): GameState | null {
     active: [...(r.active ?? [])],
     bossesBeaten: [...(r.bossesBeaten ?? [])],
     achievements: [...(r.achievements ?? [])],
+    quests: [...(r.quests ?? [])],
+    quizSolved: [...(r.quizSolved ?? [])],
+    eraTimes: [...(r.eraTimes ?? [0])],
     stats: { ...base.stats, ...(r.stats ?? {}) },
     settings: { ...base.settings, ...(r.settings ?? {}) },
   };

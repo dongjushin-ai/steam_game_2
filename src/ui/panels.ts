@@ -1,13 +1,16 @@
 // 하단 탭별 화면. 목록은 탭·시대가 바뀔 때만 다시 만들고, 숫자는 update()로 갱신한다.
-import { BUILDINGS, CODEX, ERAS, TIERS, UPGRADES } from "../data";
+import { BUILDINGS, CODEX, ERAS, QUIZ, TIERS, UPGRADES } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtMult, fmtPct, fmtTokens, setNumberFormat } from "../core/format";
-import { CP_BONUS, bossDps, buildingCost, checkpointsFor, maxAffordable } from "../core/formulas";
+import { arenaTable } from "../core/arena";
+import { CP_BONUS, bossDps, buildingCost, checkpointsFor, computeStats, maxAffordable, milestoneMult, nextMilestone } from "../core/formulas";
+import { questProgress, questText } from "../core/quests";
 import type { Game } from "../core/game";
 import { clearSave, exportSave, importSave, saveGame } from "../core/save";
 import type { Building, BuildingKind, Effect, MultStat, NumberFormat, Upgrade } from "../core/types";
 import { append, clear, h, setText } from "./dom";
 import { showModal, toast } from "./modals";
+import { setSound, setVibrate, sfx } from "./sound";
 
 export type TabId = "service" | "infra" | "research" | "bench" | "codex";
 
@@ -41,7 +44,38 @@ export class Panels {
   private rows: Updatable[] = [];
   private key = "";
 
-  constructor(private root: HTMLElement, private game: Game, private onReset: (g: unknown) => void) {}
+  private recoId = "";
+  private recoKey = "";
+
+  constructor(
+    private root: HTMLElement,
+    private game: Game,
+    private onReset: (g: unknown) => void,
+    /** 최근 순이익 기록 (그래프용) */
+    private history: () => number[],
+  ) {}
+
+  /** 비용 대비 순이익 증가가 가장 큰 건물 (💡추천) */
+  private recommended(): string {
+    const g = this.game;
+    const s = g.state;
+    const key = `${JSON.stringify(s.buildings)}|${s.upgrades.length}|${s.active.length}|${s.thinking}|${s.era}`;
+    if (key === this.recoKey) return this.recoId;
+    this.recoKey = key;
+    let best = "", bestRatio = 0;
+    const base = g.stats.net;
+    for (const b of BUILDINGS) {
+      if (b.kind === "rp" || b.kind === "param" || !g.isBuildingUnlocked(b.id)) continue;
+      const next = { ...s, buildings: { ...s.buildings, [b.id]: (s.buildings[b.id] ?? 0) + 1 } };
+      const ratio = (computeStats(next).net - base) / buildingCost(s, b, 1, g.stats.mult.cost);
+      if (ratio > bestRatio) {
+        bestRatio = ratio;
+        best = b.id;
+      }
+    }
+    this.recoId = best;
+    return best;
+  }
 
   setTab(tab: TabId): void {
     this.tab = tab;
@@ -99,14 +133,32 @@ export class Panels {
     const btn = h("button", { class: "buy" });
     btn.onclick = () => {
       const n = g.buyBuilding(b.id, this.buyMode === "max" ? "max" : this.buyMode);
-      if (n > 0) this.update();
+      if (n > 0) {
+        sfx("buy");
+        const owned = g.state.buildings[b.id];
+        if (b.kind !== "param" && milestoneMult(owned) > milestoneMult(owned - n)) {
+          toast(`🎉 ${b.emoji} ${b.name} ${owned}개 달성!`, "마일스톤: 이 건물의 생산량 ×2");
+          sfx("quest");
+        }
+        this.update();
+      } else sfx("error");
     };
     const row = h("div", { class: "row" }, h("div", { class: "ico" }, b.emoji), h("div", null, name, h("div", { class: "desc" }, b.desc), fx), btn);
     this.rows.push({
       update: () => {
         const s = g.state;
         const owned = s.buildings[b.id] ?? 0;
-        setText(name, owned ? `${b.name} ×${owned}` : b.name);
+        const reco = this.recommended() === b.id;
+        row.classList.toggle("reco", reco);
+        const ms = b.kind === "param" ? null : nextMilestone(owned);
+        const nameKey = `${owned}|${reco}`;
+        if (name.dataset.k !== nameKey) {
+          name.dataset.k = nameKey;
+          clear(name);
+          name.append(owned ? `${b.name} ×${owned}` : b.name);
+          if (reco) name.append(h("span", { class: "badge reco" }, "💡추천"));
+          if (ms && owned > 0) name.append(h("span", { class: "badge ms" }, `${ms}개 ×2`));
+        }
         const n = this.buyMode === "max" ? Math.max(1, maxAffordable(s, b, g.stats.mult.cost)) : this.buyMode;
         const cost = buildingCost(s, b, n, g.stats.mult.cost);
         const can = cost <= s.credits;
@@ -135,6 +187,7 @@ export class Panels {
     const btn = h("button", { class: `buy ${isRp ? "rp" : ""}` });
     btn.onclick = () => {
       if (g.buyUpgrade(u.id)) {
+        sfx(isRp ? "research" : "buy");
         toast(`${u.emoji} ${u.name}`, u.effects.map(effectText).join(" · ") || "해금!");
         this.update();
       }
@@ -206,6 +259,7 @@ export class Panels {
         for (const [k, v] of pairs) kv.append(h("span", null, k), h("b", null, v));
       },
     });
+    this.root.append(this.questCard());
     this.root.append(
       h("div", { class: "card" }, kv, h("div", { class: "hint", style: { marginTop: "6px" } },
         "토큰 가성비 = 매출 ÷ 추론 비용. 어려운 질문일수록 토큰도 비싸요. 🧠연구의 효율 기술(양자화·캐싱·증류…)로 단가를 낮추고, 할루시네이션을 줄이면 이익이 늘어요.")),
@@ -214,6 +268,39 @@ export class Panels {
       this.title("🧩 제품 · 플러그인 · 커넥터"),
       ...this.upgradeList("credits"),
     );
+  }
+
+  private questCard(): HTMLElement {
+    const g = this.game;
+    const box = h("div");
+    let key = "";
+    this.rows.push({
+      update: () => {
+        const s = g.state;
+        const k = s.quests.map((q) => q.id).join(",");
+        if (k !== key) {
+          key = k;
+          clear(box);
+          for (const q of s.quests) {
+            const bar = h("i");
+            const reroll = h("button", { onclick: () => { g.rerollQuest(q.id); this.update(); }, "aria-label": "다른 임무로 바꾸기" }, "🔄 바꾸기");
+            const label = h("span");
+            box.append(h("div", { class: "quest" }, label, reroll, h("div", { class: "bar" }, bar)));
+          }
+        }
+        let i = 0;
+        for (const el of box.querySelectorAll<HTMLElement>(".quest")) {
+          const q = s.quests[i++];
+          if (!q) continue;
+          const p = questProgress(s, q);
+          (el.querySelector(".bar > i") as HTMLElement).style.width = `${p * 100}%`;
+          setText(el.firstChild as HTMLElement, `${questText(q, fmt)} — ${Math.floor(p * 100)}%`);
+        }
+      },
+    });
+    return h("div", { class: "card" },
+      h("div", { class: "section-title", style: { margin: "0 0 2px" } }, h("span", null, "📋 임무"), h("span", { class: "hint" }, "달성하면 자동 보상 (수익·RP)")),
+      box);
   }
 
   // ── 🖥️ 인프라 ───────────────────────────────────────
@@ -357,6 +444,23 @@ export class Panels {
         h("span", null, e.id > s.era + 1 ? "???" : `${e.name}`, h("div", { class: "hint" }, e.years)),
         h("span", null, beaten ? `✅ ${e.boss.emoji}` : e.id === s.era ? "▶" : "")));
     });
+    // 아레나
+    const arena = h("ul", { class: "timeline arena" });
+    this.rows.push({
+      update: () => {
+        const rows = arenaTable(s, g.stats);
+        const k = rows.map((r) => `${r.id}${r.elo}`).join();
+        if (arena.dataset.k === k) return;
+        arena.dataset.k = k;
+        clear(arena);
+        rows.forEach((r, i) => arena.append(h("li", { class: r.me ? "me" : "" },
+          h("span", null, i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`),
+          h("span", null, r.emoji),
+          h("span", null, r.name, h("div", { class: "hint" }, r.lab)),
+          h("b", null, String(r.elo)))));
+      },
+    });
+    this.root.append(this.title("🏟️ 챗봇 아레나 (Elo)", h("span", { class: "hint" }, "보스 준비도·정답률이 오르면 순위 상승")), h("div", { class: "card" }, arena));
     this.root.append(this.title("🗺️ AI 연표"), h("div", { class: "card" }, tl));
   }
 
@@ -374,7 +478,11 @@ export class Panels {
         {
           label: "출시!",
           onClick: () => {
-            if (g.release()) toast(`🚀 ${g.state.aiName} v${g.state.releases + 1} 출시!`, `체크포인트 +${fmt(gain)}`);
+            const card = modelCard(g);
+            if (g.release()) {
+              sfx("era");
+              showModal({ icon: "🚀", title: `${g.state.aiName} v${g.state.releases + 1} 출시!`, sub: `체크포인트 +${fmt(gain)}`, body: [h("div", { class: "modelcard" }, card)], buttons: [{ label: "다시 학습 시작" }] });
+            }
             this.update();
           },
         },
@@ -449,6 +557,12 @@ export class Panels {
     this.root.append(
       h("div", { class: "hint", style: { marginBottom: "6px" } }, `업적 ${s.achievements.length} / ${ACHIEVEMENTS.length}`),
       grid,
+      h("button", { class: "btn", style: { margin: "10px 0 2px" }, onclick: () => shareSummary(this.game) }, "📤 내 기록 자랑하기 (복사)"),
+      this.title("⏱️ 시대별 도달 시간"),
+      h("div", { class: "card kv" }, ...this.game.state.eraTimes.flatMap((t, i) => t === undefined ? [] : [
+        h("span", null, `${ERAS[i].avatar} ${ERAS[i].name}`), h("b", null, fmtClock(t))])),
+      this.title("📈 초당 순이익 (최근 10분)"),
+      h("div", { class: "card" }, sparkline(this.history())),
       this.title("📊 기록"),
       h("div", { class: "card kv" },
         h("span", null, "답변한 질문"), h("b", null, fmt(st.answered)),
@@ -457,6 +571,11 @@ export class Panels {
         h("span", null, "겪은 이벤트"), h("b", null, fmt(st.eventsSeen)),
         h("span", null, "누적 크레딧"), h("b", null, fmt(s.totalEarned)),
         h("span", null, "모델 출시"), h("b", null, `${s.releases}회`),
+        h("span", null, "⭐VIP 질문"), h("b", null, fmt(st.goldens)),
+        h("span", null, "퀴즈 정답"), h("b", null, `${s.quizSolved.length} / ${QUIZ.length}`),
+        h("span", null, "완료한 임무"), h("b", null, fmt(st.questsDone)),
+        h("span", null, "최고 콤보"), h("b", null, fmt(st.maxCombo)),
+        h("span", null, "생각 모드"), h("b", null, `${Math.floor(st.thinkSeconds / 60)}분`),
         h("span", null, "플레이 시간"), h("b", null, `${Math.floor(st.playSeconds / 3600)}시간 ${Math.floor((st.playSeconds % 3600) / 60)}분`)),
     );
   }
@@ -480,6 +599,15 @@ export class Panels {
     this.root.append(
       this.title("🤖 AI 이름"), name,
       this.title("🔢 숫자 표기"), format,
+      this.title("🎛️ 환경"),
+      h("div", { class: "card" },
+        toggle("🔊 효과음", s.settings.sound, (v) => { s.settings.sound = v; setSound(v); if (v) sfx("buy"); }),
+        toggle("📳 진동", s.settings.vibrate, (v) => { s.settings.vibrate = v; setVibrate(v); }),
+        toggle("✨ 화려한 효과 (끄면 말풍선·숫자 감소)", s.settings.effects, (v) => { s.settings.effects = v; }),
+        toggle("💡 다음 할 일 가이드", s.settings.hints, (v) => { s.settings.hints = v; })),
+      h("div", { class: "hint", style: { margin: "6px 2px" } },
+        "키보드: ", h("span", { class: "kbd" }, "Space"), " 답변 · ", h("span", { class: "kbd" }, "1~5"), " 탭 이동 · ",
+        h("span", { class: "kbd" }, "B"), " 보스 도전 · ", h("span", { class: "kbd" }, "T"), " 생각 모드 · ", h("span", { class: "kbd" }, "V"), " VIP 질문"),
       this.title("💾 세이브"),
       h("div", { class: "stack" },
         io,
@@ -503,13 +631,87 @@ export class Panels {
   }
 }
 
+function fmtClock(sec: number): string {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return h ? `${h}시간 ${m}분` : `${m}분 ${Math.floor(sec % 60)}초`;
+}
+
+/** 클립보드(또는 공유 시트)로 기록 요약을 보낸다 */
+export function shareSummary(g: Game): void {
+  const s = g.state;
+  const st = g.stats;
+  const text = [
+    `🤖 AI 키우기 — ${s.aiName} v${s.releases + 1}`,
+    `${ERAS[s.era].avatar} ${ERAS[s.era].name} (${ERAS[s.era].years}) 도달${s.ended ? " · ✨엔딩 완료" : ""}`,
+    `🏆 벤치마크 ${s.bossesBeaten.map((e) => ERAS[e].boss.emoji).join("") || "-"}`,
+    `🧠 지능 ${fmt(st.intel)} · 📜 컨텍스트 ${fmtTokens(st.ctx)} · 🌀 할루시네이션 ${fmtPct(st.hall)}`,
+    `💬 답변 ${fmt(s.stats.answered)}개 · 💵 누적 ${fmt(s.totalEarned)} · 🏅 업적 ${s.achievements.length}개`,
+    `⏱️ 플레이 ${fmtClock(s.stats.playSeconds)}`,
+    "#AI키우기 #AttentionIsAllYouIdle",
+  ].join("\n");
+  const nav = navigator as Navigator & { share?: (d: { text: string }) => Promise<void> };
+  if (nav.share) {
+    nav.share({ text }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(text).then(() => toast("📋 복사했어요", "어디든 붙여넣어 자랑하세요!"), () => toast("복사 실패", text));
+  }
+}
+
+function toggle(label: string, value: boolean, onChange: (v: boolean) => void): HTMLElement {
+  const input = h("input", { type: "checkbox", checked: value ? "checked" : undefined }) as HTMLInputElement;
+  input.onchange = () => onChange(input.checked);
+  return h("label", { class: "toggle-row" }, h("span", null, label), input);
+}
+
+/** 순이익 기록을 작은 선 그래프로 */
+function sparkline(values: number[]): Node {
+  if (values.length < 2) return h("div", { class: "hint" }, "기록이 쌓이는 중… (5초마다 한 점)");
+  const W = 300, H = 56;
+  const logs = values.map((v) => Math.log10(Math.max(1, v)));
+  const lo = Math.min(...logs), hi = Math.max(...logs, lo + 0.01);
+  const pts = logs.map((v, i) => [(i / (logs.length - 1)) * W, H - 4 - ((v - lo) / (hi - lo)) * (H - 8)]);
+  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join("");
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("class", "spark");
+  svg.setAttribute("preserveAspectRatio", "none");
+  const area = document.createElementNS(ns, "path");
+  area.setAttribute("d", `${line}L${W},${H}L0,${H}Z`);
+  area.setAttribute("class", "a");
+  const path = document.createElementNS(ns, "path");
+  path.setAttribute("d", line);
+  path.setAttribute("class", "l");
+  svg.append(area, path);
+  return h("div", null, svg, h("div", { class: "hint" }, `현재 ${fmt(values[values.length - 1])}/초 · 최고 ${fmt(Math.max(...values))}/초 (로그 스케일)`));
+}
+
+/** 출시 직전 모델의 스펙 카드 */
+function modelCard(g: Game): string {
+  const s = g.state;
+  const st = g.stats;
+  const beaten = s.bossesBeaten.map((e) => ERAS[e].boss.emoji).join(" ");
+  return [
+    `MODEL CARD — ${s.aiName} v${s.releases + 1}`,
+    `시대: ${ERAS[s.era].name} (${ERAS[s.era].years})`,
+    `지능: ${fmt(st.intel)} · 컨텍스트: ${fmtTokens(st.ctx)}`,
+    `처리량: ${fmt(st.tps)} 토큰/초`,
+    `할루시네이션: ${fmtPct(st.hall)} · 담당 질문: ${st.tier.emoji} ${st.tier.name}`,
+    `벤치마크: ${beaten || "없음"}`,
+    `보유 기술: ${s.upgrades.length}개`,
+  ].join("\n");
+}
+
 function buildingFx(b: Building, g: Game): string {
   const st = g.stats;
+  const ms = milestoneMult(g.state.buildings[b.id] ?? 0);
+  const msText = ms > 1 ? ` (마일스톤 ×${fmt(ms)})` : "";
   switch (b.kind) {
-    case "compute": return `+${fmt((b.tps ?? 0) * st.mult.tps)} 토큰/초 · ⚡${fmt((b.powerUse ?? 0) * st.mult.powerUse)}`;
-    case "power": return `+⚡${fmt((b.power ?? 0) * st.mult.power)} 전력`;
-    case "demand": return `+${fmt((b.demand ?? 0) * st.mult.demand)} 질문/초`;
-    case "rp": return `+🧠${fmt((b.rp ?? 0) * st.mult.rp * st.cpMult)} RP/초`;
+    case "compute": return `+${fmt((b.tps ?? 0) * st.mult.tps * ms)} 토큰/초 · ⚡${fmt((b.powerUse ?? 0) * st.mult.powerUse)}${msText}`;
+    case "power": return `+⚡${fmt((b.power ?? 0) * st.mult.power * ms)} 전력${msText}`;
+    case "demand": return `+${fmt((b.demand ?? 0) * st.mult.demand * ms)} 질문/초${msText}`;
+    case "rp": return `+🧠${fmt((b.rp ?? 0) * st.mult.rp * st.cpMult * ms)} RP/초${msText}`;
     case "param": {
       const next = TIERS.find((t) => t.intelReq > st.intel);
       return `지능 ${fmt(st.intel)} → ${fmt(st.intel * (b.intelPerLevel ?? 1))}${next ? ` · 다음 질문까지 ${fmt(next.intelReq)}` : ""}`;

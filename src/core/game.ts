@@ -1,17 +1,27 @@
-import { ERAS, EVENTS } from "../data";
+import { ERAS, EVENTS, GOLDENS, QUIZ, UPGRADES } from "../data";
+import type { GoldenDef } from "../data/golden";
 import { ACHIEVEMENTS } from "./achievements";
 import {
-  BUILDING_MAP, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, bossDps, buildingCost, checkpointsFor,
-  computeStats, maxAffordable, tapValue, type Stats,
+  BUILDING_MAP, COMBO_WINDOW, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, autoTapValue, bossDps, buildingCost,
+  checkpointsFor, comboMult, computeStats, maxAffordable, tapValue, type Stats,
 } from "./formulas";
-import type { EventChoice, GameEvent, GameState } from "./types";
+import { QUEST_SLOTS, makeQuest, questProgress } from "./quests";
+import type { EventChoice, GameEvent, GameState, Quest, QuizQuestion } from "./types";
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 const START_KIT: Record<string, number> = { c_diff: 1, p_dorm: 1, d_neighbors: 1 };
+/** VIP 질문이 화면에 머무는 시간(초) */
+export const GOLDEN_LIFETIME = 12;
+/** 이벤트 대신 퀴즈가 나올 확률 */
+const QUIZ_CHANCE = 0.3;
 
 export type GameNotice =
   | { kind: "event"; event: GameEvent }
   | { kind: "choice"; event: GameEvent }
+  | { kind: "quiz"; quiz: QuizQuestion }
+  | { kind: "golden" }
+  | { kind: "goldenClaim"; def: GoldenDef; amount: number }
+  | { kind: "quest"; quest: Quest; credits: number; rp: number }
   | { kind: "era"; era: number }
   | { kind: "bossWin"; era: number }
   | { kind: "bossLose"; era: number }
@@ -35,12 +45,25 @@ export function newState(aiName = "나의 AI"): GameState {
     active: [],
     nextEventIn: 90,
     pendingChoice: null,
+    pendingQuiz: null,
+    golden: null,
+    nextGoldenIn: 40,
+    quests: [],
+    questSeq: 0,
+    combo: 0,
+    lastTapAt: -10,
+    quizSolved: [],
+    eraStartedAt: 0,
+    eraTimes: [0],
     boss: null,
     bossesBeaten: [],
     achievements: [],
-    stats: { answered: 0, hallucinations: 0, taps: 0, playSeconds: 0, eventsSeen: 0 },
+    stats: {
+      answered: 0, hallucinations: 0, taps: 0, playSeconds: 0, eventsSeen: 0, goldens: 0, quizCorrect: 0,
+      quizAsked: 0, questsDone: 0, maxCombo: 0, bought: 0, researched: 0, thinkSeconds: 0,
+    },
     ended: false,
-    settings: { format: "short" },
+    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true },
     lastSaved: Date.now(),
   };
 }
@@ -49,6 +72,8 @@ export class Game {
   state: GameState;
   stats: Stats;
   private listeners: ((n: GameNotice) => void)[] = [];
+  private autoAcc = 0;
+  private questAcc = 0;
   /** 테스트·시뮬레이션용 난수 */
   rng: () => number;
 
@@ -56,6 +81,7 @@ export class Game {
     this.state = state;
     this.rng = rng;
     this.stats = computeStats(state);
+    this.fillQuests();
   }
 
   onNotice(fn: (n: GameNotice) => void): void {
@@ -79,6 +105,19 @@ export class Game {
     s.stats.answered += st.answered * dt;
     s.stats.hallucinations += st.answered * st.hall * dt;
     s.stats.playSeconds += dt;
+    if (s.thinking) s.stats.thinkSeconds += dt;
+
+    // 자동 답변
+    if (st.autoTap > 0) {
+      this.autoAcc += st.autoTap * dt;
+      if (this.autoAcc >= 1) {
+        const n = Math.floor(this.autoAcc);
+        this.autoAcc -= n;
+        this.earn(autoTapValue(st) * n);
+        s.stats.answered += n;
+        if (s.boss) s.boss.dealt += bossDps(st) * 0.25 * n;
+      }
+    }
 
     let changed = false;
     for (const a of s.active) a.remaining -= dt;
@@ -92,12 +131,28 @@ export class Game {
       this.resolveBoss();
     }
 
-    if (!s.pendingChoice) {
+    if (!s.pendingChoice && !s.pendingQuiz) {
       s.nextEventIn -= dt;
       if (s.nextEventIn <= 0) {
         this.triggerRandomEvent();
         changed = true;
       }
+    }
+
+    // VIP 질문
+    if (s.golden) {
+      s.golden.remaining -= dt;
+      if (s.golden.remaining <= 0) s.golden = null;
+    } else {
+      s.nextGoldenIn -= dt;
+      if (s.nextGoldenIn <= 0) this.spawnGolden();
+    }
+
+    // 임무는 1초마다 확인
+    this.questAcc += dt;
+    if (this.questAcc >= 1) {
+      this.questAcc = 0;
+      this.checkQuests();
     }
 
     if (changed) this.refresh();
@@ -129,6 +184,7 @@ export class Game {
     if (cost > this.state.credits) return 0;
     this.state.credits -= cost;
     this.state.buildings[id] = (this.state.buildings[id] ?? 0) + n;
+    this.state.stats.bought += n;
     this.refresh();
     return n;
   }
@@ -144,8 +200,12 @@ export class Game {
   buyUpgrade(id: string): boolean {
     if (!this.canBuyUpgrade(id)) return false;
     const u = UPGRADE_MAP[id];
-    if (u.currency === "rp") this.state.rp -= u.cost;
-    else this.state.credits -= u.cost;
+    if (u.currency === "rp") {
+      this.state.rp -= u.cost;
+      this.state.stats.researched += 1;
+    } else {
+      this.state.credits -= u.cost;
+    }
     this.state.upgrades.push(id);
     this.refresh();
     return true;
@@ -161,14 +221,94 @@ export class Game {
     this.refresh();
   }
 
+  /** 직접 답변(탭). 빠르게 연속으로 탭하면 콤보가 쌓인다. */
   tap(): number {
     const s = this.state;
+    const now = s.stats.playSeconds;
+    s.combo = now - s.lastTapAt <= COMBO_WINDOW ? s.combo + 1 : 1;
+    s.lastTapAt = now;
+    s.stats.maxCombo = Math.max(s.stats.maxCombo, s.combo);
     s.stats.taps += 1;
     if (s.boss) s.boss.dealt += bossDps(this.stats) * 0.5;
-    const v = tapValue(this.stats);
+    const v = tapValue(this.stats) * comboMult(s.combo);
     this.earn(v);
     s.stats.answered += 1;
     return v;
+  }
+
+  // ── VIP 질문 ──────────────────────────────────────────
+
+  private spawnGolden(): void {
+    const s = this.state;
+    s.nextGoldenIn = 70 + this.rng() * 80;
+    const total = GOLDENS.reduce((t, g) => t + g.weight, 0);
+    let r = this.rng() * total;
+    const def = GOLDENS.find((g) => (r -= g.weight) < 0) ?? GOLDENS[0];
+    s.golden = { kind: def.kind, remaining: GOLDEN_LIFETIME, y: 0.15 + this.rng() * 0.5 };
+    this.emit({ kind: "golden" });
+  }
+
+  claimGolden(): GoldenDef | null {
+    const s = this.state;
+    if (!s.golden) return null;
+    const def = GOLDENS.find((g) => g.kind === s.golden!.kind)!;
+    s.golden = null;
+    s.stats.goldens += 1;
+    let amount = 0;
+    if (def.effects && def.duration) {
+      s.active = s.active.filter((a) => a.id !== `golden_${def.kind}`);
+      s.active.push({ id: `golden_${def.kind}`, name: def.name, emoji: def.emoji, effects: def.effects, remaining: def.duration });
+      this.refresh();
+    }
+    if (def.incomeSeconds) {
+      amount = Math.max(this.stats.net, this.stats.rewardPerQ) * def.incomeSeconds;
+      this.earn(amount);
+    }
+    if (def.rpSeconds) {
+      amount = Math.max(this.stats.rpRate, 1) * def.rpSeconds;
+      s.rp += amount;
+    }
+    this.emit({ kind: "goldenClaim", def, amount });
+    return def;
+  }
+
+  // ── 임무 ──────────────────────────────────────────────
+
+  private researchLeft(): number {
+    const s = this.state;
+    return UPGRADES.filter((u) => u.currency === "rp" && u.era <= s.era && !s.upgrades.includes(u.id)).length;
+  }
+
+  private fillQuests(): void {
+    const s = this.state;
+    while (s.quests.length < QUEST_SLOTS) {
+      s.questSeq += 1;
+      s.quests.push(makeQuest(s, this.stats, s.questSeq, this.rng, this.hasThinking(), this.researchLeft()));
+    }
+  }
+
+  checkQuests(): void {
+    const s = this.state;
+    for (const q of [...s.quests]) {
+      if (questProgress(s, q) < 1) continue;
+      s.quests = s.quests.filter((x) => x !== q);
+      const credits = Math.max(this.stats.net, this.stats.rewardPerQ) * q.incomeSeconds;
+      const rp = Math.max(this.stats.rpRate, 0.5) * q.rpSeconds;
+      this.earn(credits);
+      s.rp += rp;
+      s.stats.questsDone += 1;
+      this.emit({ kind: "quest", quest: q, credits, rp });
+    }
+    // 조건이 사라진 임무(예: 남은 연구 없음)는 교체
+    s.quests = s.quests.filter((q) => q.kind !== "research" || this.researchLeft() > 0 || questProgress(s, q) >= 1);
+    this.fillQuests();
+  }
+
+  /** 임무 하나를 새로 뽑는다 (UI의 '바꾸기') */
+  rerollQuest(id: number): void {
+    const s = this.state;
+    s.quests = s.quests.filter((q) => q.id !== id);
+    this.fillQuests();
   }
 
   // ── 보스(벤치마크) ────────────────────────────────────
@@ -213,6 +353,8 @@ export class Game {
   private advanceEra(): void {
     const s = this.state;
     s.era += 1;
+    s.eraStartedAt = s.stats.playSeconds;
+    if (s.eraTimes[s.era] === undefined) s.eraTimes[s.era] = s.stats.playSeconds;
     this.emit({ kind: "era", era: s.era });
     const winter = ERAS[s.era].winter;
     if (winter) {
@@ -232,9 +374,22 @@ export class Game {
     );
   }
 
+  eligibleQuiz(): QuizQuestion[] {
+    const s = this.state;
+    return QUIZ.filter((q) => q.era <= s.era && !s.quizSolved.includes(q.id));
+  }
+
   triggerRandomEvent(): void {
     const s = this.state;
     s.nextEventIn = 90 + this.rng() * 90;
+    const quizzes = this.eligibleQuiz();
+    if (quizzes.length && this.rng() < QUIZ_CHANCE) {
+      const quiz = quizzes[Math.floor(this.rng() * quizzes.length)];
+      s.pendingQuiz = quiz.id;
+      s.stats.quizAsked += 1;
+      this.emit({ kind: "quiz", quiz });
+      return;
+    }
     const pool = this.eligibleEvents();
     const total = pool.reduce((t, e) => t + e.weight, 0);
     if (total <= 0) return;
@@ -275,6 +430,25 @@ export class Game {
     const choice = ev?.choices?.[index];
     if (!ev || !choice) return;
     this.applyEvent({ ...choice, id: ev.id, name: `${ev.name}: ${choice.label}`, emoji: ev.emoji });
+  }
+
+  /** 퀴즈 답하기. 맞히면 수익 2분 + RP 1분치. */
+  answerQuiz(index: number): { correct: boolean; quiz: QuizQuestion; credits: number; rp: number } | null {
+    const s = this.state;
+    const quiz = QUIZ.find((q) => q.id === s.pendingQuiz);
+    s.pendingQuiz = null;
+    if (!quiz) return null;
+    const correct = index === quiz.answer;
+    let credits = 0, rp = 0;
+    if (correct) {
+      credits = Math.max(this.stats.net, this.stats.rewardPerQ) * 120;
+      rp = Math.max(this.stats.rpRate, 1) * 60;
+      this.earn(credits);
+      s.rp += rp;
+      s.stats.quizCorrect += 1;
+      s.quizSolved.push(quiz.id);
+    }
+    return { correct, quiz, credits, rp };
   }
 
   // ── 새 모델 출시(프레스티지) ──────────────────────────
@@ -325,6 +499,7 @@ export class Game {
     const secs = Math.min(Math.max(0, (now - s.lastSaved) / 1000), OFFLINE_CAP_SEC * capMult);
     if (secs < 30) return [0, 0, 0];
     s.boss = null;
+    s.golden = null;
     for (const a of s.active) a.remaining -= secs;
     s.active = s.active.filter((a) => a.remaining > 0);
     const st = this.refresh();

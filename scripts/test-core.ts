@@ -2,7 +2,10 @@
 import assert from "node:assert/strict";
 import { ERAS, EVENTS } from "../src/data";
 import { Game, newState } from "../src/core/game";
-import { BUILDING_MAP, OFFLINE_CAP_SEC, buildingCost, checkpointsFor, computeStats } from "../src/core/formulas";
+import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
+import { arenaTable } from "../src/core/arena";
+import { questProgress } from "../src/core/quests";
+import { QUIZ } from "../src/data";
 import { fmt, fmtTokens } from "../src/core/format";
 import { exportSave, importSave, migrate } from "../src/core/save";
 
@@ -178,6 +181,113 @@ test("숫자 표기", () => {
   assert.equal(fmtTokens(200000), "200K");
   assert.equal(fmtTokens(32768), "32K");
   assert.equal(fmtTokens(1e6), "1M");
+});
+
+
+test("마일스톤: 25개부터 생산량 ×2", () => {
+  assert.equal(milestoneMult(24), 1);
+  assert.equal(milestoneMult(25), 2);
+  assert.equal(milestoneMult(100), 8);
+  const s = newState();
+  s.buildings = { c_diff: 24, p_dorm: 100, d_neighbors: 100 };
+  const before = computeStats(s).tps;
+  s.buildings.c_diff = 25;
+  assert.ok(computeStats(s).tps > before * 2, "24개 → 25개는 두 배 이상");
+});
+
+test("콤보: 연속 탭이면 보상이 오르고, 쉬면 끊긴다", () => {
+  const g = new Game(newState());
+  const first = g.tap();
+  for (let i = 0; i < 60; i++) g.tap();
+  assert.equal(g.state.combo, 61);
+  assert.equal(g.state.stats.maxCombo, 61);
+  assert.ok(g.tap() > first * 1.9, "최대 콤보는 약 ×2");
+  assert.equal(comboMult(1000), comboMult(COMBO_MAX));
+  g.tick(2);
+  g.tap();
+  assert.equal(g.state.combo, 1);
+});
+
+test("VIP 질문: 나타났다가 시간이 지나면 사라지고, 잡으면 보상", () => {
+  const g = new Game(newState(), () => 0);
+  g.state.nextGoldenIn = 0.5;
+  const notices: string[] = [];
+  g.onNotice((n) => notices.push(n.kind));
+  g.tick(1);
+  assert.ok(g.state.golden, "등장");
+  assert.ok(notices.includes("golden"));
+  const before = g.state.credits;
+  const def = g.claimGolden()!;
+  assert.equal(def.kind, "investor");
+  assert.ok(g.state.credits > before);
+  assert.equal(g.state.stats.goldens, 1);
+  assert.equal(g.claimGolden(), null, "두 번은 못 잡는다");
+  g.state.nextGoldenIn = 0.1;
+  g.tick(1);
+  for (let i = 0; i < 15; i++) g.tick(1);
+  assert.equal(g.state.golden, null, "12초 뒤 사라진다");
+});
+
+test("임무: 항상 3개, 달성하면 보상 후 새 임무", () => {
+  const g = new Game(newState());
+  assert.equal(g.state.quests.length, 3);
+  const q = g.state.quests[0];
+  // 강제로 달성
+  q.kind = "taps";
+  q.base = 0;
+  q.target = 5;
+  for (let i = 0; i < 5; i++) g.tap();
+  assert.equal(questProgress(g.state, q), 1);
+  const before = g.state.credits;
+  g.checkQuests();
+  assert.equal(g.state.stats.questsDone, 1);
+  assert.ok(g.state.credits > before);
+  assert.equal(g.state.quests.length, 3);
+  assert.ok(!g.state.quests.includes(q));
+  const id = g.state.quests[0].id;
+  g.rerollQuest(id);
+  assert.ok(!g.state.quests.some((x) => x.id === id));
+  assert.equal(g.state.quests.length, 3);
+});
+
+test("퀴즈: 맞히면 보상과 기록, 틀리면 다시 나올 수 있다", () => {
+  const g = new Game(newState());
+  const q = QUIZ.find((x) => x.era === 0)!;
+  g.state.pendingQuiz = q.id;
+  const wrong = g.answerQuiz((q.answer + 1) % q.options.length)!;
+  assert.equal(wrong.correct, false);
+  assert.ok(!g.state.quizSolved.includes(q.id));
+  g.state.pendingQuiz = q.id;
+  const right = g.answerQuiz(q.answer)!;
+  assert.ok(right.correct && right.credits > 0);
+  assert.ok(g.state.quizSolved.includes(q.id));
+  assert.ok(!g.eligibleQuiz().some((x) => x.id === q.id));
+});
+
+test("퀴즈가 떠 있는 동안 이벤트 타이머는 멈춘다", () => {
+  const g = new Game(newState());
+  g.state.pendingQuiz = QUIZ[0].id;
+  g.state.nextEventIn = 5;
+  g.tick(10);
+  assert.equal(g.state.nextEventIn, 5);
+});
+
+test("자동 답변: 상품을 사면 초당 자동으로 번다", () => {
+  const s = newState();
+  s.era = 2;
+  s.upgrades = ["a_autoreply"];
+  const g = new Game(s);
+  assert.equal(g.stats.autoTap, 0.5);
+  const answered = g.state.stats.answered;
+  g.tick(4);
+  assert.ok(g.state.stats.answered - answered >= 2);
+});
+
+test("아레나: 플레이어가 표에 포함되고 Elo 순으로 정렬", () => {
+  const g = new Game(newState("테스트"));
+  const rows = arenaTable(g.state, g.stats);
+  assert.ok(rows.some((r) => r.me && r.name.startsWith("테스트")));
+  for (let i = 1; i < rows.length; i++) assert.ok(rows[i - 1].elo >= rows[i].elo);
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

@@ -1,8 +1,9 @@
 // 메인 장면: 질문 말풍선이 AI에게 날아가고, 탭하면 즉시 답변한다.
-import { ERAS, TIERS } from "../data";
+import { ERAS, GOLDENS, TIERS } from "../data";
 import { fmt, fmtPct, fmtTokens } from "../core/format";
-import { bossDps } from "../core/formulas";
+import { COMBO_WINDOW, bossDps, comboMult } from "../core/formulas";
 import type { Game } from "../core/game";
+import { nextHint, type GuideTab } from "../core/guide";
 import { $, clear, h, setText } from "./dom";
 
 export class Scene {
@@ -14,23 +15,34 @@ export class Scene {
   private bossBar = h("div", { class: "boss-bar" });
   private tierChip = h("span", { class: "chip" });
   private hallChip = h("span", { class: "chip" });
-  private bottleneck = h("span", { class: "chip" });
+  private bottleneck = h("button", { class: "chip" });
   private thinkBtn = h("button", { class: "chip think-btn" });
+  private comboEl = h("div", { class: "combo" });
+  private autoChip = h("span", { class: "chip" });
+  private goldenEl: HTMLButtonElement | null = null;
+  private goldenKey = "";
   private spawnAcc = 0;
   private sayTimer = 4;
   private onTap: () => void;
+  private props = h("div", { class: "props", "aria-hidden": "true" });
+  private propsEra = -1;
+  private hintTab: GuideTab | null = null;
 
-  constructor(private game: Game, onTap: () => void) {
+  constructor(private game: Game, onTap: () => void, onHint: (tab: GuideTab) => void) {
     this.onTap = onTap;
+    this.bottleneck.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+      if (this.hintTab) onHint(this.hintTab);
+    });
     this.thinkBtn.onclick = (e) => {
       e.stopPropagation();
       game.toggleThinking();
     };
-    this.root.append(h("div", { class: "grid-bg" }), this.avatar, this.say, this.top, this.hud);
-    this.hud.append(this.tierChip, this.hallChip, this.bottleneck, this.thinkBtn);
+    this.root.append(h("div", { class: "grid-bg" }), this.props, this.avatar, this.say, this.top, this.comboEl, this.hud);
+    this.hud.append(this.tierChip, this.hallChip, this.bottleneck, this.autoChip, this.thinkBtn);
     // 빈 곳을 탭해도 답변 하나
     this.root.addEventListener("pointerdown", (e) => {
-      if ((e.target as HTMLElement).closest(".bubble, .think-btn")) return;
+      if ((e.target as HTMLElement).closest(".bubble, .think-btn, .golden, button.chip")) return;
       this.tapAt(e.clientX, e.clientY);
     });
   }
@@ -38,7 +50,7 @@ export class Scene {
   private tapAt(x: number, y: number): void {
     const v = this.game.tap();
     const r = this.root.getBoundingClientRect();
-    this.pop(x - r.left, y - r.top, `+${fmt(v)}`, "big");
+    if (this.game.state.settings.effects || Math.random() < 0.3) this.pop(x - r.left, y - r.top, `+${fmt(v)}`, "big");
     this.chomp();
     this.onTap();
   }
@@ -88,7 +100,7 @@ export class Scene {
   frame(dt: number): void {
     const st = this.game.stats;
     if (document.hidden) return;
-    const rate = Math.max(0.35, Math.min(1.2, st.answered));
+    const rate = Math.max(0.35, Math.min(1.2, st.answered)) * (this.game.state.settings.effects ? 1 : 0.4);
     this.spawnAcc += dt * rate;
     if (this.spawnAcc >= 1 && this.root.querySelectorAll(".bubble").length < 6) {
       this.spawnAcc = 0;
@@ -104,6 +116,34 @@ export class Scene {
     }
   }
 
+  private updateGolden(): void {
+    const gold = this.game.state.golden;
+    const key = gold ? `${gold.kind}:${gold.y}` : "";
+    if (key !== this.goldenKey) {
+      this.goldenKey = key;
+      this.goldenEl?.remove();
+      this.goldenEl = null;
+      if (gold) {
+        const def = GOLDENS.find((d) => d.kind === gold.kind)!;
+        const ask = def.asks[Math.floor(Math.random() * def.asks.length)];
+        const el = h("button", { class: "golden", style: { top: `${gold.y * 100}%` }, "aria-label": `VIP 질문: ${def.name}` },
+          h("span", { class: "g-ico" }, def.emoji), h("span", null, h("b", null, `⭐ ${def.name}`), h("small", null, ask)));
+        el.addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          const r = this.root.getBoundingClientRect();
+          const got = this.game.claimGolden();
+          if (got) this.pop(e.clientX - r.left, e.clientY - r.top, `${got.emoji} ${got.name}!`, "big gold");
+          el.remove();
+          this.goldenEl = null;
+          this.goldenKey = "";
+        });
+        this.goldenEl = el;
+        this.root.append(el);
+      }
+    }
+    if (this.goldenEl && gold) this.goldenEl.classList.toggle("fading", gold.remaining < 3);
+  }
+
   /** 몇 번에 한 번씩: 숫자·칩 갱신 */
   update(): void {
     const g = this.game;
@@ -114,20 +154,47 @@ export class Scene {
     setText(this.hallChip, `🌀 할루시네이션 ${fmtPct(st.hall)}`);
     this.hallChip.className = `chip ${st.hall > 0.3 ? "bad" : st.hall < 0.08 ? "good" : ""}`;
 
-    if (st.bottleneck === "power") {
+    // 가이드가 켜져 있으면 '다음 할 일'을, 아니면 병목을 보여준다 (탭하면 해당 화면으로)
+    const hint = g.state.settings.hints ? nextHint(g) : null;
+    if (hint) {
+      setText(this.bottleneck, `💡 ${hint.text}`);
+      this.bottleneck.className = "chip hint";
+      this.hintTab = hint.tab;
+    } else if (st.bottleneck === "power") {
       setText(this.bottleneck, `⚡ 전력 부족 ${fmtPct(st.powerEff)}`);
       this.bottleneck.className = "chip bad";
+      this.hintTab = "infra";
     } else if (st.bottleneck === "demand") {
       setText(this.bottleneck, "📉 질문 부족 → 💬서비스");
       this.bottleneck.className = "chip warn";
+      this.hintTab = "service";
     } else {
       setText(this.bottleneck, "🖥️ 처리량 부족 → 인프라");
       this.bottleneck.className = "chip warn";
+      this.hintTab = "infra";
     }
     if (st.net < 0) {
       setText(this.bottleneck, "💸 적자! 토큰 단가를 낮추세요");
       this.bottleneck.className = "chip bad";
+      this.hintTab = "research";
     }
+
+    if (this.propsEra !== g.state.era) {
+      this.propsEra = g.state.era;
+      clear(this.props);
+      PROPS[g.state.era].forEach((p, i) => this.props.append(h("span", { style: { left: `${8 + i * 22}%`, top: `${18 + ((i * 37) % 45)}%`, animationDelay: `${i * 1.3}s` } }, p)));
+    }
+
+    this.autoChip.style.display = st.autoTap > 0 ? "" : "none";
+    setText(this.autoChip, `🤖 자동 ${fmt(st.autoTap)}/초`);
+
+    // 콤보
+    const s = g.state;
+    const live = s.combo >= 3 && s.stats.playSeconds - s.lastTapAt <= COMBO_WINDOW;
+    this.comboEl.classList.toggle("show", live);
+    if (live) setText(this.comboEl, `🔥 ${s.combo} 콤보 · 탭 ×${comboMult(s.combo).toFixed(2)}`);
+
+    this.updateGolden();
 
     this.thinkBtn.style.display = g.hasThinking() ? "" : "none";
     setText(this.thinkBtn, g.state.thinking ? "🤔 생각 모드 ON" : "🤔 생각 모드 OFF");
@@ -159,3 +226,18 @@ export class Scene {
     }
   }
 }
+
+/** 시대별 배경 소품 */
+const PROPS: string[][] = [
+  ["🏺", "⚙️", "📜", "🕰️"],
+  ["📻", "🧮", "🎫", "🐭"],
+  ["🧱", "🗃️", "☎️", "🤖"],
+  ["🗄️", "💾", "📠", "🩺"],
+  ["♟️", "🌐", "📧", "💿"],
+  ["🎮", "🐱", "⚫", "📱"],
+  ["⚡", "🧬", "🥑", "📗"],
+  ["💬", "🦙", "🖼️", "🚀"],
+  ["🔌", "🎸", "🧑‍💻", "🐋"],
+  ["🛰️", "🧠", "🪆", "💤"],
+  ["☀️", "🪐", "🌌", "♾️"],
+];

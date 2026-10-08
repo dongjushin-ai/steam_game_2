@@ -72,7 +72,7 @@ export function toast(title: string, text = "", kind = ""): void {
   const box = $("#toasts");
   const el = h("div", { class: `toast ${kind}` }, h("b", null, title), text);
   box.append(el);
-  while (box.children.length > 3) box.firstChild?.remove();
-  setTimeout(() => el.remove(), 4200);
+  while (box.children.length > 2) box.firstChild?.remove();
+  setTimeout(() => el.remove(), 3400);
   el.onclick = () => el.remove();
 }

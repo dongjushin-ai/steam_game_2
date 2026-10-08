@@ -17,7 +17,7 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow-x: hidden; }
 body {
   font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 15px;
@@ -33,6 +33,7 @@ button:disabled { cursor: default; }
   margin: 0 auto;
   display: grid;
   grid-template-rows: auto minmax(200px, 34dvh) 1fr auto;
+  grid-template-columns: minmax(0, 1fr);
   background: var(--bg);
   border-inline: 1px solid var(--line);
   overflow: hidden;
@@ -104,6 +105,10 @@ button:disabled { cursor: default; }
 .pop.big { font-size: 18px; }
 @keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-36px); opacity: 0; } }
 
+.props span { position: absolute; font-size: 26px; opacity: 0.16; animation: bob 6s ease-in-out infinite; pointer-events: none; }
+@keyframes bob { 50% { transform: translateY(-8px) rotate(-6deg); } }
+.chip.hint { border-color: var(--money); color: var(--money); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+button.chip { cursor: pointer; font: inherit; font-size: 12px; color: inherit; }
 .scene-hud { position: absolute; left: 10px; right: 10px; bottom: 8px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; pointer-events: none; }
 .chip {
   background: rgba(14, 17, 22, 0.82); border: 1px solid var(--line); border-radius: 999px;
@@ -119,6 +124,31 @@ button:disabled { cursor: default; }
 
 .boss-bar { position: absolute; left: 10px; right: 10px; top: 8px; background: rgba(14, 17, 22, 0.9); border: 1px solid var(--bad); border-radius: 10px; padding: 6px 8px; font-size: 12px; }
 .boss-bar .bar { margin-top: 4px; }
+
+.golden {
+  position: absolute; left: 6%; z-index: 3; display: flex; gap: 8px; align-items: center; max-width: 72%;
+  background: linear-gradient(135deg, #ffe680, #f5b700); color: #2b1d00; border: 2px solid #fff3b0;
+  border-radius: 16px; padding: 7px 12px 7px 8px; text-align: left; font-size: 12px;
+  box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); animation: goldPulse 1.1s ease-in-out infinite, goldIn 0.4s ease-out;
+}
+.golden .g-ico { font-size: 28px; }
+.golden b { display: block; font-size: 13px; }
+.golden small { display: block; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.golden.fading { opacity: 0.55; }
+@keyframes goldPulse { 50% { box-shadow: 0 0 22px 6px rgba(255, 215, 0, 0.55); transform: scale(1.04); } }
+@keyframes goldIn { from { transform: scale(0.3); opacity: 0; } }
+.pop.gold { color: #ffe680; font-size: 16px; }
+.combo {
+  position: absolute; right: 10px; bottom: 76px; font-weight: 800; font-size: 13px; color: #ffb347;
+  text-shadow: 0 1px 4px #000; opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+.combo.show { opacity: 1; }
+
+/* 뉴스 티커 */
+.ticker { margin-top: 6px; overflow: hidden; white-space: nowrap; font-size: 12px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 5px; }
+.ticker span { display: inline-block; padding-left: 100%; animation: ticker var(--tdur, 14s) linear forwards; }
+.ticker b { color: var(--era); margin-right: 6px; }
+@keyframes ticker { to { transform: translateX(-100%); } }
 
 /* ── 패널 ───────────────────────── */
 #panel { overflow-y: auto; padding: 10px 12px 18px; -webkit-overflow-scrolling: touch; }
@@ -137,6 +167,24 @@ button:disabled { cursor: default; }
 .row .fx { font-size: 12px; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; }
 .row .fx span { background: var(--bg3); border-radius: 6px; padding: 0 6px; }
 .row.owned { opacity: 0.55; }
+.row.reco { border-color: var(--money); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--money) 40%, transparent); }
+.badge { display: inline-block; font-size: 10px; font-weight: 800; border-radius: 6px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; }
+.badge.reco { background: var(--money); color: #111; }
+.badge.ms { background: var(--bg3); color: var(--good); }
+.quest { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.quest:last-child { border-bottom: 0; }
+.quest .bar { grid-column: 1 / -1; height: 6px; }
+.quest button { border: 0; background: var(--bg3); color: var(--muted); border-radius: 8px; font-size: 11px; padding: 2px 8px; }
+.timeline.arena li { grid-template-columns: 26px 26px 1fr auto; align-items: center; }
+.timeline.arena li.me { color: var(--era); font-weight: 800; }
+.spark { width: 100%; height: 56px; display: block; }
+.spark path.l { fill: none; stroke: var(--era); stroke-width: 2; }
+.spark path.a { fill: color-mix(in srgb, var(--era) 18%, transparent); stroke: none; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 2px; border-bottom: 1px dashed var(--line); }
+.toggle-row input { width: 20px; height: 20px; accent-color: var(--era); }
+.quiz-opt { text-align: left; }
+.kbd { font-family: ui-monospace, monospace; background: var(--bg3); border-radius: 4px; padding: 0 5px; font-size: 11px; }
+.modelcard { font-family: ui-monospace, monospace; font-size: 12px; background: var(--bg3); border-radius: 12px; padding: 10px 12px; white-space: pre-line; }
 .row.locked { opacity: 0.5; }
 .buy {
   min-width: 84px; border: 0; border-radius: 12px; padding: 8px 10px;
@@ -200,7 +248,7 @@ textarea { min-height: 80px; font-size: 11px; font-family: ui-monospace, monospa
 
 /* ── 토스트 · 모달 ───────────────── */
 #toasts { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 16px)); display: grid; gap: 6px; z-index: 30; pointer-events: none; }
-.toast { background: var(--bg2); border: 1px solid var(--era); border-radius: 12px; padding: 8px 12px; font-size: 13px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); animation: drop 0.25s ease-out; pointer-events: auto; }
+.toast { background: var(--bg2); border: 1px solid var(--era); border-radius: 12px; padding: 6px 10px; font-size: 12px; line-height: 1.35; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); animation: drop 0.25s ease-out; pointer-events: auto; }
 .toast b { display: block; }
 .toast.ach { border-color: var(--money); }
 @keyframes drop { from { transform: translateY(-12px); opacity: 0; } }

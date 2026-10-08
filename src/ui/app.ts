@@ -1,4 +1,4 @@
-import { ERAS, UPGRADES } from "../data";
+import { ERAS, EVENTS, NEWS, QUIZ, UPGRADES } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtDuration, fmtMult, setNumberFormat } from "../core/format";
 import { Game, newState, type GameNotice } from "../core/game";
@@ -6,8 +6,11 @@ import { loadGame, saveGame } from "../core/save";
 import type { Effect, GameState } from "../core/types";
 import { $, clear, h, setText } from "./dom";
 import { modalOpen, showModal, toast } from "./modals";
-import { Panels, TABS, type TabId } from "./panels";
+import { Panels, TABS, shareSummary, type TabId } from "./panels";
 import { Scene } from "./scene";
+import { questText } from "../core/quests";
+import type { QuizQuestion } from "../core/types";
+import { setSound, setVibrate, sfx } from "./sound";
 
 const SAVE_EVERY = 10;
 const UI_EVERY = 0.2;
@@ -29,6 +32,10 @@ export class App {
     powerBox: h("div", { class: "res power" }),
   };
   private navButtons = new Map<TabId, HTMLButtonElement>();
+  private ticker = h("div", { class: "ticker", "aria-hidden": "true" });
+  /** 5초마다 기록한 순이익 (최근 10분) */
+  private history: number[] = [];
+  private histAcc = 0;
   private last = performance.now();
   private uiAcc = 0;
   private saveAcc = 0;
@@ -43,24 +50,73 @@ export class App {
       else this.offline();
     });
     window.addEventListener("pagehide", () => saveGame(this.game.state));
+    window.addEventListener("keydown", (e) => this.key(e));
+  }
+
+  private key(e: KeyboardEvent): void {
+    const t = e.target as HTMLElement;
+    if (t.matches("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
+    const g = this.game;
+    if (modalOpen()) return;
+    if (e.code === "Space" || e.key === "Enter") {
+      e.preventDefault();
+      g.tap();
+      sfx("tap");
+    } else if (/^[1-5]$/.test(e.key)) {
+      this.selectTab(TABS[Number(e.key) - 1].id);
+    } else if (e.key === "b" || e.key === "B") {
+      if (g.startBoss()) this.selectTab("bench");
+    } else if (e.key === "t" || e.key === "T") {
+      g.toggleThinking();
+    } else if (e.key === "v" || e.key === "V") {
+      g.claimGolden();
+    }
+  }
+
+  private nextHeadline(): void {
+    const s = this.game.state;
+    const pool = NEWS.filter((n) => n.era <= s.era);
+    // 현재 시대 뉴스가 더 자주 나오게
+    const cur = pool.filter((n) => n.era === s.era);
+    const item = Math.random() < 0.6 && cur.length ? cur[Math.floor(Math.random() * cur.length)] : pool[Math.floor(Math.random() * pool.length)];
+    const text = item.text.split("{name}").join(s.aiName);
+    const span = h("span", null, h("b", null, `📰 ${ERAS[item.era].years.split(" ")[0]}`), text);
+    span.style.setProperty("--tdur", `${Math.max(9, text.length * 0.28)}s`);
+    span.addEventListener("animationend", () => this.nextHeadline());
+    clear(this.ticker);
+    this.ticker.append(span);
   }
 
   /** 새 게임/불러오기/초기화 시 호출 */
   private boot(state: GameState, fresh: boolean): void {
     this.game = new Game(state);
     setNumberFormat(state.settings.format);
+    setSound(state.settings.sound);
+    setVibrate(state.settings.vibrate);
+    this.history = [];
     this.game.onNotice((n) => this.notice(n));
     clear($("#scene"));
-    this.scene = new Scene(this.game, () => this.panels.update());
+    this.scene = new Scene(this.game, () => {
+      sfx("tap");
+      this.panels.update();
+    }, (tab) => this.selectTab(tab));
     this.panels = new Panels($("#panel"), this.game, (st) => {
       this.boot((st as GameState | null) ?? newState(), !st);
       saveGame(this.game.state);
-    });
+    }, () => this.history);
     this.selectTab("service");
     this.applyEraColor();
     if (fresh) this.welcome();
     else this.offline();
+    // 저장 당시 떠 있던 선택지·퀴즈를 다시 보여준다 (안 그러면 이벤트가 멈춘다)
+    const pendingEvent = EVENTS.find((e) => e.id === state.pendingChoice);
+    if (pendingEvent) this.notice({ kind: "choice", event: pendingEvent });
+    else state.pendingChoice = null;
+    const pendingQuiz = QUIZ.find((q) => q.id === state.pendingQuiz);
+    if (pendingQuiz) this.notice({ kind: "quiz", quiz: pendingQuiz });
+    else state.pendingQuiz = null;
     this.renderHeader();
+    this.nextHeadline();
   }
 
   private buildChrome(): void {
@@ -72,6 +128,7 @@ export class App {
         h("div", { class: "res money" }, hd.money, hd.moneySub),
         h("div", { class: "res rp" }, hd.rp, hd.rpSub),
         hd.powerBox),
+      this.ticker,
     );
     const nav = $("#nav");
     for (const t of TABS) {
@@ -103,6 +160,12 @@ export class App {
       this.scene.update();
       this.panels.update();
       this.renderNavDots();
+    }
+    this.histAcc += dt;
+    if (this.histAcc >= 5) {
+      this.histAcc = 0;
+      this.history.push(Math.max(0, this.game.stats.net));
+      if (this.history.length > 120) this.history.shift();
     }
     if (this.saveAcc >= SAVE_EVERY) {
       this.saveAcc = 0;
@@ -152,6 +215,7 @@ export class App {
     switch (n.kind) {
       case "event": {
         const ev = n.event;
+        sfx("event");
         if (ev.id.startsWith("winter")) {
           showModal({
             icon: ev.emoji, title: ev.name, sub: ev.year,
@@ -163,8 +227,24 @@ export class App {
         }
         break;
       }
+      case "quiz":
+        sfx("event");
+        this.quiz(n.quiz);
+        break;
+      case "golden":
+        sfx("golden");
+        break;
+      case "goldenClaim":
+        sfx("claim");
+        toast(`${n.def.emoji} ${n.def.name}`, n.def.result + (n.amount ? ` (+${fmt(n.amount)})` : ""), "ach");
+        break;
+      case "quest":
+        sfx("quest");
+        toast("📋 임무 완료!", `${questText(n.quest, fmt)} → 💵 +${fmt(n.credits)} · 🧠 +${fmt(n.rp)}`, "ach");
+        break;
       case "choice": {
         const ev = n.event;
+        sfx("event");
         showModal({
           icon: ev.emoji, title: ev.name, sub: ev.year, body: [ev.desc],
           buttons: ev.choices!.map((c, i) => ({
@@ -177,16 +257,19 @@ export class App {
       }
       case "bossWin": {
         const boss = ERAS[n.era].boss;
+        sfx("win");
         showModal({ icon: boss.emoji, title: `${boss.name} 클리어!`, sub: boss.year, body: [boss.winText], buttons: [{ label: "다음으로" }] });
         break;
       }
       case "bossLose": {
         const boss = ERAS[n.era].boss;
+        sfx("lose");
         toast(`${boss.emoji} ${boss.name} 실패`, "처리량을 늘리고 다시 도전하세요. 도전 중에 장면을 탭하면 점수가 올라요.");
         break;
       }
       case "era": {
         this.applyEraColor();
+        setTimeout(() => sfx("era"), 600);
         const era = ERAS[n.era];
         showModal({
           icon: era.avatar, title: era.name, sub: era.years, body: [era.intro, "🔓 새 유닛·연구·질문이 열렸어요!"],
@@ -197,13 +280,43 @@ export class App {
       }
       case "achievement": {
         const a = ACHIEVEMENTS.find((x) => x.id === n.id);
-        if (a) toast(`🏅 업적: ${a.emoji} ${a.name}`, a.desc, "ach");
+        if (a) {
+          sfx("quest");
+          toast(`🏅 업적: ${a.emoji} ${a.name}`, a.desc, "ach");
+        }
         break;
       }
       case "ending":
         this.ending();
         break;
     }
+  }
+
+  private quiz(q: QuizQuestion): void {
+    const g = this.game;
+    showModal({
+      icon: "🧠",
+      title: "AI 역사 퀴즈",
+      sub: `${ERAS[q.era].name} · 맞히면 수익 2분 + 연구 1분치`,
+      body: [q.q],
+      buttons: q.options.map((opt, i) => ({
+        label: `${"ABCD"[i]}. ${opt}`,
+        kind: "ghost" as const,
+        className: "quiz-opt",
+        onClick: () => {
+          const r = g.answerQuiz(i);
+          if (!r) return;
+          sfx(r.correct ? "correct" : "wrong");
+          showModal({
+            icon: r.correct ? "⭕" : "❌",
+            title: r.correct ? "정답!" : `아쉬워요! 정답은 ${"ABCD"[q.answer]}`,
+            sub: r.correct ? `💵 +${fmt(r.credits)} · 🧠 +${fmt(r.rp)}` : "틀린 문제는 나중에 다시 나와요",
+            body: [`${q.options[q.answer]} — ${q.explain}`],
+            buttons: [{ label: "계속" }],
+          });
+        },
+      })),
+    });
   }
 
   private welcome(): void {
@@ -249,7 +362,7 @@ export class App {
       showModal({
         icon: "✨", title: "Q.E.D.", sub: `${g.state.aiName} · 플레이 ${fmtDuration(g.state.stats.playSeconds)}`,
         body: [text, "끝까지 함께해줘서 고마워요. 이제 무한 모드입니다. 계속 키워도 좋아요!"],
-        buttons: [{ label: "계속 플레이" }],
+        buttons: [{ label: "📤 기록 자랑하기", kind: "ghost", onClick: () => { shareSummary(g); return false; } }, { label: "계속 플레이" }],
       });
     };
     showModal({
