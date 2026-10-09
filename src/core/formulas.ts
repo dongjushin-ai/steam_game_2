@@ -1,5 +1,5 @@
-import { BUILDINGS, TIERS, UPGRADES } from "../data";
-import type { Building, GameState, MultStat, Tier, Upgrade } from "./types";
+import { BUILDINGS, SIDE_BENCHES, TIERS, UPGRADES } from "../data";
+import type { Building, GameState, MultStat, SideBench, Tier, Upgrade } from "./types";
 
 /** 티어 보상(tiers.ts)에 곱하는 전역 배율. */
 export const REWARD_SCALE = 100;
@@ -28,6 +28,9 @@ export const COMBO_WINDOW = 1.2;
 
 export const BUILDING_MAP: Record<string, Building> = Object.fromEntries(BUILDINGS.map((b) => [b.id, b]));
 export const UPGRADE_MAP: Record<string, Upgrade> = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));
+export const BENCH_MAP: Record<string, SideBench> = Object.fromEntries(SIDE_BENCHES.map((b) => [b.id, b]));
+/** 탈옥 자동 차단 확률 상한 */
+export const AUTO_BLOCK_MAX = 0.95;
 
 export type Bottleneck = "demand" | "compute" | "power";
 
@@ -67,6 +70,10 @@ export function multipliers(state: GameState): Record<MultStat, number> {
   for (const id of state.upgrades) {
     const u = UPGRADE_MAP[id];
     if (u) for (const e of u.effects) m[e.stat] *= e.mul;
+  }
+  for (const id of state.benchDone ?? []) {
+    const b = BENCH_MAP[id];
+    if (b) for (const e of b.effects) m[e.stat] *= e.mul;
   }
   for (const a of state.active) for (const e of a.effects) m[e.stat] *= e.mul;
   return m;
@@ -166,6 +173,20 @@ export function maxAffordable(state: GameState, b: Building, costMult = multipli
 export function autoTapRate(state: GameState): number {
   let n = 0;
   for (const id of state.upgrades) n += UPGRADE_MAP[id]?.autoTap ?? 0;
+  return n;
+}
+
+/** 탈옥 프롬프트 자동 차단 확률 (상품·연구 합산) */
+export function autoBlockChance(state: GameState): number {
+  let p = 0;
+  for (const id of state.upgrades) p += UPGRADE_MAP[id]?.autoBlock ?? 0;
+  return Math.min(AUTO_BLOCK_MAX, p);
+}
+
+/** 추가 파견 슬롯 (상품) */
+export function extraMissionSlots(state: GameState): number {
+  let n = 0;
+  for (const id of state.upgrades) n += UPGRADE_MAP[id]?.missionSlots ?? 0;
   return n;
 }
 

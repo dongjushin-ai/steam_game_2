@@ -46,4 +46,9 @@ export const QUIZ_EN: Record<string, { q: string; options: string[]; explain: st
   q_hbm: { q: "What does HBM stand for?", options: ["High Bandwidth Memory", "Hyper Binary Machine", "Hybrid Bus Module", "Heavy Batch Mode"], explain: "High-bandwidth memory stacked right next to the GPU." },
   q_last_question: { q: "What question keeps repeating in Asimov's 'The Last Question'?", options: ["Does God exist?", "Can entropy be reversed?", "What is consciousness?", "Is P equal to NP?"], explain: "\"There is as yet insufficient data for a meaningful answer.\"" },
   q_bitter: { q: "What's the gist of Rich Sutton's 'Bitter Lesson'?", options: ["Human knowledge is best", "General methods that use computation win in the end", "AI is impossible", "Data doesn't matter"], explain: "Methods that scale with compute, like search and learning, win." },
+  q_mnist: { q: "What's inside the MNIST dataset?", options: ["Handwritten digits", "Cat photos", "Movie reviews", "Chess games"], explain: "60,000 training + 10,000 test images, 28×28 grayscale." },
+  q_winograd: { q: "What does the Winograd Schema test?", options: ["Using common sense to resolve what a pronoun refers to", "Translation speed", "Image classification", "Speech recognition"], explain: "\"The trophy doesn't fit in the suitcase because it's too big.\" It is the trophy." },
+  q_mmlu: { q: "How many subjects does MMLU cover?", options: ["9", "57", "100", "1,000"], explain: "Multiple choice across 57 subjects: math, law, medicine, history and more." },
+  q_humaneval: { q: "How many Python problems are in HumanEval?", options: ["12", "57", "164", "2,294"], explain: "Released with the 2021 Codex paper. 2,294 is SWE-bench's count." },
+  q_injection: { q: "What's the attack that steers an AI agent with instructions hidden inside a document?", options: ["SQL injection", "Prompt injection", "Vanishing gradients", "Overfitting"], explain: "The name comes from SQL injection." },
 };

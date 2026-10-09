@@ -1,7 +1,7 @@
-import { ERAS, QUIZ } from "../data";
-import { BUILDING_MAP, UPGRADE_MAP } from "./formulas";
+import { ERAS, MISSIONS, QUIZ, THREATS } from "../data";
+import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP } from "./formulas";
 import { SAVE_VERSION, newState } from "./game";
-import type { GameState, Quest, QuestKind } from "./types";
+import type { ActiveMission, GameState, ModelRecord, Quest, QuestKind } from "./types";
 
 const KEY = "ai-kiugi-save";
 /** 직전 정상 세이브. 본 세이브가 깨졌을 때 여기서 복구한다. */
@@ -36,6 +36,15 @@ export function migrate(raw: unknown): GameState | null {
   const stats = { ...base.stats };
   for (const k of Object.keys(stats) as (keyof typeof stats)[]) stats[k] = num(r.stats?.[k], stats[k]);
   const lastEra = ERAS.length - 1;
+  const fight = r.sideFight;
+  const threat = r.threat;
+  const missions: ActiveMission[] = (Array.isArray(r.missions) ? r.missions : []).filter(
+    (m) => !!m && MISSIONS.some((d) => d.id === m.id) && typeof m.endsAt === "number" && isFinite(m.endsAt),
+  );
+  const models: ModelRecord[] = (Array.isArray(r.models) ? r.models : []).filter(
+    (m) => !!m && typeof m === "object" && Number.isInteger(m.version),
+  ).map((m) => ({ version: m.version, era: int(m.era), intel: num(m.intel), ctx: num(m.ctx), tier: int(m.tier), hall: num(m.hall), at: num(m.at) }));
+  const daily = r.daily && typeof r.daily.last === "string" ? { last: r.daily.last, streak: int(r.daily.streak) } : base.daily;
 
   return {
     ...base,
@@ -57,6 +66,14 @@ export function migrate(raw: unknown): GameState | null {
     quests,
     quizSolved: [...new Set(strList(r.quizSolved).filter((id) => QUIZ.some((q) => q.id === id)))],
     eraTimes: Array.isArray(r.eraTimes) ? r.eraTimes.map((t) => num(t)) : [0],
+    benchDone: [...new Set(strList(r.benchDone).filter((id) => BENCH_MAP[id]))],
+    sideFight: fight && BENCH_MAP[fight.id] && num(fight.remaining) > 0 ? { id: fight.id, dealt: num(fight.dealt), remaining: num(fight.remaining) } : null,
+    threat: threat && Number.isInteger(threat.text) && threat.text >= 0 && threat.text < THREATS.length && num(threat.remaining) > 0
+      ? { text: threat.text, remaining: num(threat.remaining), y: num(threat.y, 0.3) } : null,
+    nextThreatIn: num(r.nextThreatIn, base.nextThreatIn),
+    missions,
+    models,
+    daily,
     nextEventIn: num(r.nextEventIn, base.nextEventIn),
     nextGoldenIn: num(r.nextGoldenIn, base.nextGoldenIn),
     stats,

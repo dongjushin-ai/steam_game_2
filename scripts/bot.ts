@@ -43,14 +43,18 @@ export function runSim(opts: SimOptions = {}): SimResult {
   let seed = opts.seed ?? 42;
   const rng = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
 
-  const game = new Game(newState("sim"), rng);
+  // 파견 임무의 '실제 시간'은 게임 시간으로 대신한다
+  const game: Game = new Game(newState("sim"), rng, () => game.state.stats.playSeconds * 1000);
   game.onNotice((n) => {
     if (n.kind === "choice") game.choose(human ? Math.floor(rng() * 2) : 0);
     // 퀴즈는 봇 50%, 사람 60% 정답으로 가정
     if (n.kind === "quiz") game.answerQuiz(rng() < (human ? 0.6 : 0.5) ? n.quiz.answer : (n.quiz.answer + 1) % n.quiz.options.length);
     if (n.kind === "golden") catchGolden = human && rng() < 0.6;
+    // 탈옥 말풍선: 봇은 다 막고, 사람은 70%만 막는다
+    if (n.kind === "threat") catchThreat = !human || rng() < 0.7;
   });
   let catchGolden = false;
+  let catchThreat = false;
   const res: SimResult = { game, eraReached: [0], entryNet: [0], entryRp: [0], dps: [], net: [], rpRate: [], dpsEra: [], log: [] };
   const param = BUILDINGS.find((b) => b.kind === "param")!;
 
@@ -110,6 +114,16 @@ export function runSim(opts: SimOptions = {}): SimResult {
 
     if (!s.boss && game.bossReady().ok && bossDps(game.stats) * boss.time * 1.05 >= boss.hp) game.startBoss();
 
+    // 사이드 벤치마크: 확실히 이길 때만
+    if (!s.boss && !s.sideFight) {
+      const sb = game.sideBenches().find((b) => game.sideBenchReady(b.id).ok && bossDps(game.stats) * b.time * 1.05 >= game.benchHp(b));
+      if (sb) game.startSideBench(sb.id);
+    }
+    // 파견: 빈 슬롯이 있으면 최신 임무부터 (사람은 가끔 잊는다)
+    if (!human || rng() < 0.3) {
+      for (const m of [...game.availableMissions()].reverse()) if (game.canStartMission(m.id)) game.startMission(m.id);
+    }
+
     // 사람처럼: 수익이 2분 동안 15% 넘게 안 늘고 보스도 못 깰 때만 출시
     const gain = game.releaseGain();
     const t = res.net.length;
@@ -125,6 +139,10 @@ export function runSim(opts: SimOptions = {}): SimResult {
     if (catchGolden && game.state.golden && game.state.golden.remaining < 9) {
       game.claimGolden();
       catchGolden = false;
+    }
+    if (catchThreat && game.state.threat && game.state.threat.remaining < 7) {
+      game.blockThreat();
+      catchThreat = false;
     }
     if (!human || t % 4 === 0) step();
     const s = game.state;

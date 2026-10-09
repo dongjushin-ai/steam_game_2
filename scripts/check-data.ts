@@ -1,5 +1,5 @@
 // 콘텐츠 데이터 무결성 검사: npm test 에서 실행된다.
-import { BUILDINGS, CODEX, ERAS, EVENTS, TIERS, UPGRADES } from "../src/data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, MISSIONS, SIDE_BENCHES, TIERS, UPGRADES } from "../src/data";
 import { ACHIEVEMENTS } from "../src/core/achievements";
 
 const errors: string[] = [];
@@ -20,7 +20,21 @@ unique("codex", CODEX.map((c) => c.id));
 unique("achievements", ACHIEVEMENTS.map((a) => a.id));
 unique("all ids", [...BUILDINGS.map((b) => b.id), ...UPGRADES.map((u) => u.id)]);
 
+unique("side benches", SIDE_BENCHES.map((b) => b.id));
+unique("missions", MISSIONS.map((m) => m.id));
+
 const maxEra = ERAS.length - 1;
+for (const b of SIDE_BENCHES) {
+  if (b.era < 0 || b.era > maxEra) fail(`${b.id}: era 범위 밖`);
+  if (!(b.hpFactor > 0 && b.hpFactor <= 1)) fail(`${b.id}: hpFactor 이상`);
+  if (!b.effects.length) fail(`${b.id}: 보상 효과 없음`);
+}
+for (const m of MISSIONS) {
+  if (m.era < 0 || m.era > maxEra) fail(`${m.id}: era 범위 밖`);
+  if (!(m.duration > 0)) fail(`${m.id}: duration 이상`);
+  if (!m.incomeSeconds && !m.rpSeconds && !m.effects) fail(`${m.id}: 보상 없음`);
+  if (m.effects && !m.effectDuration) fail(`${m.id}: 효과 지속시간 없음`);
+}
 ERAS.forEach((e, i) => {
   if (e.id !== i) fail(`eras[${i}].id = ${e.id}`);
   if (!(e.boss.hp > 0) || !isFinite(e.boss.hp)) fail(`era ${i} 보스 체력이 이상함: ${e.boss.hp}`);

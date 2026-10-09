@@ -3,7 +3,7 @@ import { BUILDINGS, CODEX, ERAS, QUIZ, TIERS, UPGRADES } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtMult, fmtPct, fmtTokens, setNumberFormat } from "../core/format";
 import { arenaTable } from "../core/arena";
-import { CP_BONUS, bossDps, buildingCost, checkpointsFor, computeStats, maxAffordable, milestoneMult, nextMilestone } from "../core/formulas";
+import { CP_BONUS, autoBlockChance, bossDps, buildingCost, checkpointsFor, computeStats, maxAffordable, milestoneMult, nextMilestone } from "../core/formulas";
 import { questProgress, questText } from "../core/quests";
 import type { Game } from "../core/game";
 import { clearSave, exportSave, importSave, saveGame } from "../core/save";
@@ -50,7 +50,7 @@ interface Updatable {
 export class Panels {
   tab: TabId = "service";
   private buyMode: BuyMode = 1;
-  private codexTab: "history" | "tech" | "ach" | "settings" = "history";
+  private codexTab: "history" | "tech" | "models" | "ach" | "settings" = "history";
   private rows: Updatable[] = [];
   private key = "";
 
@@ -98,7 +98,8 @@ export class Panels {
   private layoutKey(): string {
     const s = this.game.state;
     return [this.tab, this.buyMode, this.codexTab, s.era, s.upgrades.length, s.releases, s.boss ? 1 : 0,
-      s.achievements.length, s.bossesBeaten.length, s.ended ? 1 : 0, this.game.hasThinking() ? 1 : 0].join("/");
+      s.achievements.length, s.bossesBeaten.length, s.ended ? 1 : 0, this.game.hasThinking() ? 1 : 0,
+      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length].join("/");
   }
 
   update(): void {
@@ -193,6 +194,9 @@ export class Panels {
     const fx = h("div", { class: "fx" }, ...u.effects.map((e) => h("span", null, effectText(e))));
     if (u.ctx) fx.append(h("span", null, `${L("컨텍스트", "Context")} ${fmtTokens(u.ctx)}`));
     if (u.unlockThinking) fx.append(h("span", null, L("🤔 생각 모드", "🤔 Thinking Mode")));
+    if (u.autoTap) fx.append(h("span", null, L(`🤖 자동 답변 +${u.autoTap}/초`, `🤖 Auto-answer +${u.autoTap}/s`)));
+    if (u.autoBlock) fx.append(h("span", null, L(`🛡️ 탈옥 자동 차단 +${Math.round(u.autoBlock * 100)}%`, `🛡️ Jailbreak auto-block +${Math.round(u.autoBlock * 100)}%`)));
+    if (u.missionSlots) fx.append(h("span", null, L(`🛰️ 파견 슬롯 +${u.missionSlots}`, `🛰️ Mission slot +${u.missionSlots}`)));
     const isRp = u.currency === "rp";
     const btn = h("button", { class: `buy ${isRp ? "rp" : ""}` });
     btn.onclick = () => {
@@ -270,6 +274,7 @@ export class Panels {
       },
     });
     this.root.append(this.questCard());
+    if (g.missionSlots() > 0) this.root.append(this.missionCard());
     this.root.append(
       h("div", { class: "card" }, kv, h("div", { class: "hint", style: { marginTop: "6px" } },
         L("토큰 가성비 = 매출 ÷ 추론 비용. 어려운 질문일수록 토큰도 비싸요. 🧠연구의 효율 기술(양자화·캐싱·증류…)로 단가를 낮추고, 할루시네이션을 줄이면 이익이 늘어요.", "Token value ratio = revenue ÷ inference cost. Harder questions cost more per token. Lower the price with 🧠Research efficiency tech (quantization, caching, distillation…) and cut hallucinations to grow profit."))),
@@ -311,6 +316,52 @@ export class Panels {
     return h("div", { class: "card" },
       h("div", { class: "section-title", style: { margin: "0 0 2px" } }, h("span", null, L("📋 임무", "📋 Quests")), h("span", { class: "hint" }, L("달성하면 자동 보상 (수익·RP)", "Auto-rewarded on completion (income·RP)"))),
       box);
+  }
+
+  /** 에이전트 파견: 실제 시간으로 흐르고, 끝나면 자동으로 보상 */
+  private missionCard(): HTMLElement {
+    const g = this.game;
+    const s = g.state;
+    const slots = g.missionSlots();
+    const head = h("span", { class: "hint" });
+    const list = h("div");
+    for (const m of [...g.availableMissions()].reverse()) {
+      const running = s.missions.some((x) => x.id === m.id);
+      const reward: string[] = [];
+      if (m.incomeSeconds) reward.push(L(`💵 수익 ${fmtDurationShort(m.incomeSeconds)}분`, `💵 ${fmtDurationShort(m.incomeSeconds)} min of income`));
+      if (m.rpSeconds) reward.push(L(`🧠 RP ${fmtDurationShort(m.rpSeconds)}분`, `🧠 ${fmtDurationShort(m.rpSeconds)} min of RP`));
+      if (m.effects) reward.push(...m.effects.map(effectText));
+      const btn = h("button", { class: "buy" });
+      btn.onclick = () => {
+        if (g.startMission(m.id)) {
+          sfx("buy");
+          toast(`${m.emoji} ${m.name}`, L("파견 출발! 앱을 꺼도 시간은 흘러요", "Dispatched! Time keeps running while you're away"));
+          this.update();
+        } else sfx("error");
+      };
+      const row = h("div", { class: `row ${running ? "running" : ""}` }, h("div", { class: "ico" }, m.emoji),
+        h("div", null, h("div", { class: "name" }, m.name, h("small", null, fmtDurationShort(m.duration) + L("분", "m"))), h("div", { class: "desc" }, m.desc),
+          h("div", { class: "fx" }, ...reward.map((r) => h("span", null, r)))), btn);
+      this.rows.push({
+        update: () => {
+          if (running) {
+            btn.disabled = true;
+            btn.className = "buy";
+            setText(btn, `⏳ ${fmtClock(g.missionLeft(m.id))}`);
+          } else {
+            const can = g.canStartMission(m.id);
+            btn.disabled = !can;
+            btn.className = `buy ${can ? "can" : ""}`;
+            setText(btn, can ? L("🚀 파견", "🚀 Send") : L("슬롯 없음", "No slot"));
+          }
+        },
+      });
+      list.append(row);
+    }
+    this.rows.push({ update: () => setText(head, L(`파견 중 ${s.missions.length} / ${slots}`, `Out ${s.missions.length} / ${slots}`)) });
+    return h("div", null,
+      this.title(L("🛰️ 에이전트 파견", "🛰️ Agent missions"), head),
+      list);
   }
 
   // ── 🖥️ 인프라 ───────────────────────────────────────
@@ -418,6 +469,7 @@ export class Panels {
         h("p", { class: "desc" }, boss.desc),
         req, ready, btn),
     );
+    this.root.append(...this.sideBenchList());
 
     // 새 모델 출시
     const rel = h("div");
@@ -474,6 +526,53 @@ export class Panels {
     this.root.append(this.title(L("🗺️ AI 연표", "🗺️ AI Timeline")), h("div", { class: "card" }, tl));
   }
 
+  /** 지난 시대의 명작 벤치마크들. 깨면 영구 보너스. */
+  private sideBenchList(): HTMLElement[] {
+    const g = this.game;
+    const s = g.state;
+    const list = g.sideBenches();
+    if (!list.length) return [];
+    const out: HTMLElement[] = [this.title(L(`🎯 사이드 벤치마크 ${s.benchDone.length}/${list.length}`, `🎯 Side benchmarks ${s.benchDone.length}/${list.length}`), h("span", { class: "hint" }, L("깨면 영구 보너스 · 20초", "Permanent bonus · 20s")))];
+    const open = list.filter((b) => !s.benchDone.includes(b.id));
+    const cleared = list.filter((b) => s.benchDone.includes(b.id));
+    const row = (b: (typeof list)[number]) => {
+      const won = s.benchDone.includes(b.id);
+      const fx = h("div", { class: "fx" }, ...b.effects.map((e) => h("span", null, effectText(e))));
+      const btn = h("button", { class: "buy" });
+      btn.onclick = () => {
+        if (g.startSideBench(b.id)) {
+          sfx("event");
+          this.update();
+        } else sfx("error");
+      };
+      const el = h("div", { class: `row ${won ? "owned" : ""}` }, h("div", { class: "ico" }, b.emoji),
+        h("div", null, h("div", { class: "name" }, b.name, h("small", null, b.year)), h("div", { class: "desc" }, won ? `✅ ${b.winText}` : b.desc), fx),
+        won ? h("span", { class: "hint" }, "✅") : btn);
+      if (!won) {
+        this.rows.push({
+          update: () => {
+            const fight = s.sideFight?.id === b.id ? s.sideFight : null;
+            if (fight) {
+              btn.disabled = true;
+              btn.className = "buy";
+              setText(btn, `${fmtPct(Math.min(1, fight.dealt / g.benchHp(b)))} · ${Math.ceil(fight.remaining)}s`);
+              return;
+            }
+            const r = g.sideBenchReady(b.id);
+            const pct = Math.min(1, (bossDps(g.stats) * b.time) / g.benchHp(b));
+            btn.disabled = !r.ok;
+            btn.className = `buy ${r.ok && pct >= 1 ? "can" : ""}`;
+            setText(btn, r.ok ? L(`도전 ${fmtPct(pct)}`, `Try ${fmtPct(pct)}`) : `🔒 ${r.reason}`);
+          },
+        });
+      }
+      return el;
+    };
+    out.push(...open.map(row));
+    if (cleared.length) out.push(h("details", null, h("summary", { class: "hint" }, L(`정복 ${cleared.length}개`, `Cleared (${cleared.length})`)), ...cleared.map(row)));
+    return out;
+  }
+
   private confirmRelease(): void {
     const g = this.game;
     const gain = g.releaseGain();
@@ -506,13 +605,14 @@ export class Panels {
 
   private buildCodex(): void {
     const seg = h("div", { class: "seg", style: { marginBottom: "8px" } });
-    const tabs: [typeof this.codexTab, string][] = [["history", L("📜 역사", "📜 History")], ["tech", L("🔬 기술", "🔬 Tech")], ["ach", L("🏅 업적", "🏅 Feats")], ["settings", L("⚙️ 설정", "⚙️ Settings")]];
+    const tabs: [typeof this.codexTab, string][] = [["history", L("📜 역사", "📜 History")], ["tech", L("🔬 기술", "🔬 Tech")], ["models", L("🗂️ 모델", "🗂️ Models")], ["ach", L("🏅 업적", "🏅 Feats")], ["settings", L("⚙️ 설정", "⚙️ Settings")]];
     for (const [id, label] of tabs) {
       seg.append(h("button", { class: this.codexTab === id ? "on" : "", onclick: () => { this.codexTab = id; this.update(); } }, label));
     }
     this.root.append(seg);
     if (this.codexTab === "history") this.buildHistory();
     else if (this.codexTab === "tech") this.buildTech();
+    else if (this.codexTab === "models") this.buildModels();
     else if (this.codexTab === "ach") this.buildAchievements();
     else this.buildSettings();
   }
@@ -556,6 +656,24 @@ export class Panels {
     if (!owned.length) this.root.append(h("p", { class: "hint" }, L("아직 없어요. 🧠 연구 탭에서 첫 연구를 해보세요.", "Nothing yet. Try your first research in the 🧠 Research tab.")));
   }
 
+  /** 모델 연대기: 출시할 때마다 남긴 스펙 */
+  private buildModels(): void {
+    const g = this.game;
+    const s = g.state;
+    const st = g.stats;
+    const rows = [...s.models].reverse();
+    const line = (v: string, era: number, intel: number, ctx: number, tier: number, hall: number, at: string, now = false) =>
+      h("div", { class: `codex-item ${now ? "now" : ""}` }, h("div", { class: "e" }, ERAS[era]?.avatar ?? "🤖"),
+        h("div", null, h("b", null, `${s.aiName} ${v}`), h("small", null, ` · ${ERAS[era]?.name ?? ""} · ${at}`),
+          h("div", { class: "hint" }, `🧠 ${fmt(intel)} · 📜 ${fmtTokens(ctx)} · ${TIERS[tier]?.emoji ?? ""} ${TIERS[tier]?.name ?? ""} · ${L("환각", "Hall.")} ${fmtPct(hall)}`)));
+    this.root.append(
+      h("p", { class: "hint" }, L("🚀 새 모델을 출시할 때마다 그 순간의 스펙이 여기 기록돼요.", "🚀 Every model you release leaves its spec sheet here.")),
+      line(L(`v${s.releases + 1} (개발 중)`, `v${s.releases + 1} (in training)`), s.era, st.intel, st.ctx, st.tier.id, st.hall, fmtClock(s.stats.playSeconds), true),
+      ...rows.map((m) => line(`v${m.version}`, m.era, m.intel, m.ctx, m.tier, m.hall, fmtClock(m.at))),
+    );
+    if (!rows.length) this.root.append(h("p", { class: "hint" }, L("아직 출시한 모델이 없어요. 🏆 벤치마크 탭에서 첫 출시를 해보세요.", "No releases yet. Ship your first model from the 🏆 Bench tab.")));
+  }
+
   private buildAchievements(): void {
     const s = this.game.state;
     const grid = h("div", { class: "ach-grid" });
@@ -585,6 +703,11 @@ export class Panels {
         h("span", null, L("퀴즈 정답", "Quizzes solved")), h("b", null, `${s.quizSolved.length} / ${QUIZ.length}`),
         h("span", null, L("완료한 임무", "Quests done")), h("b", null, fmt(st.questsDone)),
         h("span", null, L("최고 콤보", "Best combo")), h("b", null, fmt(st.maxCombo)),
+        h("span", null, L("사이드 벤치마크", "Side benchmarks")), h("b", null, `${s.benchDone.length} / ${this.game.sideBenches().length}`),
+        h("span", null, L("막은 탈옥", "Jailbreaks blocked")), h("b", null, `${fmt(st.blocked)} (${L("자동", "auto")} ${fmtPct(autoBlockChance(s))})`),
+        h("span", null, L("뚫린 탈옥", "Breaches")), h("b", null, fmt(st.breaches)),
+        h("span", null, L("파견 완료", "Missions done")), h("b", null, fmt(st.missionsDone)),
+        h("span", null, L("출석", "Daily streak")), h("b", null, L(`${s.daily.streak}일 연속`, `${s.daily.streak} day(s)`)),
         h("span", null, L("생각 모드", "Thinking Mode")), h("b", null, fmtClock(st.thinkSeconds)),
         h("span", null, L("플레이 시간", "Play time")), h("b", null, fmtClock(st.playSeconds))),
     );
@@ -642,6 +765,11 @@ export class Panels {
           "History sources: Wikipedia (CC BY-SA 4.0), collected with the Obscura headless browser. Source code and data are in the GitHub repository.")),
     );
   }
+}
+
+/** 초 → 분 (정수, 최소 1) */
+function fmtDurationShort(sec: number): string {
+  return String(Math.max(1, Math.round(sec / 60)));
 }
 
 function fmtClock(sec: number): string {

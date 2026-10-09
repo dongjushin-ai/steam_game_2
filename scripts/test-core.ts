@@ -366,4 +366,142 @@ test("세이브: 본 세이브가 깨지면 백업에서 복구", () => {
   delete (globalThis as { localStorage?: unknown }).localStorage;
 });
 
+test("사이드 벤치마크: 이기면 영구 보너스, 출시 후에도 유지", () => {
+  const s = newState();
+  s.era = 5;
+  const g = new Game(s);
+  const before = g.stats.mult.intel;
+  assert.ok(g.startSideBench("sb_imagenet") || g.sideBenchReady("sb_imagenet").reason?.includes("지능"));
+  s.sideFight = { id: "sb_imagenet", dealt: 1e30, remaining: 10 };
+  g.tick(0.1);
+  assert.equal(s.sideFight, null);
+  assert.deepEqual(s.benchDone, ["sb_imagenet"]);
+  assert.ok(Math.abs(g.stats.mult.intel / before - 1.15) < 1e-9, "지능 ×1.15");
+  assert.equal(g.sideBenchReady("sb_imagenet").ok, false, "다시 도전할 수 없다");
+  assert.equal(g.sideBenchReady("sb_turing2").ok, false, "미래 시대는 잠김");
+  s.totalEarned = 1e12;
+  g.release();
+  assert.ok(g.state.benchDone.includes("sb_imagenet"));
+  assert.equal(g.state.models.length, 1, "출시하면 연대기에 기록");
+  assert.equal(g.state.models[0].version, 1);
+});
+
+test("사이드 벤치마크 시간 초과는 실패, 보스와 동시 진행 불가", () => {
+  const s = newState();
+  s.era = 4;
+  const g = new Game(s);
+  s.sideFight = { id: "sb_mnist", dealt: 0, remaining: 0.05 };
+  assert.equal(g.startBoss(), false);
+  g.tick(0.1);
+  assert.equal(s.sideFight, null);
+  assert.equal(s.benchDone.length, 0);
+});
+
+test("탈옥: 시대 6부터, 놓치면 수요 −30%, 막으면 보상", () => {
+  const s = newState();
+  s.era = 5;
+  s.nextThreatIn = 0.01;
+  const g = new Game(s, () => 0.99);
+  g.tick(0.1);
+  assert.equal(s.threat, null, "시대 5에는 없다");
+  s.era = 6;
+  g.tick(0.1);
+  assert.ok(s.threat, "시대 6에는 나온다");
+  const demand = g.stats.demand;
+  for (let i = 0; i < 110; i++) g.tick(0.1);
+  assert.equal(s.threat, null);
+  assert.equal(s.stats.breaches, 1);
+  assert.ok(g.stats.demand < demand, "뚫리면 수요 감소");
+  s.nextThreatIn = 0.01;
+  g.tick(0.1);
+  const credits = s.credits;
+  assert.ok(g.blockThreat() > 0);
+  assert.ok(s.credits > credits);
+  assert.equal(s.stats.blocked, 1);
+});
+
+test("탈옥 자동 차단: 안전 연구 확률 합산, 상한 95%", () => {
+  const s = newState();
+  s.era = 9;
+  s.upgrades = ["u_redteam", "u_classifier", "k_injection"];
+  s.nextThreatIn = 0.01;
+  const g = new Game(s, () => 0.5);
+  g.tick(0.1);
+  assert.equal(s.threat, null);
+  assert.equal(s.stats.blocked, 1, "rng 0.5 < 0.9 → 자동 차단");
+});
+
+test("에이전트 파견: 슬롯 제한, 실제 시간 경과 후 자동 보상", () => {
+  let now = 1_000_000;
+  const s = newState();
+  s.era = 6;
+  const g = new Game(s, Math.random, () => now);
+  assert.equal(g.missionSlots(), 2);
+  assert.ok(g.startMission("m_review"));
+  assert.equal(g.startMission("m_review"), false, "같은 임무 중복 불가");
+  assert.ok(g.startMission("m_talk"));
+  assert.equal(g.startMission("m_kaggle"), false, "슬롯 가득");
+  assert.equal(g.startMission("m_poc"), false, "미래 시대 임무 불가");
+  const rp = s.rp;
+  now += 241_000;
+  g.tick(1);
+  assert.equal(s.missions.length, 1, "리뷰만 끝남");
+  assert.ok(s.rp > rp);
+  assert.equal(s.stats.missionsDone, 1);
+  s.upgrades.push("m_hq");
+  g.refresh();
+  assert.equal(g.missionSlots(), 3);
+  assert.ok(g.startMission("m_gpu_auction"));
+  now += 3_600_000;
+  g.tick(1);
+  assert.equal(s.missions.length, 0);
+  assert.ok(s.active.some((a) => a.id === "mission_m_gpu_auction"), "효과형 보상");
+});
+
+test("파견은 오프라인 동안에도 끝난다", () => {
+  let now = Date.now();
+  const s = newState();
+  s.era = 3;
+  s.lastSaved = now;
+  const g = new Game(s, Math.random, () => now);
+  assert.ok(g.startMission("m_review"));
+  now += 3_600_000;
+  g.applyOffline(now);
+  assert.equal(s.missions.length, 0);
+  assert.equal(s.stats.missionsDone, 1);
+});
+
+test("출석: 하루 한 번, 연속이면 스트릭 증가, 끊기면 1부터", () => {
+  const g = new Game(newState());
+  assert.equal(g.claimDaily("2026-10-01", "2026-09-30")!.streak, 1);
+  assert.equal(g.claimDaily("2026-10-01", "2026-09-30"), null, "같은 날 두 번 불가");
+  assert.equal(g.claimDaily("2026-10-02", "2026-10-01")!.streak, 2);
+  const r3 = g.claimDaily("2026-10-03", "2026-10-02")!;
+  assert.equal(r3.streak, 3);
+  assert.ok(r3.credits > 0 && r3.rp > 0);
+  assert.equal(g.claimDaily("2026-10-09", "2026-10-08")!.streak, 1);
+});
+
+test("세이브: 새 시스템 필드 정리", () => {
+  const s = migrate({
+    era: 7, credits: 1,
+    benchDone: ["sb_mnist", "sb_fake", "sb_mnist"],
+    sideFight: { id: "sb_fake", dealt: 1, remaining: 5 },
+    threat: { text: 999, remaining: 3, y: 0.2 },
+    missions: [{ id: "m_review", endsAt: 5 }, { id: "nope", endsAt: 5 }, { id: "m_talk", endsAt: "x" }],
+    models: [{ version: 1, era: 3, intel: 5, ctx: 0, tier: 2, hall: 0.2, at: 100 }, { version: "x" }],
+    daily: { last: 7 },
+  })!;
+  assert.deepEqual(s.benchDone, ["sb_mnist"]);
+  assert.equal(s.sideFight, null);
+  assert.equal(s.threat, null);
+  assert.deepEqual(s.missions.map((m) => m.id), ["m_review"]);
+  assert.equal(s.models.length, 1);
+  assert.deepEqual(s.daily, { last: "", streak: 0 });
+  const old = migrate({ era: 2, credits: 5 })!;
+  assert.deepEqual(old.benchDone, []);
+  assert.deepEqual(old.missions, []);
+  assert.equal(old.stats.blocked, 0);
+});
+
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

@@ -1,11 +1,12 @@
 // 언어 전환. UI 문구는 L("한국어", "English"), 콘텐츠 데이터는 applyLanguage()가 id별 번역표로 덮어쓴다.
-import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, NEWS, QUIZ, RIVALS, TIERS, UPGRADES } from "../data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import type { NewsItem } from "../core/types";
 import { BUILDINGS_EN } from "./en/buildings";
 import { CODEX_EN } from "./en/codex";
 import { ERAS_EN, TIERS_EN } from "./en/eras";
 import { EVENTS_EN } from "./en/events";
+import { BENCHES_EN, EXTRA_ACHIEVEMENTS_EN, EXTRA_UPGRADES_EN, MISSIONS_EN, THREATS_EN } from "./en/extra";
 import { ACHIEVEMENTS_EN, GOLDENS_EN, RIVALS_EN } from "./en/misc";
 import { NEWS_EN } from "./en/news";
 import { QUIZ_EN } from "./en/quiz";
@@ -37,7 +38,12 @@ const KO = {
   goldens: GOLDENS.map((g) => ({ name: g.name, asks: [...g.asks], result: g.result })),
   achievements: ACHIEVEMENTS.map((a) => ({ name: a.name, desc: a.desc })),
   rivals: RIVALS.map((r) => ({ lab: r.lab, quote: r.quote })),
+  benches: SIDE_BENCHES.map((b) => ({ name: b.name, desc: b.desc, winText: b.winText, year: b.year })),
+  missions: MISSIONS.map((m) => ({ name: m.name, desc: m.desc })),
+  threats: [...THREATS],
 };
+const UPG_EN = { ...UPGRADES_EN, ...EXTRA_UPGRADES_EN };
+const ACH_EN = { ...ACHIEVEMENTS_EN, ...EXTRA_ACHIEVEMENTS_EN };
 
 const year = (y: string) => YEARS_EN[y] ?? y;
 
@@ -78,7 +84,7 @@ export function applyLanguage(next: Lang): void {
     x.desc = t?.desc ?? KO.buildings[i].desc;
   });
   UPGRADES.forEach((x, i) => {
-    const t = en ? pick(UPGRADES_EN, x.id, "upgrade") : undefined;
+    const t = en ? pick(UPG_EN, x.id, "upgrade") : undefined;
     x.name = t?.name ?? KO.upgrades[i].name;
     x.desc = t?.desc ?? KO.upgrades[i].desc;
     x.year = en ? year(KO.upgrades[i].year) : KO.upgrades[i].year;
@@ -117,7 +123,7 @@ export function applyLanguage(next: Lang): void {
     x.result = t?.result ?? KO.goldens[i].result;
   });
   ACHIEVEMENTS.forEach((x, i) => {
-    const t = en ? pick(ACHIEVEMENTS_EN, x.id, "achievement") : undefined;
+    const t = en ? pick(ACH_EN, x.id, "achievement") : undefined;
     x.name = t?.name ?? KO.achievements[i].name;
     x.desc = t?.desc ?? KO.achievements[i].desc;
   });
@@ -126,6 +132,21 @@ export function applyLanguage(next: Lang): void {
     x.lab = t?.lab ?? KO.rivals[i].lab;
     x.quote = t?.quote ?? KO.rivals[i].quote;
   });
+  SIDE_BENCHES.forEach((x, i) => {
+    const ko = KO.benches[i];
+    const t = en ? pick(BENCHES_EN, x.id, "bench") : undefined;
+    x.name = t?.name ?? ko.name;
+    x.desc = t?.desc ?? ko.desc;
+    x.winText = t?.winText ?? ko.winText;
+    x.year = en ? year(ko.year) : ko.year;
+  });
+  MISSIONS.forEach((x, i) => {
+    const t = en ? pick(MISSIONS_EN, x.id, "mission") : undefined;
+    x.name = t?.name ?? KO.missions[i].name;
+    x.desc = t?.desc ?? KO.missions[i].desc;
+  });
+  if (en && THREATS_EN.length !== KO.threats.length) missing.push("threats:length");
+  THREATS.splice(0, THREATS.length, ...(en ? THREATS_EN : KO.threats));
 }
 
 function replaceAll(target: NewsItem[], items: NewsItem[]): void {

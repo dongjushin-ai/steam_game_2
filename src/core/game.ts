@@ -1,12 +1,12 @@
-import { ERAS, EVENTS, GOLDENS, QUIZ, UPGRADES } from "../data";
+import { ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSlots } from "../data";
 import type { GoldenDef } from "../data/golden";
 import { ACHIEVEMENTS } from "./achievements";
 import {
-  BUILDING_MAP, COMBO_WINDOW, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, autoTapValue, bossDps, buildingCost,
+  BENCH_MAP, BUILDING_MAP, COMBO_WINDOW, autoBlockChance, extraMissionSlots, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, autoTapValue, bossDps, buildingCost,
   checkpointsFor, comboMult, computeStats, maxAffordable, tapValue, type Stats,
 } from "./formulas";
 import { QUEST_SLOTS, makeQuest, questProgress } from "./quests";
-import type { EventChoice, GameEvent, GameState, Quest, QuizQuestion } from "./types";
+import type { EventChoice, GameEvent, GameState, MissionDef, Quest, QuizQuestion, SideBench } from "./types";
 import { L } from "../i18n/lang";
 
 export const SAVE_VERSION = 2;
@@ -15,6 +15,14 @@ const START_KIT: Record<string, number> = { c_diff: 1, p_dorm: 1, d_neighbors: 1
 export const GOLDEN_LIFETIME = 12;
 /** 이벤트 대신 퀴즈가 나올 확률 */
 const QUIZ_CHANCE = 0.3;
+/** 탈옥 프롬프트가 나오기 시작하는 시대 (ChatGPT 이후) */
+export const THREAT_ERA = 6;
+/** 탈옥 말풍선이 머무는 시간(초). 놓치면 뚫린다. */
+export const THREAT_LIFETIME = 10;
+/** 뚫렸을 때: 신뢰 하락으로 수요 −30%, 30초 */
+const BREACH = { demand: 0.7, duration: 30 };
+/** 모델 연대기 최대 기록 수 */
+const MODEL_LOG_MAX = 60;
 
 export type GameNotice =
   | { kind: "event"; event: GameEvent }
@@ -27,6 +35,12 @@ export type GameNotice =
   | { kind: "bossWin"; era: number }
   | { kind: "bossLose"; era: number }
   | { kind: "achievement"; id: string }
+  | { kind: "benchWin"; bench: SideBench }
+  | { kind: "benchLose"; bench: SideBench }
+  | { kind: "threat" }
+  | { kind: "threatBlocked"; auto: boolean; amount: number }
+  | { kind: "breach" }
+  | { kind: "missionDone"; mission: MissionDef; credits: number; rp: number }
   | { kind: "ending" };
 
 export function newState(aiName = "나의 AI"): GameState {
@@ -56,12 +70,20 @@ export function newState(aiName = "나의 AI"): GameState {
     quizSolved: [],
     eraStartedAt: 0,
     eraTimes: [0],
+    benchDone: [],
+    sideFight: null,
+    threat: null,
+    nextThreatIn: 120,
+    missions: [],
+    models: [],
+    daily: { last: "", streak: 0 },
     boss: null,
     bossesBeaten: [],
     achievements: [],
     stats: {
       answered: 0, hallucinations: 0, taps: 0, playSeconds: 0, eventsSeen: 0, goldens: 0, quizCorrect: 0,
       quizAsked: 0, questsDone: 0, maxCombo: 0, bought: 0, researched: 0, thinkSeconds: 0, bonusEarned: 0,
+      blocked: 0, breaches: 0, missionsDone: 0, benchWins: 0,
     },
     ended: false,
     settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko" },
@@ -77,10 +99,13 @@ export class Game {
   private questAcc = 0;
   /** 테스트·시뮬레이션용 난수 */
   rng: () => number;
+  /** 실제 시각(ms). 파견 임무가 쓴다. 시뮬레이션에서는 게임 시간으로 바꿔 넣는다. */
+  clock: () => number;
 
-  constructor(state: GameState = newState(), rng: () => number = Math.random) {
+  constructor(state: GameState = newState(), rng: () => number = Math.random, clock: () => number = Date.now) {
     this.state = state;
     this.rng = rng;
+    this.clock = clock;
     this.stats = computeStats(state);
     this.fillQuests();
   }
@@ -117,6 +142,7 @@ export class Game {
         this.earn(autoTapValue(st) * n);
         s.stats.answered += n;
         if (s.boss) s.boss.dealt += bossDps(st) * 0.25 * n;
+        if (s.sideFight) s.sideFight.dealt += bossDps(st) * 0.25 * n;
       }
     }
 
@@ -131,9 +157,14 @@ export class Game {
       s.boss.remaining -= dt;
       this.resolveBoss();
     }
+    if (s.sideFight) {
+      s.sideFight.dealt += bossDps(st) * dt;
+      s.sideFight.remaining -= dt;
+      this.resolveSideBench();
+    }
 
     // 보스전 중에는 이벤트·퀴즈를 띄우지 않는다 (창을 닫는 동안 보스 시간이 흐르므로)
-    if (!s.pendingChoice && !s.pendingQuiz && !s.boss) {
+    if (!s.pendingChoice && !s.pendingQuiz && !s.boss && !s.sideFight) {
       s.nextEventIn -= dt;
       if (s.nextEventIn <= 0) {
         this.triggerRandomEvent();
@@ -150,11 +181,21 @@ export class Game {
       if (s.nextGoldenIn <= 0) this.spawnGolden();
     }
 
-    // 임무는 1초마다 확인
+    // 탈옥 프롬프트
+    if (s.threat) {
+      s.threat.remaining -= dt;
+      if (s.threat.remaining <= 0) this.breach();
+    } else if (s.era >= THREAT_ERA) {
+      s.nextThreatIn -= dt;
+      if (s.nextThreatIn <= 0) this.spawnThreat();
+    }
+
+    // 임무·파견은 1초마다 확인
     this.questAcc += dt;
     if (this.questAcc >= 1) {
       this.questAcc = 0;
       this.checkQuests();
+      this.checkMissions();
     }
 
     if (changed) this.refresh();
@@ -238,6 +279,7 @@ export class Game {
     s.stats.maxCombo = Math.max(s.stats.maxCombo, s.combo);
     s.stats.taps += 1;
     if (s.boss) s.boss.dealt += bossDps(this.stats) * 0.5;
+    if (s.sideFight) s.sideFight.dealt += bossDps(this.stats) * 0.5;
     const v = tapValue(this.stats) * comboMult(s.combo);
     this.earn(v);
     s.stats.answered += 1;
@@ -327,14 +369,14 @@ export class Game {
     const s = this.state;
     if (s.ended && s.era >= ERAS.length - 1 && s.bossesBeaten.includes(s.era)) return { ok: false, reason: L("이미 모든 벤치마크를 정복했습니다", "Every benchmark conquered") };
     const boss = ERAS[s.era].boss;
-    if (s.boss) return { ok: false, reason: L("도전 중", "In progress") };
+    if (s.boss || s.sideFight) return { ok: false, reason: L("도전 중", "In progress") };
     if (this.stats.intel < boss.intelReq) return { ok: false, reason: L(`지능 ${boss.intelReq} 필요`, `Needs intelligence ${boss.intelReq}`) };
     if (this.stats.ctx < boss.ctxReq) return { ok: false, reason: L(`컨텍스트 ${boss.ctxReq} 필요`, `Needs context ${boss.ctxReq}`) };
     return { ok: true };
   }
 
   startBoss(): boolean {
-    if (!this.bossReady().ok) return false;
+    if (!this.bossReady().ok || this.state.sideFight) return false;
     this.state.boss = { era: this.state.era, dealt: 0, remaining: ERAS[this.state.era].boss.time };
     return true;
   }
@@ -372,6 +414,167 @@ export class Game {
       if (ev) this.applyEvent(ev);
     }
     this.refresh();
+  }
+
+  // ── 사이드 벤치마크 ───────────────────────────────────
+
+  benchHp(b: SideBench): number {
+    return ERAS[b.era].boss.hp * b.hpFactor;
+  }
+
+  /** 지금 시대까지 열린 사이드 벤치마크 */
+  sideBenches(): SideBench[] {
+    return Object.values(BENCH_MAP).filter((b) => b.era <= this.state.era);
+  }
+
+  sideBenchReady(id: string): { ok: boolean; reason?: string } {
+    const s = this.state;
+    const b = BENCH_MAP[id];
+    if (!b || b.era > s.era) return { ok: false, reason: L("잠김", "Locked") };
+    if (s.benchDone.includes(id)) return { ok: false, reason: L("정복", "Cleared") };
+    if (s.boss || s.sideFight) return { ok: false, reason: L("다른 도전 중", "Another run in progress") };
+    if (this.stats.intel < b.intelReq) return { ok: false, reason: L(`지능 ${b.intelReq} 필요`, `Needs intelligence ${b.intelReq}`) };
+    if (this.stats.ctx < b.ctxReq) return { ok: false, reason: L(`컨텍스트 ${b.ctxReq} 필요`, `Needs context ${b.ctxReq}`) };
+    return { ok: true };
+  }
+
+  startSideBench(id: string): boolean {
+    if (!this.sideBenchReady(id).ok) return false;
+    this.state.sideFight = { id, dealt: 0, remaining: BENCH_MAP[id].time };
+    return true;
+  }
+
+  private resolveSideBench(): void {
+    const s = this.state;
+    const fight = s.sideFight;
+    if (!fight) return;
+    const b = BENCH_MAP[fight.id];
+    if (!b) {
+      s.sideFight = null;
+      return;
+    }
+    if (fight.dealt >= this.benchHp(b)) {
+      s.sideFight = null;
+      if (!s.benchDone.includes(b.id)) s.benchDone.push(b.id);
+      s.stats.benchWins += 1;
+      this.refresh();
+      this.emit({ kind: "benchWin", bench: b });
+    } else if (fight.remaining <= 0) {
+      s.sideFight = null;
+      this.emit({ kind: "benchLose", bench: b });
+    }
+  }
+
+  // ── 탈옥 프롬프트 ─────────────────────────────────────
+
+  private spawnThreat(): void {
+    const s = this.state;
+    s.nextThreatIn = 100 + this.rng() * 80;
+    if (this.rng() < autoBlockChance(s)) {
+      // 안전 연구가 알아서 막았다
+      s.stats.blocked += 1;
+      this.emit({ kind: "threatBlocked", auto: true, amount: 0 });
+      return;
+    }
+    s.threat = { text: Math.floor(this.rng() * THREATS.length), remaining: THREAT_LIFETIME, y: 0.15 + this.rng() * 0.3 };
+    this.emit({ kind: "threat" });
+  }
+
+  /** 탈옥 말풍선을 눌러 막는다. 보상: 수익 15초분. */
+  blockThreat(): number {
+    const s = this.state;
+    if (!s.threat) return 0;
+    s.threat = null;
+    s.stats.blocked += 1;
+    const amount = Math.max(this.stats.net, this.stats.rewardPerQ) * 15;
+    this.earnBonus(amount);
+    this.emit({ kind: "threatBlocked", auto: false, amount });
+    return amount;
+  }
+
+  private breach(): void {
+    const s = this.state;
+    s.threat = null;
+    s.stats.breaches += 1;
+    s.active = s.active.filter((a) => a.id !== "breach");
+    s.active.push({ id: "breach", name: L("탈옥 사고", "Jailbreak breach"), emoji: "🔓", effects: [{ stat: "demand", mul: BREACH.demand }], remaining: BREACH.duration });
+    this.refresh();
+    this.emit({ kind: "breach" });
+  }
+
+  // ── 에이전트 파견 ─────────────────────────────────────
+
+  missionSlots(): number {
+    const base = baseMissionSlots(this.state.era);
+    return base > 0 ? base + extraMissionSlots(this.state) : 0;
+  }
+
+  availableMissions(): MissionDef[] {
+    return MISSIONS.filter((m) => m.era <= this.state.era);
+  }
+
+  canStartMission(id: string): boolean {
+    const s = this.state;
+    const m = MISSIONS.find((x) => x.id === id);
+    return !!m && m.era <= s.era && !s.missions.some((x) => x.id === id) && s.missions.length < this.missionSlots();
+  }
+
+  startMission(id: string): boolean {
+    if (!this.canStartMission(id)) return false;
+    const m = MISSIONS.find((x) => x.id === id)!;
+    this.state.missions.push({ id, endsAt: this.clock() + m.duration * 1000 });
+    return true;
+  }
+
+  /** 남은 시간(초) */
+  missionLeft(id: string): number {
+    const m = this.state.missions.find((x) => x.id === id);
+    return m ? Math.max(0, (m.endsAt - this.clock()) / 1000) : 0;
+  }
+
+  /** 끝난 파견의 보상을 받는다 (자동) */
+  checkMissions(): void {
+    const s = this.state;
+    if (!s.missions.length) return;
+    const now = this.clock();
+    const done = s.missions.filter((m) => m.endsAt <= now);
+    if (!done.length) return;
+    s.missions = s.missions.filter((m) => m.endsAt > now);
+    for (const run of done) {
+      const def = MISSIONS.find((m) => m.id === run.id);
+      if (!def) continue;
+      const credits = def.incomeSeconds ? Math.max(this.stats.net, this.stats.rewardPerQ) * def.incomeSeconds : 0;
+      const rp = def.rpSeconds ? Math.max(this.stats.rpRate, 1) * def.rpSeconds : 0;
+      if (credits) this.earnBonus(credits);
+      s.rp += rp;
+      if (def.effects && def.effectDuration) {
+        const id = `mission_${def.id}`;
+        s.active = s.active.filter((a) => a.id !== id);
+        s.active.push({ id, name: def.name, emoji: def.emoji, effects: def.effects, remaining: def.effectDuration });
+        this.refresh();
+      }
+      s.stats.missionsDone += 1;
+      this.emit({ kind: "missionDone", mission: def, credits, rp });
+    }
+  }
+
+  // ── 출석 ──────────────────────────────────────────────
+
+  /**
+   * 하루 첫 접속 보상. today/yesterday는 'YYYY-MM-DD'.
+   * 연속 접속 일수(최대 7)만큼 수익·RP가 커진다. 이미 받았으면 null.
+   */
+  claimDaily(today: string, yesterday: string): { streak: number; credits: number; rp: number } | null {
+    const d = this.state.daily;
+    if (d.last === today) return null;
+    d.streak = d.last === yesterday ? d.streak + 1 : 1;
+    d.last = today;
+    const k = Math.min(7, d.streak);
+    const credits = Math.max(this.stats.net, this.stats.rewardPerQ) * 60 * k;
+    const rp = Math.max(this.stats.rpRate, 1) * 30 * k;
+    this.earnBonus(credits);
+    this.state.rp += rp;
+    return { streak: d.streak, credits, rp };
   }
 
   // ── 이벤트 ────────────────────────────────────────────
@@ -471,6 +674,12 @@ export class Game {
     const gain = this.releaseGain();
     if (gain < 1) return false;
     const s = this.state;
+    const st = this.stats;
+    s.models.push({
+      version: s.releases + 1, era: s.era, intel: st.intel, ctx: st.ctx, tier: st.tier.id,
+      hall: st.hall, at: Math.floor(s.stats.playSeconds),
+    });
+    if (s.models.length > MODEL_LOG_MAX) s.models.splice(0, s.models.length - MODEL_LOG_MAX);
     s.checkpoints += gain;
     s.releases += 1;
     s.credits = 0;
@@ -483,6 +692,7 @@ export class Game {
     }
     s.thinking = false;
     s.boss = null;
+    s.sideFight = null;
     s.active = s.active.filter((a) => a.id.startsWith("winter"));
     this.refresh();
     return true;
@@ -514,7 +724,9 @@ export class Game {
       return [0, 0, 0];
     }
     s.boss = null;
+    s.sideFight = null;
     s.golden = null;
+    s.threat = null;
     for (const a of s.active) a.remaining -= secs;
     s.active = s.active.filter((a) => a.remaining > 0);
     const st = this.refresh();
@@ -524,6 +736,8 @@ export class Game {
     this.earn(credits);
     s.rp += rp;
     s.stats.answered += st.answered * secs * eff;
+    // 파견은 실제 시간으로 흘렀으니 끝난 것은 지금 받는다
+    this.checkMissions();
     return [secs, credits, rp];
   }
 }

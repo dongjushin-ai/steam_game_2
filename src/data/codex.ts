@@ -95,4 +95,10 @@ export const CODEX: CodexEntry[] = [
   { id: "hbm4", era: 9, year: "2025", emoji: "🧱", title: "HBM4", text: "2,048비트 인터페이스의 고대역폭 메모리. 2025년 4월 표준 발표." },
   { id: "jepa", era: 10, year: "2022~", emoji: "🌍", title: "월드 모델", text: "다음 단어가 아니라 세상의 다음 상태를 예측하는 모델. 르쿤은 2025년 11월 이를 위한 새 회사를 세우겠다며 메타를 떠난다고 밝혔다." },
   { id: "singularity", era: 10, year: "1993", emoji: "✨", title: "특이점", text: "버너 빈지가 대중화한 개념. 기술 발전이 너무 빨라져 그 너머를 예측할 수 없게 되는 지점." },
+  { id: "red_teaming", era: 7, year: "2022~", emoji: "🛡️", title: "레드팀", text: "출시 전에 일부러 모델을 공격해 위험한 약점을 찾는 작업. 사이버보안에서 쓰던 말을 빌려왔다." },
+  { id: "jailbreak", era: 7, year: "2022~", emoji: "🦹", title: "탈옥 프롬프트", text: "역할극·인코딩·감정 호소로 안전장치를 우회하려는 입력. 'DAN'이나 '할머니 공격' 같은 밈이 유행했다." },
+  { id: "bench_saturation", era: 7, year: "2020s", emoji: "📈", title: "벤치마크 포화", text: "새 벤치마크가 나오면 몇 년, 때로는 몇 달 만에 사람 수준을 넘는다. 그래서 점점 더 어려운 시험이 만들어진다." },
+  { id: "prompt_injection", era: 8, year: "2022", emoji: "💉", title: "프롬프트 인젝션", text: "문서·웹페이지·도구 결과 속에 숨긴 지시로 모델을 조종하는 공격. 2022년 사이먼 윌리슨이 SQL 인젝션에서 이름을 따왔다." },
+  { id: "swebench", era: 8, year: "2023", emoji: "🛠️", title: "SWE-bench", text: "프린스턴 연구진이 공개한 벤치마크. 실제 깃허브 이슈 2,294개를 고치고 테스트를 통과시켜야 한다." },
+  { id: "arc", era: 8, year: "2019", emoji: "🟦", title: "ARC", text: "프랑수아 숄레가 논문 「지능의 측정에 관하여」와 함께 공개한 추상 추론 퍼즐. 적은 예시로 규칙을 찾는 능력을 잰다." },
 ];

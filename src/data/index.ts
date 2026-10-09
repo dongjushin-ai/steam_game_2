@@ -23,3 +23,5 @@ export { GOLDENS } from "./golden";
 export { QUIZ } from "./quiz";
 export { NEWS } from "./news";
 export { RIVALS } from "./rivals";
+export { SIDE_BENCHES } from "./benchmarks";
+export { MISSIONS, THREATS, baseMissionSlots } from "./missions";

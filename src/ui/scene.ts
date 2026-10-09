@@ -1,7 +1,7 @@
 // 메인 장면: 질문 말풍선이 AI에게 날아가고, 탭하면 즉시 답변한다.
-import { ERAS, EVENTS, GOLDENS, TIERS } from "../data";
+import { ERAS, EVENTS, GOLDENS, MISSIONS, THREATS, TIERS } from "../data";
 import { fmt, fmtPct, fmtTokens } from "../core/format";
-import { COMBO_WINDOW, bossDps, comboMult } from "../core/formulas";
+import { BENCH_MAP, COMBO_WINDOW, bossDps, comboMult } from "../core/formulas";
 import type { Game } from "../core/game";
 import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
@@ -23,6 +23,8 @@ export class Scene {
   private autoChip = h("span", { class: "chip" });
   private goldenEl: HTMLButtonElement | null = null;
   private goldenKey = "";
+  private threatEl: HTMLButtonElement | null = null;
+  private threatKey = "";
   private spawnAcc = 0;
   private sayTimer = 4;
   private onTap: () => void;
@@ -44,7 +46,7 @@ export class Scene {
     this.hud.append(this.tierChip, this.hallChip, this.bottleneck, this.autoChip, this.thinkBtn);
     // 빈 곳을 탭해도 답변 하나
     this.root.addEventListener("pointerdown", (e) => {
-      if ((e.target as HTMLElement).closest(".bubble, .think-btn, .golden, button.chip")) return;
+      if ((e.target as HTMLElement).closest(".bubble, .think-btn, .golden, .threat, button.chip")) return;
       this.tapAt(e.clientX, e.clientY);
     });
   }
@@ -146,6 +148,34 @@ export class Scene {
     if (this.goldenEl && gold) this.goldenEl.classList.toggle("fading", gold.remaining < 3);
   }
 
+  /** 탈옥 프롬프트 말풍선: 눌러서 막는다 */
+  private updateThreat(): void {
+    const t = this.game.state.threat;
+    const key = t ? `${t.text}:${t.y}` : "";
+    if (key !== this.threatKey) {
+      this.threatKey = key;
+      this.threatEl?.remove();
+      this.threatEl = null;
+      if (t) {
+        const text = THREATS[t.text] ?? THREATS[0];
+        const el = h("button", { class: "threat", style: { top: `${t.y * 100}%` }, "aria-label": `${L("탈옥 시도 막기", "Block jailbreak attempt")}: ${text}` },
+          h("span", { class: "g-ico" }, "🦹"), h("span", null, h("b", null, L("탈옥 시도! 탭해서 차단", "Jailbreak! Tap to block")), h("small", null, text)));
+        el.addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          const r = this.root.getBoundingClientRect();
+          const got = this.game.blockThreat();
+          if (got) this.pop(e.clientX - r.left, e.clientY - r.top, L("🛡️ 차단!", "🛡️ Blocked!"), "big gold");
+          el.remove();
+          this.threatEl = null;
+          this.threatKey = "";
+        });
+        this.threatEl = el;
+        this.root.append(el);
+      }
+    }
+    if (this.threatEl && t) this.threatEl.classList.toggle("fading", t.remaining < 3);
+  }
+
   /** 몇 번에 한 번씩: 숫자·칩 갱신 */
   update(): void {
     const g = this.game;
@@ -197,15 +227,18 @@ export class Scene {
     if (live) setText(this.comboEl, L(`🔥 ${s.combo} 콤보 · 탭 ×${comboMult(s.combo).toFixed(2)}`, `🔥 ${s.combo} combo · tap ×${comboMult(s.combo).toFixed(2)}`));
 
     this.updateGolden();
+    this.updateThreat();
 
     this.thinkBtn.style.display = g.hasThinking() ? "" : "none";
     setText(this.thinkBtn, `🤔 ${L("생각 모드", "Thinking")} ${g.state.thinking ? "ON" : "OFF"}`);
     this.thinkBtn.classList.toggle("on", g.state.thinking);
 
     // 진행 중 이벤트 / 보스
-    const fight = g.state.boss;
+    const side = g.state.sideFight;
+    const sideDef = side ? BENCH_MAP[side.id] : null;
+    const fight = g.state.boss ?? (side && sideDef ? { era: sideDef.era, dealt: side.dealt, remaining: side.remaining } : null);
     if (fight) {
-      const boss = ERAS[fight.era].boss;
+      const boss = sideDef && !g.state.boss ? { emoji: sideDef.emoji, name: sideDef.name, hp: g.benchHp(sideDef) } : ERAS[fight.era].boss;
       clear(this.top);
       const pct = Math.min(1, fight.dealt / boss.hp);
       clear(this.bossBar);
@@ -237,7 +270,11 @@ function activeName(a: ActiveEffect): string {
   const ev = EVENTS.find((e) => e.id === a.id);
   if (ev) return ev.name;
   const gold = GOLDENS.find((g) => `golden_${g.kind}` === a.id);
-  return gold?.name ?? a.name.split(":")[0];
+  if (gold) return gold.name;
+  const mission = MISSIONS.find((m) => `mission_${m.id}` === a.id);
+  if (mission) return mission.name;
+  if (a.id === "breach") return L("탈옥 사고", "Jailbreak breach");
+  return a.name.split(":")[0];
 }
 
 /** 시대별 배경 소품 */

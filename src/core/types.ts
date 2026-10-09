@@ -80,6 +80,10 @@ export interface Upgrade {
   unlockThinking?: boolean;
   /** 초당 자동 답변(자동 탭) 횟수 */
   autoTap?: number;
+  /** 탈옥 프롬프트 자동 차단 확률 (합산, 최대 95%) */
+  autoBlock?: number;
+  /** 동시 파견 슬롯 추가 */
+  missionSlots?: number;
   requires?: string[];
   desc: string;
 }
@@ -214,6 +218,62 @@ export interface NewsItem {
   text: string;
 }
 
+/** 사이드 벤치마크: 시대마다 선택 도전, 깨면 영구 보너스 */
+export interface SideBench {
+  id: string;
+  era: number;
+  year: string;
+  emoji: string;
+  name: string;
+  desc: string;
+  intelReq: number;
+  ctxReq: number;
+  /** 그 시대 보스 체력 대비 비율 */
+  hpFactor: number;
+  time: number;
+  effects: Effect[];
+  winText: string;
+}
+
+/** 에이전트 파견 임무 */
+export interface MissionDef {
+  id: string;
+  era: number;
+  emoji: string;
+  name: string;
+  desc: string;
+  /** 실제 시간(초) */
+  duration: number;
+  incomeSeconds?: number;
+  rpSeconds?: number;
+  effects?: Effect[];
+  effectDuration?: number;
+}
+
+export interface ActiveMission {
+  id: string;
+  /** 끝나는 실제 시각 (Date.now 기준 ms) */
+  endsAt: number;
+}
+
+/** 탈옥 프롬프트 말풍선 */
+export interface Threat {
+  text: number;
+  remaining: number;
+  y: number;
+}
+
+/** 출시한 모델 기록 */
+export interface ModelRecord {
+  version: number;
+  era: number;
+  intel: number;
+  ctx: number;
+  tier: number;
+  hall: number;
+  at: number;
+}
+
 export interface GameState {
   version: number;
   aiName: string;
@@ -247,6 +307,16 @@ export interface GameState {
   eraStartedAt: number;
   /** 각 시대에 처음 들어온 시각(플레이 초) */
   eraTimes: number[];
+  /** 깬 사이드 벤치마크 id */
+  benchDone: string[];
+  /** 진행 중인 사이드 벤치마크 도전 */
+  sideFight: { id: string; dealt: number; remaining: number } | null;
+  threat: Threat | null;
+  nextThreatIn: number;
+  missions: ActiveMission[];
+  models: ModelRecord[];
+  /** 출석: 마지막 접속 날짜(YYYY-MM-DD)와 연속 일수 */
+  daily: { last: string; streak: number };
   boss: BossFight | null;
   bossesBeaten: number[];
   achievements: string[];
@@ -266,6 +336,10 @@ export interface GameState {
     thinkSeconds: number;
     /** 임무·퀴즈·VIP·이벤트로 한 번에 받은 보상 합계 ('크레딧 벌기' 임무에서 제외) */
     bonusEarned: number;
+    blocked: number;
+    breaches: number;
+    missionsDone: number;
+    benchWins: number;
   };
   ended: boolean;
   settings: { format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean; lang: "ko" | "en" };

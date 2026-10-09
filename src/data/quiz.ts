@@ -58,4 +58,9 @@ export const QUIZ: QuizQuestion[] = [
 
   { id: "q_last_question", era: 10, q: "아시모프 「마지막 질문」에서 반복되는 질문은?", options: ["신은 존재하는가?", "엔트로피를 되돌릴 수 있는가?", "의식이란 무엇인가?", "P는 NP인가?"], answer: 1, explain: "\"의미 있는 답을 하기엔 데이터가 부족합니다.\"" },
   { id: "q_bitter", era: 10, q: "리치 서튼의 '쓰라린 교훈'의 요지는?", options: ["사람의 지식이 최고다", "계산량을 쓰는 범용 방법이 결국 이긴다", "AI는 불가능하다", "데이터는 필요 없다"], answer: 1, explain: "검색과 학습처럼 컴퓨트에 따라 확장되는 방법이 이긴다." },
+  { id: "q_mnist", era: 4, q: "MNIST 데이터셋에 들어 있는 것은?", options: ["손글씨 숫자", "고양이 사진", "영화 리뷰", "체스 기보"], answer: 0, explain: "학습용 6만 장 + 테스트용 1만 장, 28×28 흑백 이미지." },
+  { id: "q_winograd", era: 6, q: "위노그라드 스키마가 시험하는 능력은?", options: ["상식으로 대명사가 가리키는 대상 맞히기", "번역 속도", "이미지 분류", "음성 인식"], answer: 0, explain: "\"트로피가 가방에 안 들어간다. 그것이 너무 커서.\" 그것은 트로피." },
+  { id: "q_mmlu", era: 7, q: "MMLU가 다루는 과목 수는?", options: ["9", "57", "100", "1,000"], answer: 1, explain: "수학·법·의학·역사 등 57개 과목 객관식." },
+  { id: "q_humaneval", era: 7, q: "HumanEval에 들어 있는 파이썬 문제 수는?", options: ["12", "57", "164", "2,294"], answer: 2, explain: "2021년 Codex 논문과 함께 공개됐다. 2,294는 SWE-bench의 문제 수." },
+  { id: "q_injection", era: 8, q: "문서 속에 숨긴 지시로 AI 에이전트를 조종하는 공격은?", options: ["SQL 인젝션", "프롬프트 인젝션", "그래디언트 소실", "과적합"], answer: 1, explain: "이름은 SQL 인젝션에서 따왔다." },
 ];

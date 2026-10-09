@@ -92,4 +92,8 @@ export const NEWS_EN: NewsItem[] = [
     "Mars base: 'Sent our question 40 minutes ago, still waiting'",
     "{name} is waiting for the last question",
   ),
+  ...n(6, "Benchmark leaderboards now change #1 every week"),
+  ...n(7, "Jailbreak community launches season 3 of the 'grandma' series", "{name} politely declines 'DAN' during red-team drills"),
+  ...n(8, "White-text prompt injection alert: \"hidden instructions found in résumés\"", "Agents now write their own trip reports"),
+  ...n(9, "New benchmark saturated three weeks after launch; authors \"preparing the next version\""),
 ];

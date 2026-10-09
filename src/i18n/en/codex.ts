@@ -82,4 +82,10 @@ export const CODEX_EN: Record<string, { title: string; text: string }> = {
   hbm4: { title: "HBM4", text: "High-bandwidth memory with a 2,048-bit interface. Standardized in April 2025." },
   jepa: { title: "World Models", text: "Models that predict the next state of the world rather than the next word. In November 2025 LeCun announced he was leaving Meta to start a company built on them." },
   singularity: { title: "The Singularity", text: "A concept popularized by Vernor Vinge: the point where technology moves so fast that what lies beyond can't be predicted." },
+  red_teaming: { title: "Red Teaming", text: "Attacking a model on purpose before launch to find dangerous weak spots. The term is borrowed from cybersecurity." },
+  jailbreak: { title: "Jailbreak Prompts", text: "Inputs that try to slip past safeguards with role-play, encodings or emotional appeals. Memes like 'DAN' and the 'grandma exploit' went viral." },
+  bench_saturation: { title: "Benchmark Saturation", text: "A new benchmark gets beaten at human level within years, sometimes months. So ever harder tests keep being written." },
+  prompt_injection: { title: "Prompt Injection", text: "Steering a model with instructions hidden inside documents, web pages or tool results. Simon Willison named it in 2022, after SQL injection." },
+  swebench: { title: "SWE-bench", text: "A benchmark released by Princeton researchers: fix 2,294 real GitHub issues and make the tests pass." },
+  arc: { title: "ARC", text: "Abstract reasoning puzzles François Chollet released with his paper 'On the Measure of Intelligence'. They test finding a rule from just a few examples." },
 };

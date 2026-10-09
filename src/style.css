@@ -136,6 +136,17 @@ button.chip { cursor: pointer; font: inherit; font-size: 12px; color: inherit; }
 .golden b { display: block; font-size: 13px; }
 .golden small { display: block; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
 .golden.fading { opacity: 0.55; }
+.threat {
+  position: absolute; right: 6%; z-index: 3; display: flex; gap: 8px; align-items: center; max-width: 72%;
+  background: linear-gradient(135deg, #3a0d12, #6b1420); color: #ffe3e6; border: 2px solid #ff6b7a;
+  border-radius: 16px; padding: 7px 12px 7px 8px; text-align: left; font-size: 12px;
+  animation: threatShake 0.9s ease-in-out infinite, goldIn 0.4s ease-out;
+}
+.threat .g-ico { font-size: 26px; }
+.threat b { display: block; font-size: 13px; }
+.threat small { display: block; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.threat.fading { opacity: 0.6; }
+@keyframes threatShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px) rotate(-1deg); } 75% { transform: translateX(2px) rotate(1deg); } }
 @keyframes goldPulse { 50% { box-shadow: 0 0 22px 6px rgba(255, 215, 0, 0.55); transform: scale(1.04); } }
 @keyframes goldIn { from { transform: scale(0.3); opacity: 0; } }
 .pop.gold { color: #ffe680; font-size: 16px; }
@@ -168,6 +179,7 @@ button.chip { cursor: pointer; font: inherit; font-size: 12px; color: inherit; }
 .row .fx { font-size: 12px; margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; }
 .row .fx span { background: var(--bg3); border-radius: 6px; padding: 0 6px; }
 .row.owned { opacity: 0.55; }
+.row.running { border-color: var(--good); }
 .row.reco { border-color: var(--money); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--money) 40%, transparent); }
 .badge { display: inline-block; font-size: 10px; font-weight: 800; border-radius: 6px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; }
 .badge.reco { background: var(--money); color: #111; }
@@ -228,10 +240,11 @@ button.chip { cursor: pointer; font: inherit; font-size: 12px; color: inherit; }
 .codex-item b { font-size: 13px; }
 .codex-item b small { color: var(--muted); margin-left: 4px; }
 .codex-item p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.codex-item.now { border-color: var(--good); }
 .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 .ach { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 8px; font-size: 12px; }
 .ach b { display: block; font-size: 13px; }
-.ach.off { opacity: 0.4; filter: grayscale(1); }
+.ach.off { color: var(--muted); border-style: dashed; filter: grayscale(1); }
 
 input[type="text"], textarea, select {
   width: 100%; background: var(--bg3); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit;
@@ -267,7 +280,7 @@ textarea { min-height: 80px; font-size: 11px; font-family: ui-monospace, monospa
 
 .ticker span.static { padding-left: 0; animation: none; }
 @media (prefers-reduced-motion: reduce) {
-  .golden, .props span { animation: none; }
+  .golden, .threat, .props span { animation: none; }
   .bubble { animation-duration: 0.01s; }
   .pop, .toast, .modal { animation: none; }
 }

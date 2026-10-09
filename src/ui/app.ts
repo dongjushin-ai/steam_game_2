@@ -56,7 +56,10 @@ export class App {
     requestAnimationFrame((t) => this.frame(t));
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) saveGame(this.game.state);
-      else this.offline();
+      else {
+        this.offline();
+        this.daily(false);
+      }
     });
     window.addEventListener("pagehide", () => saveGame(this.game.state));
     window.addEventListener("keydown", (e) => this.key(e));
@@ -128,6 +131,7 @@ export class App {
     this.applyEraColor();
     if (fresh) this.welcome();
     else this.offline();
+    this.daily(fresh);
     // 저장 당시 떠 있던 선택지·퀴즈를 다시 보여준다 (안 그러면 이벤트가 멈춘다)
     const pendingEvent = EVENTS.find((e) => e.id === state.pendingChoice);
     if (pendingEvent) this.notice({ kind: "choice", event: pendingEvent });
@@ -310,6 +314,40 @@ export class App {
         }
         break;
       }
+      case "benchWin": {
+        const b = n.bench;
+        sfx("win");
+        showModal({ icon: b.emoji, title: L(`${b.name} 정복!`, `${b.name} cleared!`), sub: b.year, body: [b.winText, effectsLine(b.effects, 0)], buttons: [{ label: L("좋아!", "Nice!") }] });
+        break;
+      }
+      case "benchLose":
+        sfx("lose");
+        toast(L(`${n.bench.emoji} ${n.bench.name} 실패`, `${n.bench.emoji} ${n.bench.name} failed`), L("처리량을 더 늘리고 다시 도전하세요.", "Add throughput and try again."));
+        break;
+      case "threat":
+        sfx("event");
+        break;
+      case "threatBlocked":
+        if (n.auto) toast(L("🛡️ 탈옥 시도 자동 차단", "🛡️ Jailbreak auto-blocked"), L("안전 연구가 제 몫을 했어요.", "Your safety research did its job."));
+        else {
+          sfx("claim");
+          toast(L("🛡️ 탈옥 차단!", "🛡️ Jailbreak blocked!"), `💵 +${fmt(n.amount)}`, "ach");
+        }
+        break;
+      case "breach":
+        sfx("lose");
+        toast(L("🔓 탈옥 당했다!", "🔓 Jailbroken!"), L("스크린샷이 퍼졌어요. 30초간 질문 유입 −30%. 🛡️안전 연구로 자동 차단을 늘리세요.", "Screenshots went viral. Incoming questions −30% for 30s. Research 🛡️safety to auto-block more."));
+        break;
+      case "missionDone": {
+        const m = n.mission;
+        sfx("quest");
+        const parts: string[] = [];
+        if (n.credits) parts.push(`💵 +${fmt(n.credits)}`);
+        if (n.rp) parts.push(`🧠 +${fmt(n.rp)}`);
+        if (m.effects && m.effectDuration) parts.push(effectsLine(m.effects, m.effectDuration));
+        toast(L(`${m.emoji} 파견 복귀: ${m.name}`, `${m.emoji} Back from: ${m.name}`), parts.join(" · "), "ach");
+        break;
+      }
       case "ending":
         this.ending();
         break;
@@ -364,6 +402,17 @@ export class App {
       }],
     });
     for (const p of document.querySelectorAll<HTMLElement>(".modal p")) p.style.whiteSpace = "pre-line";
+  }
+
+  /** 하루 첫 접속 보상. 새 게임 첫날은 조용히 출석만 찍는다. */
+  private daily(silent: boolean): void {
+    const day = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const now = new Date();
+    const r = this.game.claimDaily(day(now), day(new Date(now.getTime() - 86_400_000)));
+    if (!r || silent) return;
+    sfx("quest");
+    toast(L(`📅 출석 ${r.streak}일째!`, `📅 Day ${r.streak} streak!`),
+      `💵 +${fmt(r.credits)} · 🧠 +${fmt(r.rp)}${r.streak < 7 ? L(" · 내일 오면 더 커져요", " · Come back tomorrow for more") : ""}`, "ach");
   }
 
   private offline(): void {

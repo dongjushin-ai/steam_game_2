@@ -3,7 +3,7 @@ import type { Effect, MultStat, Upgrade, UpgradeCategory } from "../core/types";
 const fx = (pairs: Partial<Record<MultStat, number>>): Effect[] =>
   Object.entries(pairs).map(([stat, mul]) => ({ stat: stat as MultStat, mul: mul as number }));
 
-type Extra = Pick<Upgrade, "ctx" | "unlockThinking" | "requires" | "autoTap">;
+type Extra = Pick<Upgrade, "ctx" | "unlockThinking" | "requires" | "autoTap" | "autoBlock" | "missionSlots">;
 
 const research = (
   id: string, era: number, year: string, emoji: string, name: string, cost: number,
@@ -64,6 +64,7 @@ const RESEARCH: Upgrade[] = [
   research("u_moe", 7, "2023", "🧩", "전문가 혼합 (MoE)", 8e9, "arch", { tps: 2, price: 0.7 }, "토큰마다 일부 전문가만 깨운다. 파라미터는 크게, 계산은 작게."),
   research("u_cai", 7, "2022", "📘", "헌법적 AI", 1e10, "safety", { hall: 0.8, demand: 1.3 }, "원칙 목록으로 AI가 스스로를 비판하고 고친다."),
   research("u_ctx200k", 7, "2023", "📚", "200K 컨텍스트", 1.3e10, "memory", { intel: 1.3 }, "소설 한 권, 코드베이스 하나를 한 번에. 컨텍스트 200K 확보.", { ctx: 200000 }),
+  research("u_redteam", 7, "2022", "🛡️", "레드팀", 1.2e10, "safety", { hall: 0.9 }, "일부러 모델을 공격해서 약점을 찾는다. 탈옥 프롬프트 40% 자동 차단.", { autoBlock: 0.4 }),
   research("u_multimodal", 7, "2024", "🎙️", "네이티브 멀티모달", 1.7e10, "arch", { reward: 2 }, "텍스트·이미지·음성을 한 모델이 직접 다룬다."),
 
   research("u_reasoning", 8, "2024", "🤔", "테스트 타임 컴퓨트", 6e10, "arch", { intel: 2 }, "답하기 전에 오래 생각한다. '생각 모드' 해금: 토큰을 더 쓰는 대신 할루시네이션이 크게 준다.", { unlockThinking: true }),
@@ -73,6 +74,7 @@ const RESEARCH: Upgrade[] = [
   research("u_computeruse", 8, "2024", "🖱️", "컴퓨터 사용", 1.6e11, "tool", { demand: 1.8 }, "화면을 보고 마우스와 키보드를 직접 조작한다."),
   research("u_synthetic", 8, "2025", "🧪", "합성 데이터", 2.2e11, "data", { intel: 2 }, "인터넷 데이터가 바닥나자, 모델이 만든 데이터로 모델을 가르친다."),
   research("u_specdec", 8, "2023", "🏎️", "투기적 디코딩", 3e11, "efficiency", { tps: 2 }, "작은 모델이 초안을 쓰고 큰 모델이 검증한다. 결과는 같고 속도는 두 배."),
+  research("u_classifier", 8, "2025", "🚧", "헌법적 분류기", 3.5e11, "safety", { demand: 1.1 }, "입력과 출력을 감시하는 작은 분류기. 탈옥 프롬프트 30% 추가 자동 차단.", { autoBlock: 0.3 }),
   research("u_router", 8, "2025", "🔀", "모델 라우터", 4e11, "efficiency", { price: 0.7 }, "쉬운 질문은 작은 모델로, 어려운 질문은 큰 모델로. (고장만 안 나면)"),
 
   research("u_ctx1m", 9, "2026", "🌊", "1M 컨텍스트 표준화", 1.5e12, "memory", { intel: 1.5 }, "모든 모델이 100만 토큰을 기본으로 읽는다. 컨텍스트 1M 확보.", { ctx: 1e6 }),
@@ -108,6 +110,7 @@ const PRODUCTS: Upgrade[] = [
   product("p_interpreter", 7, "2023", "🐍", "플러그인: 코드 인터프리터", 1.6e11, "tool", { reward: 1.4 }, "직접 코드를 실행해서 계산한다. strawberry의 r도 이제 정확히 센다."),
   product("p_functions", 7, "2023", "🛠️", "함수 호출", 2.2e11, "tool", { tps: 1.3, reward: 1.2 }, "JSON으로 외부 함수를 부른다. 도구 사용의 시작."),
   product("p_artifacts", 7, "2024", "🪟", "아티팩트", 3e11, "tool", { demand: 1.4 }, "대화 옆 창에서 코드와 문서가 살아 움직인다."),
+  product("m_hq", 7, "2024", "🛰️", "에이전트 파견 본부", 2.4e11, "service", { rp: 1.1 }, "파견 업무를 관리하는 팀을 꾸린다. 동시 파견 +1.", { missionSlots: 1 }),
   product("s_immersion", 7, "2023", "🛁", "액침 냉각", 2.6e11, "hardware", { powerUse: 0.7 }, "서버를 통째로 냉각유에 담근다."),
   product("k_github", 8, "2024", "🐙", "커넥터: GitHub", 2e12, "connector", { reward: 1.3 }, "레포를 읽고 PR을 올린다.", { requires: ["u_mcp"] }),
   product("k_slack", 8, "2024", "💬", "커넥터: Slack", 2.6e12, "connector", { demand: 1.3 }, "팀 채널에서 바로 질문을 받는다.", { requires: ["u_mcp"] }),
@@ -115,6 +118,7 @@ const PRODUCTS: Upgrade[] = [
   product("k_notion", 8, "2025", "🗒️", "커넥터: Notion", 4e12, "connector", { hall: 0.9, reward: 1.1 }, "팀 위키를 근거로 답한다.", { requires: ["u_mcp"] }),
   product("k_figma", 8, "2025", "🎨", "커넥터: Figma", 5e12, "connector", { reward: 1.25 }, "디자인 파일을 읽고 코드로 옮긴다.", { requires: ["u_mcp"] }),
   product("k_db", 8, "2025", "🗄️", "커넥터: 데이터베이스", 6e12, "connector", { reward: 1.3 }, "SQL을 직접 실행해서 답한다.", { requires: ["u_mcp"] }),
+  product("k_injection", 8, "2025", "🧱", "프롬프트 인젝션 방어", 5.5e12, "connector", { hall: 0.95 }, "도구 결과 속 숨은 지시를 무시하도록 격리한다. 탈옥 프롬프트 20% 추가 자동 차단.", { autoBlock: 0.2 }),
   product("v_cli", 8, "2025", "🧑‍💻", "CLI 코딩 에이전트", 7e12, "dev", { reward: 1.5 }, "터미널에서 자연어로 일을 맡긴다. 코드를 읽고, 고치고, 테스트하고, 커밋한다."),
   product("v_vibe", 8, "2025", "🎸", "바이브 코딩 모드", 9e12, "dev", { demand: 1.6 }, "코드는 안 보고 느낌으로 만든다. 2025 콜린스 올해의 단어."),
   product("s_nuclear", 8, "2024", "☢️", "원전 재가동 계약", 8e12, "hardware", { power: 1.5 }, "멈춘 원자력 발전소를 AI 전력용으로 다시 켠다."),
@@ -124,6 +128,7 @@ const PRODUCTS: Upgrade[] = [
   product("v_hooks", 9, "2025", "🪝", "훅", 5e13, "dev", { hall: 0.85 }, "도구 실행 전후에 검사를 끼워 넣는다."),
   product("v_sandbox", 9, "2025", "🏖️", "클라우드 샌드박스", 6.5e13, "dev", { demand: 1.5 }, "격리된 컨테이너에서 에이전트가 안전하게 일한다."),
   product("v_browser", 9, "2026", "🧭", "브라우저 에이전트", 8e13, "tool", { demand: 1.5 }, "브라우저에서 클릭하고 입력하며 웹 업무를 대신한다."),
+  product("m_fleet", 9, "2026", "🚁", "파견 자동화", 9e13, "service", { reward: 1.1 }, "에이전트가 알아서 다음 파견지를 찾는다. 동시 파견 +1.", { missionSlots: 1 }),
   product("s_smr", 9, "2026", "⚛️", "소형 모듈 원자로", 1e14, "hardware", { power: 2 }, "데이터센터 옆에 작은 원자로를 둔다."),
   product("a_background", 9, "2025", "☁️", "백그라운드 에이전트", 1.2e14, "dev", {}, "클라우드에서 24시간 돌아가는 에이전트. 초당 5회 자동 답변(탭).", { autoTap: 5 }),
   product("a_autonomy", 10, "20XX", "🌐", "완전 자율 운영 (팬픽)", 4e15, "service", {}, "회사 전체가 스스로 돌아간다. 초당 10회 자동 답변(탭).", { autoTap: 10 }),
