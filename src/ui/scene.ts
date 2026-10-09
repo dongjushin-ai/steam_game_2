@@ -7,6 +7,8 @@ import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
 import { $, clear, h, setText } from "./dom";
 import { L } from "../i18n/lang";
+import { avatarSvg } from "./avatar";
+import { backdropSvg } from "./backdrop";
 
 export class Scene {
   private root = $("#scene");
@@ -28,8 +30,9 @@ export class Scene {
   private spawnAcc = 0;
   private sayTimer = 4;
   private onTap: () => void;
-  private props = h("div", { class: "props", "aria-hidden": "true" });
-  private propsEra = -1;
+  private backdrop = h("div", { class: "backdrop-wrap", "aria-hidden": "true" });
+  /** 배경·아바타를 마지막으로 그린 시대 */
+  private drawnEra = -1;
   private hintTab: GuideTab | null = null;
 
   constructor(private game: Game, onTap: () => void, onHint: (tab: GuideTab) => void) {
@@ -42,8 +45,8 @@ export class Scene {
       e.stopPropagation();
       game.toggleThinking();
     };
-    this.root.append(h("div", { class: "grid-bg" }), this.props, this.avatar, this.say, this.top, this.comboEl, this.hud);
-    this.hud.append(this.tierChip, this.hallChip, this.bottleneck, this.autoChip, this.thinkBtn);
+    this.root.append(this.backdrop, this.avatar, this.say, this.top, this.comboEl, this.hud);
+    this.hud.append(this.bottleneck, h("div", { class: "hud-row" }, this.tierChip, this.hallChip, this.autoChip, this.thinkBtn));
     // 빈 곳을 탭해도 답변 하나
     this.root.addEventListener("pointerdown", (e) => {
       if ((e.target as HTMLElement).closest(".bubble, .think-btn, .golden, .threat, button.chip")) return;
@@ -181,9 +184,17 @@ export class Scene {
     const g = this.game;
     const st = g.stats;
     const era = ERAS[g.state.era];
-    setText(this.avatar, era.avatar);
-    setText(this.tierChip, `${st.tier.emoji} ${st.tier.name} · ${fmtTokens(st.tokensPerQ)}${L("토큰", " tokens")}`);
-    setText(this.hallChip, `🌀 ${L("할루시네이션", "Hallucination")} ${fmtPct(st.hall)}`);
+    if (this.drawnEra !== g.state.era) {
+      // 직접 만든 고정 SVG 문자열이라 innerHTML로 넣어도 안전하다
+      this.drawnEra = g.state.era;
+      this.backdrop.innerHTML = backdropSvg(g.state.era, era.color);
+      this.avatar.innerHTML = avatarSvg(g.state.era, era.color);
+      this.root.dataset.era = String(g.state.era);
+    }
+    setText(this.tierChip, `${st.tier.emoji} ${st.tier.name} · ${fmtTokens(st.tokensPerQ)}`);
+    this.tierChip.title = L(`담당 질문: ${st.tier.name}, 질문당 ${fmtTokens(st.tokensPerQ)} 토큰`, `Handles: ${st.tier.name}, ${fmtTokens(st.tokensPerQ)} tokens per question`);
+    setText(this.hallChip, `🌀 ${L("환각", "Halluc.")} ${fmtPct(st.hall)}`);
+    this.hallChip.title = `${L("할루시네이션", "Hallucination")} ${fmtPct(st.hall)}`;
     this.hallChip.className = `chip ${st.hall > 0.3 ? "bad" : st.hall < 0.08 ? "good" : ""}`;
 
     // 가이드가 켜져 있으면 '다음 할 일'을, 아니면 병목을 보여준다 (탭하면 해당 화면으로)
@@ -211,14 +222,10 @@ export class Scene {
       this.hintTab = "research";
     }
 
-    if (this.propsEra !== g.state.era) {
-      this.propsEra = g.state.era;
-      clear(this.props);
-      PROPS[g.state.era].forEach((p, i) => this.props.append(h("span", { style: { left: `${8 + i * 22}%`, top: `${18 + ((i * 37) % 45)}%`, animationDelay: `${i * 1.3}s` } }, p)));
-    }
 
     this.autoChip.style.display = st.autoTap > 0 ? "" : "none";
-    setText(this.autoChip, `🤖 ${L("자동", "Auto")} ${fmt(st.autoTap)}/${L("초", "s")}`);
+    setText(this.autoChip, `🤖 ${fmt(st.autoTap)}/${L("초", "s")}`);
+    this.autoChip.title = L("초당 자동 답변", "Auto-answers per second");
 
     // 콤보
     const s = g.state;
@@ -230,8 +237,16 @@ export class Scene {
     this.updateThreat();
 
     this.thinkBtn.style.display = g.hasThinking() ? "" : "none";
-    setText(this.thinkBtn, `🤔 ${L("생각 모드", "Thinking")} ${g.state.thinking ? "ON" : "OFF"}`);
+    setText(this.thinkBtn, `🤔 ${L("생각", "Think")} ${g.state.thinking ? "ON" : "OFF"}`);
+    this.thinkBtn.setAttribute("aria-label", `${L("생각 모드", "Thinking Mode")} ${g.state.thinking ? "ON" : "OFF"}`);
     this.thinkBtn.classList.toggle("on", g.state.thinking);
+    // 장면 분위기: 보스전 경보등, 생각 모드 오라, 탈옥 사고 글리치
+    // HUD 줄이 넘치면 오른쪽을 흐리게 해서 옆으로 밀 수 있다는 걸 알린다
+    const row = this.thinkBtn.parentElement;
+    if (row) row.classList.toggle("more", row.scrollWidth > row.clientWidth + 2 && row.scrollLeft + row.clientWidth < row.scrollWidth - 2);
+    this.root.classList.toggle("fight", !!(g.state.boss || g.state.sideFight));
+    this.root.classList.toggle("thinking", g.state.thinking);
+    this.root.classList.toggle("breach", g.state.active.some((a) => a.id === "breach"));
 
     // 진행 중 이벤트 / 보스
     const side = g.state.sideFight;
@@ -277,17 +292,3 @@ function activeName(a: ActiveEffect): string {
   return a.name.split(":")[0];
 }
 
-/** 시대별 배경 소품 */
-const PROPS: string[][] = [
-  ["🏺", "⚙️", "📜", "🕰️"],
-  ["📻", "🧮", "🎫", "🐭"],
-  ["🧱", "🗃️", "☎️", "🤖"],
-  ["🗄️", "💾", "📠", "🩺"],
-  ["♟️", "🌐", "📧", "💿"],
-  ["🎮", "🐱", "⚫", "📱"],
-  ["⚡", "🧬", "🥑", "📗"],
-  ["💬", "🦙", "🖼️", "🚀"],
-  ["🔌", "🎸", "🧑‍💻", "🐋"],
-  ["🛰️", "🧠", "🪆", "💤"],
-  ["☀️", "🪐", "🌌", "♾️"],
-];
