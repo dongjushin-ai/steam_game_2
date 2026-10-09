@@ -25,6 +25,7 @@ body {
   overscroll-behavior: none;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--money); outline-offset: 2px; border-radius: 8px; }
 button:disabled { cursor: default; }
 
 #app {
@@ -190,7 +191,7 @@ button.chip { cursor: pointer; font: inherit; font-size: 12px; color: inherit; }
   min-width: 84px; border: 0; border-radius: 12px; padding: 8px 10px;
   background: var(--bg3); color: var(--muted); font-weight: 800; font-size: 13px; line-height: 1.2;
 }
-.buy small { display: block; font-size: 10px; font-weight: 600; opacity: 0.8; }
+.buy small { display: block; font-size: 10px; font-weight: 700; }
 .buy.can { background: var(--era); color: #111; }
 .buy.can:active { transform: scale(0.96); }
 .buy.rp.can { background: var(--rp); }
@@ -264,7 +265,9 @@ textarea { min-height: 80px; font-size: 11px; font-family: ui-monospace, monospa
 .choice { text-align: left; }
 .choice small { display: block; font-weight: 600; opacity: 0.8; }
 
+.ticker span.static { padding-left: 0; animation: none; }
 @media (prefers-reduced-motion: reduce) {
+  .golden, .props span { animation: none; }
   .bubble { animation-duration: 0.01s; }
   .pop, .toast, .modal { animation: none; }
 }

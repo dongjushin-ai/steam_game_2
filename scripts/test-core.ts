@@ -7,7 +7,7 @@ import { arenaTable } from "../src/core/arena";
 import { questProgress } from "../src/core/quests";
 import { QUIZ } from "../src/data";
 import { fmt, fmtTokens } from "../src/core/format";
-import { exportSave, importSave, migrate } from "../src/core/save";
+import { exportSave, importSave, loadGame, migrate, saveGame } from "../src/core/save";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -322,6 +322,48 @@ test("30초 미만 자리 비움은 정상 속도로 진행된다", () => {
   assert.equal(secs, 0, "오프라인 창은 안 뜬다");
   assert.ok(Math.abs(g.state.stats.playSeconds - 20) < 1.01, "20초만큼 진행");
   assert.ok(g.state.credits > 0);
+});
+
+test("세이브 정리: 깨진 숫자·없는 id·범위 밖 시대를 고친다", () => {
+  const bad = {
+    ...newState(), credits: NaN, rp: -5, totalEarned: Infinity, era: 99,
+    buildings: { c_diff: 3.7, ghost_building: 10 },
+    upgrades: ["u_algorithm", "u_removed_in_patch", "u_algorithm"],
+    bossesBeaten: [0, 1, 42, -1],
+    quests: [{ id: 1, kind: "nonsense", base: 0, target: 5, incomeSeconds: 1, rpSeconds: 1 }],
+    stats: { answered: "lots" },
+  };
+  const s = migrate(bad)!;
+  assert.equal(s.credits, 0);
+  assert.equal(s.rp, 0);
+  assert.equal(s.totalEarned, 0);
+  assert.equal(s.era, ERAS.length - 1);
+  assert.deepEqual(s.buildings, { c_diff: 3 });
+  assert.deepEqual(s.upgrades, ["u_algorithm"]);
+  assert.deepEqual(s.bossesBeaten, [0, 1]);
+  assert.equal(s.quests.length, 0);
+  assert.equal(s.stats.answered, 0);
+  const g = new Game(s);
+  assert.ok(isFinite(g.stats.net), "정리된 세이브로 정상 계산");
+  assert.equal(g.state.quests.length, 3, "임무는 다시 채워진다");
+});
+
+test("세이브: 본 세이브가 깨지면 백업에서 복구", () => {
+  const store = new Map<string, string>();
+  (globalThis as { localStorage?: unknown }).localStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  };
+  const s = newState("백업 테스트");
+  s.credits = 777;
+  saveGame(s);
+  assert.equal(loadGame()!.credits, 777);
+  store.set("ai-kiugi-save", "{ 깨진 json");
+  const back = loadGame()!;
+  assert.equal(back.aiName, "백업 테스트");
+  assert.equal(back.credits, 777);
+  delete (globalThis as { localStorage?: unknown }).localStorage;
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

@@ -92,7 +92,7 @@ export const ERAS: Era[] = [
     name: "통계적 머신러닝",
     years: "1993 ~ 2005",
     avatar: "🎲",
-    color: "#8a6bd9",
+    color: "#967de0",
     winter: "winter2",
     intro:
       "LISP 머신 시장이 무너지고 두 번째 겨울이 왔다. 살아남은 연구자들은 규칙 대신 데이터와 확률을 택했다. 그리고 인터넷이 데이터를 쏟아내기 시작한다.",

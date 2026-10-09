@@ -67,6 +67,12 @@ function next(): void {
   root.onclick = (e) => {
     if (spec.dismissable && e.target === root) close();
   };
+  // 키보드·스크린리더: 창이 뜨면 첫 버튼(입력칸이 있으면 입력칸)으로 포커스, Esc로 닫기(닫을 수 있는 창만)
+  const first = modal.querySelector<HTMLElement>("input, textarea, select") ?? modal.querySelector<HTMLElement>(".m-btns .btn");
+  first?.focus({ preventScroll: true });
+  modal.onkeydown = (e) => {
+    if (e.key === "Escape" && spec.dismissable) close();
+  };
 }
 
 export function toast(title: string, text = "", kind = ""): void {

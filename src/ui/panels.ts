@@ -593,11 +593,11 @@ export class Panels {
   private buildSettings(): void {
     const g = this.game;
     const s = g.state;
-    const name = h("input", { type: "text", maxlength: "20", value: s.aiName }) as HTMLInputElement;
+    const name = h("input", { type: "text", maxlength: "20", value: s.aiName, "aria-label": L("AI 이름", "AI name") }) as HTMLInputElement;
     name.onchange = () => {
       s.aiName = name.value.trim() || L("나의 AI", "My AI");
     };
-    const format = h("select") as HTMLSelectElement;
+    const format = h("select", { "aria-label": L("숫자 표기", "Number format") }) as HTMLSelectElement;
     for (const [v, label] of [["short", L("1.23M (영문 단위)", "1.23M (short scale)")], ["korean", L("123만 (한글 단위)", "123만 (Korean units)")], ["sci", L("1.23e6 (지수)", "1.23e6 (scientific)")]]) {
       format.append(h("option", { value: v, selected: s.settings.format === v ? "selected" : undefined }, label));
     }
@@ -605,7 +605,7 @@ export class Panels {
       s.settings.format = format.value as NumberFormat;
       setNumberFormat(s.settings.format);
     };
-    const io = h("textarea", { placeholder: L("여기에 세이브 코드를 붙여넣으세요", "Paste a save code here") }) as HTMLTextAreaElement;
+    const io = h("textarea", { placeholder: L("여기에 세이브 코드를 붙여넣으세요", "Paste a save code here"), "aria-label": L("세이브 코드", "Save code") }) as HTMLTextAreaElement;
     this.root.append(
       this.title(L("🤖 AI 이름", "🤖 AI name")), name,
       this.title(L("🌐 언어", "🌐 Language")), langSelect(s),

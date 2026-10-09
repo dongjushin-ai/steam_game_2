@@ -37,6 +37,7 @@ export class App {
   /** 5초마다 기록한 순이익 (최근 10분) */
   private history: number[] = [];
   private histAcc = 0;
+  private tickerTimer = 0;
   private last = performance.now();
   private uiAcc = 0;
   private saveAcc = 0;
@@ -91,10 +92,17 @@ export class App {
     const item = Math.random() < 0.6 && cur.length ? cur[Math.floor(Math.random() * cur.length)] : pool[Math.floor(Math.random() * pool.length)];
     const text = item.text.split("{name}").join(s.aiName);
     const span = h("span", null, h("b", null, `📰 ${ERAS[item.era].years.split(" ")[0]}`), text);
-    span.style.setProperty("--tdur", `${Math.max(9, text.length * 0.28)}s`);
-    span.addEventListener("animationend", () => this.nextHeadline());
+    clearTimeout(this.tickerTimer);
     clear(this.ticker);
     this.ticker.append(span);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // 움직임 줄이기: 흐르지 않고 8초마다 바뀐다
+      span.classList.add("static");
+      this.tickerTimer = window.setTimeout(() => span.isConnected && this.nextHeadline(), 8000);
+      return;
+    }
+    span.style.setProperty("--tdur", `${Math.max(9, text.length * 0.28)}s`);
+    span.addEventListener("animationend", () => this.nextHeadline());
   }
 
   /** 새 게임/불러오기/초기화 시 호출 */
@@ -151,7 +159,11 @@ export class App {
   }
 
   private selectTab(id: TabId): void {
-    for (const [k, b] of this.navButtons) b.classList.toggle("on", k === id);
+    for (const [k, b] of this.navButtons) {
+      b.classList.toggle("on", k === id);
+      if (k === id) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
+    }
     this.panels.setTab(id);
   }
 
