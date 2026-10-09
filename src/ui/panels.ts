@@ -147,7 +147,7 @@ export class Panels {
         sfx("buy");
         const owned = g.state.buildings[b.id];
         if (b.kind !== "param" && milestoneMult(owned) > milestoneMult(owned - n)) {
-          toast(L(`🎉 ${b.emoji} ${b.name} ${owned}개 달성!`, `🎉 ${b.emoji} ${owned} ${b.name}!`), L("마일스톤: 이 건물의 생산량 ×2", "Milestone: this building's output ×2"));
+          toast(L(`🎉 ${b.emoji} ${b.name} ${owned}개 달성!`, `🎉 ${b.emoji} ${b.name} ×${owned}!`), L("마일스톤: 이 건물의 생산량 ×2", "Milestone: this building's output ×2"));
           sfx("quest");
         }
         this.update();

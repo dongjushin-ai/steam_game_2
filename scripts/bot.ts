@@ -26,6 +26,11 @@ export interface SimOptions {
   seed?: number;
   /** false면 새 모델 출시(프레스티지)를 하지 않는다 */
   release?: boolean;
+  /**
+   * true면 사람처럼 플레이한다: 4초마다 판단, 40%는 최적이 아닌 아무거나 구매,
+   * 처음 15분은 빠르게 탭하다가 이후 느슨하게, VIP 질문 60%만 잡음, 퀴즈 60% 정답.
+   */
+  human?: boolean;
   /** 이 시대에 진입하고 이 초만큼 지나면 멈춘다 (보정용) */
   stopAfter?: { era: number; seconds: number };
 }
@@ -34,16 +39,18 @@ const fmtTime = (s: number) => `${Math.floor(s / 3600)}h${String(Math.floor((s %
 export { fmtTime };
 
 export function runSim(opts: SimOptions = {}): SimResult {
-  const { maxHours = 30, tapsPerSec = 1, logEvery = 0, release = true } = opts;
+  const { maxHours = 30, tapsPerSec = 1, logEvery = 0, release = true, human = false } = opts;
   let seed = opts.seed ?? 42;
   const rng = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
 
   const game = new Game(newState("sim"), rng);
   game.onNotice((n) => {
-    if (n.kind === "choice") game.choose(0);
-    // 퀴즈는 절반 정도 맞힌다고 가정
-    if (n.kind === "quiz") game.answerQuiz(rng() < 0.5 ? n.quiz.answer : (n.quiz.answer + 1) % n.quiz.options.length);
+    if (n.kind === "choice") game.choose(human ? Math.floor(rng() * 2) : 0);
+    // 퀴즈는 봇 50%, 사람 60% 정답으로 가정
+    if (n.kind === "quiz") game.answerQuiz(rng() < (human ? 0.6 : 0.5) ? n.quiz.answer : (n.quiz.answer + 1) % n.quiz.options.length);
+    if (n.kind === "golden") catchGolden = human && rng() < 0.6;
   });
+  let catchGolden = false;
   const res: SimResult = { game, eraReached: [0], entryNet: [0], entryRp: [0], dps: [], net: [], rpRate: [], dpsEra: [], log: [] };
   const param = BUILDINGS.find((b) => b.kind === "param")!;
 
@@ -71,19 +78,26 @@ export function runSim(opts: SimOptions = {}): SimResult {
     }
 
     let best: { kind: "b" | "u"; id: string; cost: number; ratio: number } | null = null;
+    const affordable: { kind: "b" | "u"; id: string }[] = [];
     for (const b of BUILDINGS) {
       if (b.kind === "rp" || b.kind === "param" || !game.isBuildingUnlocked(b.id)) continue;
       const cost = buildingCost(s, b);
+      if (cost <= s.credits) affordable.push({ kind: "b", id: b.id });
       const ratio = gainOf("b", b.id) / cost;
       if (!best || ratio > best.ratio) best = { kind: "b", id: b.id, cost, ratio };
     }
     for (const u of UPGRADES) {
       if (u.currency !== "credits" || s.upgrades.includes(u.id) || u.era > s.era) continue;
       if (u.requires && !u.requires.every((r) => s.upgrades.includes(r))) continue;
+      if (u.cost <= s.credits) affordable.push({ kind: "u", id: u.id });
       const ratio = Math.max(gainOf("u", u.id), st.net * 0.05) / u.cost;
       if (!best || ratio > best.ratio) best = { kind: "u", id: u.id, cost: u.cost, ratio };
     }
-    if (best && best.cost <= s.credits) {
+    if (human && affordable.length && rng() < 0.4) {
+      const pick = affordable[Math.floor(rng() * affordable.length)];
+      if (pick.kind === "b") game.buyBuilding(pick.id);
+      else game.buyUpgrade(pick.id);
+    } else if (best && best.cost <= s.credits) {
       if (best.kind === "b") game.buyBuilding(best.id);
       else game.buyUpgrade(best.id);
     }
@@ -105,9 +119,14 @@ export function runSim(opts: SimOptions = {}): SimResult {
   };
 
   for (let t = 1; t <= maxHours * 3600; t++) {
-    for (let i = 0; i < tapsPerSec; i++) game.tap();
+    const taps = human ? (t < 900 ? 2 : rng() < 0.4 ? 1 : 0) : tapsPerSec;
+    for (let i = 0; i < taps; i++) game.tap();
     game.tick(1);
-    step();
+    if (catchGolden && game.state.golden && game.state.golden.remaining < 9) {
+      game.claimGolden();
+      catchGolden = false;
+    }
+    if (!human || t % 4 === 0) step();
     const s = game.state;
     if (s.era >= res.eraReached.length) {
       res.eraReached.push(t);

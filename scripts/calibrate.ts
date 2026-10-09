@@ -15,6 +15,7 @@ const TARGET_MIN = [3, 4, 6, 9, 11, 13, 15, 17, 19, 21, 24];
 const FIRST_UNIT_SECONDS = 20;
 const FIRST_RESEARCH_SECONDS = 30;
 const INNER = 4;
+const FINALE_HP_BONUS = 2.5;
 
 const b: Balance = { cost: [...BALANCE.cost], rp: [...BALANCE.rp], bossHp: [...BALANCE.bossHp] };
 
@@ -58,6 +59,9 @@ for (let e = 0; e < ERAS.length; e++) {
   }
   const target = entry + TARGET_MIN[e] * 60;
   b.bossHp[e] = median(res.dps, target - 180, target) * ERAS[e].boss.time * 0.85;
+  // 마지막 보스는 ×2.5: 사람형 플레이테스트에서 ⭐해커톤(처리량 ×4, 30초)이 보스전과 겹치면
+  // 피날레가 8분 만에 끝나 버렸다. (docs/WORKLOG.md 2차 진행 참고)
+  if (e === ERAS.length - 1) b.bossHp[e] *= FINALE_HP_BONUS;
   console.log(`Era ${e} cost×${b.cost[e].toPrecision(2)} rp×${b.rp[e].toPrecision(2)} hp=${b.bossHp[e].toExponential(1)}`);
 }
 

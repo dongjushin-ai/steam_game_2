@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "sim": "tsx scripts/sim.ts",
     "calibrate": "tsx scripts/calibrate.ts",
+    "playtest": "tsx scripts/playtest.ts",
     "test": "tsx scripts/check-data.ts && tsx scripts/check-i18n.ts && tsx scripts/test-core.ts && tsx scripts/sim.ts --quiet"
   },
   "devDependencies": {

@@ -29,7 +29,7 @@ export function nextHint(g: Game): Hint | null {
 
   if (st.intel < boss.intelReq) {
     const param = BUILDINGS.find((b) => b.kind === "param")!;
-    if (buildingCost(s, param) <= s.credits) return { text: L(`🧠 파라미터 확장으로 지능 ${Math.ceil(boss.intelReq)} 만들기`, `🧠 Scale up parameters to reach intelligence ${Math.ceil(boss.intelReq)}`), tab: "research" };
+    if (buildingCost(s, param) <= s.credits) return { text: L(`🧠 파라미터 확장으로 지능 ${Math.ceil(boss.intelReq)} 만들기`, `🧠 Scale up parameters until intelligence hits ${Math.ceil(boss.intelReq)}`), tab: "research" };
     return { text: L(`🧠 보스까지 지능 ${Math.ceil(boss.intelReq)} 필요 (지금 ${st.intel.toFixed(1)})`, `🧠 Boss needs intelligence ${Math.ceil(boss.intelReq)} (now ${st.intel.toFixed(1)})`), tab: "research" };
   }
   if (st.ctx < boss.ctxReq) return { text: L("📜 컨텍스트 창을 늘리는 연구가 필요해요", "📜 Research a bigger context window"), tab: "research" };

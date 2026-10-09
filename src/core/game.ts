@@ -61,7 +61,7 @@ export function newState(aiName = "나의 AI"): GameState {
     achievements: [],
     stats: {
       answered: 0, hallucinations: 0, taps: 0, playSeconds: 0, eventsSeen: 0, goldens: 0, quizCorrect: 0,
-      quizAsked: 0, questsDone: 0, maxCombo: 0, bought: 0, researched: 0, thinkSeconds: 0,
+      quizAsked: 0, questsDone: 0, maxCombo: 0, bought: 0, researched: 0, thinkSeconds: 0, bonusEarned: 0,
     },
     ended: false,
     settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko" },
@@ -159,6 +159,12 @@ export class Game {
 
     if (changed) this.refresh();
     this.checkAchievements();
+  }
+
+  /** 한 번에 받는 보상: '크레딧 벌기' 임무 진행에는 넣지 않는다 (보상이 다른 임무를 연달아 깨는 것 방지) */
+  private earnBonus(amount: number): void {
+    this.earn(amount);
+    if (amount > 0) this.state.stats.bonusEarned += amount;
   }
 
   private earn(amount: number): void {
@@ -265,7 +271,7 @@ export class Game {
     }
     if (def.incomeSeconds) {
       amount = Math.max(this.stats.net, this.stats.rewardPerQ) * def.incomeSeconds;
-      this.earn(amount);
+      this.earnBonus(amount);
     }
     if (def.rpSeconds) {
       amount = Math.max(this.stats.rpRate, 1) * def.rpSeconds;
@@ -292,12 +298,13 @@ export class Game {
 
   checkQuests(): void {
     const s = this.state;
-    for (const q of [...s.quests]) {
-      if (questProgress(s, q) < 1) continue;
+    // 먼저 달성한 임무를 모두 고른 뒤 보상을 준다 (보상이 다른 임무 판정에 끼어들지 않게)
+    const done = s.quests.filter((q) => questProgress(s, q) >= 1);
+    for (const q of done) {
       s.quests = s.quests.filter((x) => x !== q);
       const credits = Math.max(this.stats.net, this.stats.rewardPerQ) * q.incomeSeconds;
       const rp = Math.max(this.stats.rpRate, 0.5) * q.rpSeconds;
-      this.earn(credits);
+      this.earnBonus(credits);
       s.rp += rp;
       s.stats.questsDone += 1;
       this.emit({ kind: "quest", quest: q, credits, rp });
@@ -420,7 +427,7 @@ export class Game {
     this.refresh();
     if (ev.incomeSeconds) {
       const amount = Math.max(this.stats.net, 0) * ev.incomeSeconds;
-      if (amount >= 0) this.earn(amount);
+      if (amount >= 0) this.earnBonus(amount);
       else s.credits = Math.max(0, s.credits + amount);
     }
     if (ev.rpSeconds) s.rp += this.stats.rpRate * ev.rpSeconds;
@@ -446,7 +453,7 @@ export class Game {
     if (correct) {
       credits = Math.max(this.stats.net, this.stats.rewardPerQ) * 120;
       rp = Math.max(this.stats.rpRate, 1) * 60;
-      this.earn(credits);
+      this.earnBonus(credits);
       s.rp += rp;
       s.stats.quizCorrect += 1;
       s.quizSolved.push(quiz.id);

@@ -264,6 +264,8 @@ export interface GameState {
     bought: number;
     researched: number;
     thinkSeconds: number;
+    /** 임무·퀴즈·VIP·이벤트로 한 번에 받은 보상 합계 ('크레딧 벌기' 임무에서 제외) */
+    bonusEarned: number;
   };
   ended: boolean;
   settings: { format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean; lang: "ko" | "en" };

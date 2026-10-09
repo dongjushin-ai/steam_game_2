@@ -250,6 +250,18 @@ test("임무: 항상 3개, 달성하면 보상 후 새 임무", () => {
   assert.equal(g.state.quests.length, 3);
 });
 
+test("임무 보상이 '크레딧 벌기' 임무를 연달아 깨지 않는다", () => {
+  const g = new Game(newState(), () => 0.5);
+  g.state.quests = [
+    { id: 1, kind: "taps", base: 0, target: 1, incomeSeconds: 70, rpSeconds: 20 },
+    { id: 2, kind: "earn", base: g.state.totalEarned - g.state.stats.bonusEarned, target: 50, incomeSeconds: 30, rpSeconds: 20 },
+  ];
+  g.tap();
+  g.checkQuests();
+  assert.equal(g.state.stats.questsDone, 1, "탭 임무만 완료");
+  assert.ok(g.state.quests.some((q) => q.id === 2), "벌기 임무는 남아 있음");
+});
+
 test("퀴즈: 맞히면 보상과 기록, 틀리면 다시 나올 수 있다", () => {
   const g = new Game(newState());
   const q = QUIZ.find((x) => x.era === 0)!;
