@@ -59,6 +59,7 @@ npm run sim         # 봇이 처음부터 엔딩까지 플레이 (30분마다 �
 npm run calibrate   # 시대별 비용·보스 체력 자동 보정 → src/data/balance.ts
 npm run playtest    # 사람처럼 플레이하는 봇 5회 → 시대별 체류 시간·정체 구간
 npm run build
+npm run build:single  # 파일 하나짜리 dist/ai-kiugi.html (친구에게 보내기용, 더블클릭으로 실행)
 ```
 
 ```
