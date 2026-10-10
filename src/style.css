@@ -29,7 +29,7 @@ body {
   overscroll-behavior: none;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--money); outline-offset: 2px; border-radius: 8px; }
+:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.85); outline-offset: 3px; border-radius: 10px; }
 button:disabled { cursor: default; }
 
 #app {
@@ -78,7 +78,10 @@ body { background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--e
   touch-action: manipulation;
 }
 .backdrop-wrap { position: absolute; inset: 0; pointer-events: none; }
-.backdrop { width: 100%; height: 100%; display: block; }
+.backdrop { position: relative; width: 100%; height: 100%; }
+.bd-layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* 움직이는 조각만 따로 GPU 층에: 깜박여도 정지한 방은 다시 그리지 않는다 */
+.bd-anim { will-change: transform; }
 .bd-led { animation: bdLed 2s steps(2, jump-none) infinite; }
 .bd-flicker { animation: bdFlicker 0.18s ease-in-out infinite alternate; }
 .bd-twinkle { animation: bdTwinkle 3s ease-in-out infinite; }
@@ -114,6 +117,37 @@ body { background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--e
 }
 @keyframes alarm { 50% { opacity: 0.45; } }
 @keyframes glitch { 0% { transform: translateX(0); } 33% { transform: translateX(-2px); } 66% { transform: translateX(2px); } }
+/* 떠다니는 입자: 옛 시대는 따뜻한 먼지, 5시대부터는 시대색 데이터 조각 */
+.motes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.motes i {
+  position: absolute; bottom: -6px; width: 3px; height: 3px; border-radius: 50%;
+  background: #ffe8b0; opacity: 0; box-shadow: 0 0 6px #ffe8b0; animation: mote 11s linear infinite;
+}
+#scene[data-era="5"] .motes i, #scene[data-era="6"] .motes i, #scene[data-era="7"] .motes i, #scene[data-era="8"] .motes i, #scene[data-era="9"] .motes i {
+  width: 2px; height: 6px; border-radius: 1px; background: var(--era); box-shadow: 0 0 8px var(--era);
+}
+#scene[data-era="10"] .motes i { background: #fff; box-shadow: 0 0 8px #fff8d0; }
+@keyframes mote { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 0.55; } 85% { opacity: 0.35; } 100% { transform: translate(18px, -260px); opacity: 0; } }
+.ripple {
+  position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; pointer-events: none; z-index: 3;
+  border: 2px solid color-mix(in srgb, var(--era) 70%, #fff); animation: ripple 0.5s ease-out forwards;
+}
+@keyframes ripple { to { transform: scale(4.2); opacity: 0; border-width: 1px; } }
+.burst { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 2; }
+.burst::before {
+  content: ""; position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--era) 60%, #fff); box-shadow: 0 0 14px var(--era); animation: ring 0.5s ease-out forwards;
+}
+.burst.bad::before { border-color: var(--bad); box-shadow: 0 0 14px var(--bad); }
+.burst i { position: absolute; left: 0; top: -1.5px; width: 0; height: 3px; }
+.burst i::after {
+  content: ""; position: absolute; left: 0; top: 0; width: 12px; height: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--era) 50%, #fff));
+  box-shadow: 0 0 8px var(--era); animation: spark 0.6s ease-out forwards;
+}
+.burst.bad i::after { background: linear-gradient(90deg, transparent, #ff8a80); box-shadow: 0 0 8px var(--bad); }
+@keyframes spark { from { transform: translateX(14px); opacity: 1; } to { transform: translateX(58px) scaleX(0.4); opacity: 0; } }
+@keyframes ring { from { transform: scale(0.5); opacity: 1; } to { transform: scale(2.2); opacity: 0; } }
 .avatar svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .avatar.chomp { transform: translateY(-62%) scale(1.1); }
 .av-eyes { transform-box: fill-box; transform-origin: center; animation: blink 4.2s infinite; }
@@ -366,6 +400,50 @@ textarea { min-height: 80px; font-size: 11px; font-family: ui-monospace, monospa
 @media (prefers-reduced-motion: reduce) {
   .golden, .threat, .avatar, .av-eyes, .bd-led, .bd-flicker, .bd-twinkle, .bd-blink, .bd-spin, .bd-orbit, .bd-steam,
   .av-spin, .av-spin-rev, .av-orbit, .av-flicker, .av-blink, .backdrop, #scene::after, #scene.thinking .avatar::before { animation: none; }
+  .motes, .ripple, .burst { display: none; }
   .bubble { animation-duration: 0.01s; }
   .pop, .toast, .modal { animation: none; }
 }
+
+/* ── 그림 머리 (창·도감) ───────────── */
+.hero { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.hero .backdrop { width: 100%; height: 100%; }
+.hero-av { position: absolute; right: 9%; bottom: 14%; width: 34%; max-width: 140px; aspect-ratio: 1; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 20px color-mix(in srgb, var(--hero) 50%, transparent)); }
+.hero-av svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.still *, .still *::before, .still *::after { animation: none !important; }
+.m-hero { position: relative; height: 168px; margin: -18px -16px 4px; border-radius: 22px 22px 0 0; overflow: hidden; }
+.m-hero::after { content: ""; position: absolute; inset: auto 0 0 0; height: 46px; background: linear-gradient(180deg, transparent, #1a212b); }
+.m-hero .hero-av { animation: hover 4.5s ease-in-out infinite; }
+.m-logo { display: block; width: 92px; height: 92px; margin: 0 auto; border-radius: 24px; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 30px rgba(217, 119, 87, 0.3); }
+.codex-banner { position: relative; height: 96px; margin: 18px 0 8px; border-radius: 16px; overflow: hidden; border: 1px solid var(--stroke); box-shadow: var(--lift); }
+.codex-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(5, 7, 10, 0.85) 0%, rgba(5, 7, 10, 0.35) 55%, transparent 80%); }
+.codex-banner .hero-av { width: 30%; right: 6%; bottom: 6%; }
+.cb-text { position: absolute; left: 13px; bottom: 10px; z-index: 1; display: grid; text-shadow: 0 2px 6px #000; }
+.cb-text b { font-size: 15px; font-weight: 800; }
+.cb-text small { font-size: 12px; color: #c9d3de; }
+.av-thumb { display: inline-block; width: 26px; height: 26px; vertical-align: middle; }
+.av-thumb svg { width: 100%; height: 100%; display: block; }
+
+/* VIP 말풍선에 빛이 훑고 지나간다 */
+.golden { overflow: hidden; }
+.golden::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.65), transparent); transform: skewX(-18deg); animation: shine 2.2s ease-in-out infinite; pointer-events: none; }
+@keyframes shine { 0% { left: -60%; } 60%, 100% { left: 130%; } }
+
+/* 시작 화면 */
+#splash { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: 14px; background: radial-gradient(ellipse at 50% 40%, #2a1912, #07080b 70%); transition: opacity 0.45s, visibility 0.45s; }
+#splash img { width: 108px; height: 108px; border-radius: 28px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 40px rgba(217, 119, 87, 0.35); animation: hover 2.4s ease-in-out infinite; }
+#splash b { font-size: 13px; letter-spacing: 3px; color: #c9b4a8; font-weight: 700; text-transform: uppercase; }
+#splash.gone { opacity: 0; visibility: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .m-hero .hero-av, .golden::after, #splash img { animation: none; }
+}
+.boss-card { overflow: hidden; padding-top: 0; }
+.boss-banner { height: 112px; margin: 0 -13px; position: relative; }
+.boss-banner .hero-av { display: none; }
+.boss-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, #171d26 100%); }
+.boss-card .big {
+  position: relative; z-index: 1; width: 88px; height: 88px; margin: -50px auto 0; display: grid; place-items: center; font-size: 50px; border-radius: 26px;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--era) 45%, #2a3340), #161c24 75%);
+  border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5), 0 0 26px var(--era-soft);
+}
+

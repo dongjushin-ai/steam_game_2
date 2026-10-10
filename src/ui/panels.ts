@@ -12,6 +12,7 @@ import { append, clear, h, setText } from "./dom";
 import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
 import { L } from "../i18n/lang";
+import { avatarThumb, heroHtml } from "./art";
 
 export type TabId = "service" | "infra" | "research" | "bench" | "codex";
 
@@ -463,6 +464,7 @@ export class Panels {
     this.root.append(
       this.title(`${era.years} · ${era.name}`),
       h("div", { class: "card boss-card" },
+        bossBanner(s.era, era.color),
         h("div", { class: "big" }, boss.emoji),
         h("h3", null, boss.name),
         h("div", { class: "hint" }, boss.year),
@@ -502,7 +504,7 @@ export class Panels {
       const beaten = s.bossesBeaten.includes(e.id);
       const cls = e.id === s.era ? "now" : e.id > s.era ? "future" : "";
       tl.append(h("li", { class: cls },
-        h("span", null, e.id > s.era ? "❔" : e.avatar),
+        e.id > s.era ? h("span", null, "❔") : thumb(e.id, e.color),
         h("span", null, e.id > s.era + 1 ? "???" : `${e.name}`, h("div", { class: "hint" }, e.years)),
         h("span", null, beaten ? `✅ ${e.boss.emoji}` : e.id === s.era ? "▶" : "")));
     });
@@ -627,7 +629,7 @@ export class Panels {
         this.root.append(h("div", { class: "codex-era" }, `❔ ??? (${CODEX.filter((c) => c.era === era.id).length + 1}${L("장", " cards")})`));
         continue;
       }
-      this.root.append(h("div", { class: "codex-era" }, `${era.avatar} ${era.name} · ${era.years}`));
+      this.root.append(eraBanner(era.id, era.color, era.name, era.years));
       for (const c of CODEX.filter((x) => x.era === era.id)) {
         this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, c.emoji),
           h("div", null, h("b", null, c.title, h("small", null, c.year)), h("p", null, c.text))));
@@ -765,6 +767,26 @@ export class Panels {
           "History sources: Wikipedia (CC BY-SA 4.0), collected with the Obscura headless browser. Source code and data are in the GitHub repository.")),
     );
   }
+}
+
+/** 도감 시대 머리: 그 시대 방 그림 위에 이름 (움직임 없는 정지 그림) */
+function eraBanner(era: number, color: string, name: string, years: string): HTMLElement {
+  const el = h("div", { class: "codex-banner" });
+  el.innerHTML = heroHtml(era, color, { still: true });
+  el.append(h("div", { class: "cb-text" }, h("b", null, name), h("small", null, years)));
+  return el;
+}
+
+function bossBanner(era: number, color: string): HTMLElement {
+  const el = h("div", { class: "boss-banner", "aria-hidden": "true" });
+  el.innerHTML = heroHtml(era, color, { still: true });
+  return el;
+}
+
+function thumb(era: number, color: string): HTMLElement {
+  const el = h("span");
+  el.innerHTML = avatarThumb(era, color);
+  return el;
 }
 
 /** 초 → 분 (정수, 최소 1) */

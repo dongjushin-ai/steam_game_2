@@ -39,9 +39,18 @@ const rect = (x: number, y: number, w: number, h: number, fill: string, extra = 
   `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(w)}" height="${r1(h)}" fill="${fill}" ${extra}/>`;
 const circle = (cx: number, cy: number, r: number, fill: string, extra = "") =>
   `<circle cx="${r1(cx)}" cy="${r1(cy)}" r="${r1(r)}" fill="${fill}" ${extra}/>`;
-/** 깜박이는 LED (지연 시간은 제각각) */
+/**
+ * 움직이는 조각 표시. 정지한 방은 한 번만 그리고, 표시된 조각만 따로 떼어
+ * 별도 GPU 층(.bd-anim)에 올린다 → LED 하나가 깜박일 때 방 전체를 다시 그리지 않는다.
+ */
+const A0 = "\u0001";
+const A1 = "\u0002";
+const anim = (svg: string) => A0 + svg + A1;
+/** 깜박이는 LED. 타이밍을 몇 가지로 묶어서 화면이 바뀌는 횟수를 줄인다. */
+const LED_DELAYS = [0, 0.7, 1.4, 2.1];
+const LED_DURS = [1.6, 2.4, 3.2];
 const led = (x: number, y: number, r: number, color: string, rnd: () => number, cls = "bd-led") =>
-  circle(x, y, r, color, `class="${cls}" style="animation-delay:-${r1(rnd() * 4)}s;animation-duration:${r1(1.2 + rnd() * 2.6)}s"`);
+  anim(circle(x, y, r, color, `class="${cls}" style="animation-delay:-${LED_DELAYS[Math.floor(rnd() * 4)]}s;animation-duration:${LED_DURS[Math.floor(rnd() * 3)]}s"`));
 /** 바닥 그림자 */
 const shadow = (cx: number, w: number) => `<ellipse cx="${r1(cx)}" cy="${HZ + 2}" rx="${r1(w / 2 + 6)}" ry="5" fill="#000" opacity=".45"/>`;
 
@@ -87,7 +96,7 @@ function study(rnd: () => number): string {
   // 아치형 창
   s += `<defs><linearGradient id="bdNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1633"/><stop offset="1" stop-color="#26385e"/></linearGradient></defs>`;
   s += `<path d="M28 112 V52 a38 38 0 0 1 76 0 V112 Z" fill="url(#bdNight)" stroke="#5a3d22" stroke-width="5"/>`;
-  for (let i = 0; i < 14; i++) s += circle(34 + rnd() * 64, 22 + rnd() * 80, rnd() * 0.9 + 0.3, "#fff", `class="bd-twinkle" style="animation-delay:-${r1(rnd() * 3)}s"`);
+  for (let i = 0; i < 14; i++) s += anim(circle(34 + rnd() * 64, 22 + rnd() * 80, rnd() * 0.9 + 0.3, "#fff", `class="bd-twinkle" style="animation-delay:-${Math.floor(rnd() * 4) * 0.8}s"`));
   s += circle(82, 40, 9, "#f4ecd0") + circle(86, 37, 8, "#0b1633", 'opacity=".9"');
   s += rect(64, 16, 4, 96, "#5a3d22") + rect(28, 66, 76, 4, "#5a3d22");
   // 책장
@@ -107,8 +116,8 @@ function study(rnd: () => number): string {
   }
   // 책상과 촛불, 종이
   s += shadow(240, 50) + rect(214, 150, 54, 6, "#5a3a20") + rect(218, 156, 4, 34, "#3b2513") + rect(260, 156, 4, 34, "#3b2513");
-  s += rect(222, 144, 18, 6, "#efe3c2", 'transform="rotate(-6 231 147)"') + rect(244, 128, 5, 22, "#efe9d8") + `<ellipse cx="246.5" cy="124" rx="2.4" ry="5" fill="#ffcf5a" class="bd-flicker"/>`;
-  s += `<g opacity=".14">${circle(246.5, 126, 22, "#ffb347", 'class="bd-flicker"')}</g>`;
+  s += rect(222, 144, 18, 6, "#efe3c2", 'transform="rotate(-6 231 147)"') + rect(244, 128, 5, 22, "#efe9d8") + anim(`<ellipse cx="246.5" cy="124" rx="2.4" ry="5" fill="#ffcf5a" class="bd-flicker"/>`);
+  s += anim(`<g opacity=".14">${circle(246.5, 126, 22, "#ffb347", 'class="bd-flicker"')}</g>`);
   return s;
 }
 
@@ -146,12 +155,12 @@ function mainframe(rnd: () => number): string {
     const x = 8 + i * 64;
     s += shadow(x + 28, 58) + rect(x, 58, 58, 132, "#cfd6d2", 'rx="2"') + rect(x + 4, 64, 50, 64, "#1a2322", 'rx="2"');
     for (const [cx, cy] of [[x + 17, 82], [x + 41, 82]]) {
-      s += `<g class="bd-spin" style="animation-duration:${r1(3 + rnd() * 3)}s">` + circle(cx, cy, 11, "#3a4644", 'stroke="#9fb2ae" stroke-width="1.4"') + circle(cx, cy, 3, "#cfd6d2");
+      s += A0 + `<g class="bd-spin" style="animation-duration:${r1(3 + rnd() * 3)}s">` + circle(cx, cy, 11, "#3a4644", 'stroke="#9fb2ae" stroke-width="1.4"') + circle(cx, cy, 3, "#cfd6d2");
       for (let k = 0; k < 3; k++) {
         const a = (k * 2 * Math.PI) / 3;
         s += `<line x1="${r1(cx + Math.cos(a) * 3)}" y1="${r1(cy + Math.sin(a) * 3)}" x2="${r1(cx + Math.cos(a) * 10)}" y2="${r1(cy + Math.sin(a) * 10)}" stroke="#9fb2ae" stroke-width="1.6"/>`;
       }
-      s += "</g>";
+      s += "</g>" + A1;
     }
     s += rect(x + 10, 100, 38, 22, "#0e1514", 'rx="2"') + rect(x + 22, 102, 14, 18, "#283533");
     for (let k = 0; k < 4; k++) s += rect(x + 8 + k * 11, 136, 7, 5, ["#d94b3c", "#3cb371", "#e1b12c", "#f0f0f0"][k], 'rx="1"');
@@ -187,7 +196,7 @@ function office(rnd: () => number): string {
   for (const x of [26, 156, 212]) {
     s += rect(x, 108, 40, 36, "#d6ceb2", 'rx="4"') + rect(x + 5, 113, 30, 22, "#0b2312", 'rx="2"');
     for (let k = 0; k < 4; k++) s += rect(x + 8, 117 + k * 4.5, 8 + rnd() * 16, 1.8, "#5dff7a", 'opacity=".85"');
-    s += rect(x + 8 + 14, 117 + 4 * 4.5, 3, 2.4, "#5dff7a", 'class="bd-blink"');
+    s += anim(rect(x + 8 + 14, 117 + 4 * 4.5, 3, 2.4, "#5dff7a", 'class="bd-blink"'));
     s += rect(x + 14, 144, 12, 6, "#bfb79b") + rect(x - 2, 146, 44, 4, "#cfc7aa", 'rx="1"');
   }
   // 플로피와 머그잔
@@ -245,9 +254,9 @@ function gpuDesk(rnd: () => number, accent: string): string {
   s += `<defs><linearGradient id="bdRgb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4d8d"/><stop offset=".5" stop-color="#7c5cff"/><stop offset="1" stop-color="#2de2e6"/></linearGradient></defs>`;
   for (const cy of [102, 124]) {
     s += circle(229, cy, 9, "none", 'stroke="url(#bdRgb)" stroke-width="2.2"');
-    s += `<g class="bd-spin" style="animation-duration:.9s">`;
+    s += A0 + `<g class="bd-spin" style="animation-duration:.9s">`;
     for (let k = 0; k < 5; k++) s += `<ellipse cx="229" cy="${cy - 4}" rx="2" ry="4" fill="#3a2f44" transform="rotate(${k * 72} 229 ${cy})"/>`;
-    s += "</g>" + circle(229, cy, 2, "#1a1420");
+    s += "</g>" + circle(229, cy, 2, "#1a1420") + A1;
   }
   s += rect(209, 138, 40, 6, "#2a1f30") + rect(211, 139.5, 30, 3, "url(#bdRgb)", 'opacity=".9"');
   // 키보드, 마우스
@@ -335,7 +344,6 @@ function aisle(rnd: () => number, accent: string, opts: { pipes?: boolean; holo?
     for (const [x, y, w, h] of [[34, 70, 54, 36], [104, 46, 40, 28]] as const) {
       s += rect(x, y, w, h, accent, `opacity=".14" rx="3" stroke="${accent}" stroke-opacity=".7"`);
       for (let k = 0; k < 4; k++) s += rect(x + 5, y + 6 + k * (h / 5), w * (0.3 + rnd() * 0.55), 1.6, accent, 'opacity=".75"');
-      s += rect(x, y, w, h, "none", `class="bd-scan" stroke="${accent}" stroke-opacity=".0"`);
     }
   }
   return s;
@@ -345,7 +353,7 @@ function aisle(rnd: () => number, accent: string, opts: { pipes?: boolean; holo?
 function campus(rnd: () => number): string {
   let s = `<defs><linearGradient id="bdSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070a1f"/><stop offset=".7" stop-color="#1c2357"/><stop offset="1" stop-color="#3a3f7a"/></linearGradient></defs>`;
   s += rect(0, 0, W, HZ, "url(#bdSky)");
-  for (let i = 0; i < 40; i++) s += circle(rnd() * W, rnd() * 90, rnd() * 0.8 + 0.2, "#fff", `class="bd-twinkle" style="animation-delay:-${r1(rnd() * 3)}s"`);
+  for (let i = 0; i < 40; i++) s += anim(circle(rnd() * W, rnd() * 90, rnd() * 0.8 + 0.2, "#fff", `class="bd-twinkle" style="animation-delay:-${Math.floor(rnd() * 4) * 0.8}s"`));
   s += circle(60, 34, 10, "#e9ecff", 'opacity=".9"');
   // 송전탑과 전선
   for (const x of [16, 126, 236]) {
@@ -355,7 +363,7 @@ function campus(rnd: () => number): string {
   // 냉각탑과 증기
   for (const x of [170, 214]) {
     s += `<path d="M${x} 160 Q ${x + 6} 128 ${x + 2} 112 L${x + 22} 112 Q ${x + 18} 128 ${x + 24} 160 Z" fill="#2a2f55"/>`;
-    for (let k = 0; k < 3; k++) s += circle(x + 12 + (rnd() - 0.5) * 8, 104 - k * 9, 7 + k * 3, "#c9cdf0", `opacity=".16" class="bd-steam" style="animation-delay:-${r1(rnd() * 4)}s"`);
+    for (let k = 0; k < 3; k++) s += anim(`<g opacity=".16">${circle(x + 12 + (rnd() - 0.5) * 8, 104 - k * 9, 7 + k * 3, "#c9cdf0", `class="bd-steam" style="animation-delay:-${r1(rnd() * 4)}s"`)}</g>`);
   }
   // 데이터센터 건물 (창문 줄이 켜져 있다)
   for (const [x, w, h] of [[0, 70, 34], [74, 90, 44], [250, 150, 40]] as const) {
@@ -379,17 +387,25 @@ function space(rnd: () => number, accent: string): string {
     <linearGradient id="bdPlanet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b6bd9"/><stop offset="1" stop-color="#0c1530"/></linearGradient>
   </defs>`;
   s += `<ellipse cx="90" cy="60" rx="140" ry="70" fill="url(#bdNeb1)"/><ellipse cx="300" cy="40" rx="120" ry="60" fill="url(#bdNeb2)"/>`;
-  for (let i = 0; i < 90; i++) s += circle(rnd() * W, rnd() * H, rnd() * 0.9 + 0.2, "#fff", `class="bd-twinkle" style="animation-delay:-${r1(rnd() * 4)}s;opacity:${r1(0.3 + rnd() * 0.7)}"`);
+  for (let i = 0; i < 90; i++) {
+    const x = rnd() * W;
+    const y = rnd() * H;
+    const star = circle(x, y, rnd() * 0.9 + 0.2, "#fff", `class="bd-twinkle" style="animation-delay:-${Math.floor(rnd() * 4) * 1}s"`);
+    // 움직이는 층은 맨 위에 그려지므로 행성·태양 위에 별이 찍히지 않게 거른다
+    const onPlanet = ((x - 40) / 222) ** 2 + ((y - 300) / 112) ** 2 < 1;
+    const onSun = (x - 150) ** 2 + (y - 100) ** 2 < 30 ** 2;
+    if (!onPlanet && !onSun) s += anim(star);
+  }
   s += circle(150, 100, 46, "url(#bdSun)") + circle(150, 100, 13, "#fffbe6");
   // 다이슨 스웜: 기울어진 궤도 위 위성들
   for (const [rx, ry, rot, n, dur] of [[70, 20, -18, 18, 40], [96, 30, 12, 26, 60]] as const) {
-    s += `<g transform="rotate(${rot} 150 100)"><ellipse cx="150" cy="100" rx="${rx}" ry="${ry}" fill="none" stroke="${accent}" stroke-opacity=".25" stroke-width=".6"/>`;
+    s += A0 + `<g transform="rotate(${rot} 150 100)"><ellipse cx="150" cy="100" rx="${rx}" ry="${ry}" fill="none" stroke="${accent}" stroke-opacity=".25" stroke-width=".6"/>`;
     s += `<g class="bd-orbit" style="animation-duration:${dur}s">`;
     for (let k = 0; k < n; k++) {
       const a = (k / n) * Math.PI * 2;
       s += rect(150 + Math.cos(a) * rx - 1.5, 100 + Math.sin(a) * ry - 1, 3, 2, "#ffe9a8", 'opacity=".9"');
     }
-    s += "</g></g>";
+    s += "</g></g>" + A1;
   }
   // 행성 가장자리
   s += `<ellipse cx="40" cy="300" rx="220" ry="110" fill="url(#bdPlanet)"/><ellipse cx="40" cy="300" rx="220" ry="110" fill="none" stroke="#8fd3ff" stroke-opacity=".5" stroke-width="2"/>`;
@@ -414,5 +430,26 @@ export function backdropSvg(era: number, accent: string): string {
     () => space(rnd, accent),
   ];
   const body = (scenes[era] ?? scenes[scenes.length - 1])();
-  return `<svg class="backdrop" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false"><defs>${base.defs}</defs>${base.back}${body}${base.front}</svg>`;
+  // 표시된 움직이는 조각을 떼어 내서 세 층으로: 정지한 방 / 움직이는 것 / 조명·비네트
+  const moving: string[] = [];
+  // 같은 타이밍으로 깜박이는 단일 요소들은 <g> 하나로 묶어 애니메이션 하나로 돌린다
+  // (SVG 안의 애니메이션은 요소마다 메인 스레드 비용이 들어서, 150개를 따로 돌리면 저가 폰에서 끊긴다)
+  const groups = new Map<string, string[]>();
+  const still = body.replace(/\u0001([\s\S]*?)\u0002/g, (_, part: string) => {
+    const m = /^<(circle|rect|ellipse) ([^>]*?)class="(bd-[\w-]+)"(?: style="([^"]*)")?([^>]*)\/>$/.exec(part);
+    if (m) {
+      const key = `${m[3]}|${m[4] ?? ""}`;
+      const list = groups.get(key) ?? [];
+      list.push(`<${m[1]} ${m[2]}${m[5]}/>`);
+      groups.set(key, list);
+    } else moving.push(part);
+    return "";
+  });
+  for (const [key, list] of groups) {
+    const [cls, style] = key.split("|");
+    moving.push(`<g class="${cls}"${style ? ` style="${style}"` : ""}>${list.join("")}</g>`);
+  }
+  const svg = (cls: string, inner: string) =>
+    `<svg class="bd-layer ${cls}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">${inner}</svg>`;
+  return `<div class="backdrop">${svg("bd-still", `<defs>${base.defs}</defs>${base.back}${still}`)}${svg("bd-anim", moving.join(""))}${svg("bd-front", base.front)}</div>`;
 }

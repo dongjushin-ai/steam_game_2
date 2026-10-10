@@ -7,8 +7,7 @@ import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
 import { $, clear, h, setText } from "./dom";
 import { L } from "../i18n/lang";
-import { avatarSvg } from "./avatar";
-import { backdropSvg } from "./backdrop";
+import { sceneArt } from "./art";
 
 export class Scene {
   private root = $("#scene");
@@ -45,7 +44,12 @@ export class Scene {
       e.stopPropagation();
       game.toggleThinking();
     };
-    this.root.append(this.backdrop, this.avatar, this.say, this.top, this.comboEl, this.hud);
+    // 떠다니는 먼지(옛 시대)·데이터 입자(현대): 모양은 CSS가 시대별로 정한다
+    const motes = h("div", { class: "motes", "aria-hidden": "true" });
+    for (let i = 0; i < 14; i++) {
+      motes.append(h("i", { style: { left: `${(i * 37) % 100}%`, animationDelay: `-${(i * 1.7) % 11}s`, animationDuration: `${9 + ((i * 5) % 7)}s` } }));
+    }
+    this.root.append(this.backdrop, motes, this.avatar, this.say, this.top, this.comboEl, this.hud);
     this.hud.append(this.bottleneck, h("div", { class: "hud-row" }, this.tierChip, this.hallChip, this.autoChip, this.thinkBtn));
     // 빈 곳을 탭해도 답변 하나
     this.root.addEventListener("pointerdown", (e) => {
@@ -58,8 +62,27 @@ export class Scene {
     const v = this.game.tap();
     const r = this.root.getBoundingClientRect();
     if (this.game.state.settings.effects || Math.random() < 0.3) this.pop(x - r.left, y - r.top, `+${fmt(v)}`, "big");
+    if (this.game.state.settings.effects) this.ripple(x - r.left, y - r.top);
     this.chomp();
     this.onTap();
+  }
+
+  /** 탭한 자리에 퍼지는 고리 */
+  private ripple(x: number, y: number): void {
+    const el = h("div", { class: "ripple", style: { left: `${x}px`, top: `${y}px` } });
+    this.root.append(el);
+    setTimeout(() => el.remove(), 500);
+  }
+
+  /** AI가 질문을 삼킬 때 아바타에서 튀는 불꽃 */
+  private burst(bad: boolean): void {
+    if (!this.game.state.settings.effects) return;
+    const r = this.root.getBoundingClientRect();
+    const a = this.avatar.getBoundingClientRect();
+    const el = h("div", { class: `burst ${bad ? "bad" : ""}`, style: { left: `${a.left - r.left + a.width * 0.45}px`, top: `${a.top - r.top + a.height * 0.45}px` } });
+    for (let i = 0; i < 8; i++) el.append(h("i", { style: { transform: `rotate(${i * 45 + Math.random() * 20}deg)` } }));
+    this.root.append(el);
+    setTimeout(() => el.remove(), 650);
   }
 
   private chomp(): void {
@@ -97,6 +120,7 @@ export class Scene {
       b.remove();
       this.chomp();
       const wrong = Math.random() < st.hall;
+      this.burst(wrong);
       const perBubble = st.net / Math.max(0.4, Math.min(1.2, st.answered));
       this.pop(to * 0.8, y, wrong ? L("❌ 할루시네이션", "❌ Hallucination") : `+${fmt(Math.max(0, perBubble))}`, wrong ? "bad" : "");
     });
@@ -187,8 +211,9 @@ export class Scene {
     if (this.drawnEra !== g.state.era) {
       // 직접 만든 고정 SVG 문자열이라 innerHTML로 넣어도 안전하다
       this.drawnEra = g.state.era;
-      this.backdrop.innerHTML = backdropSvg(g.state.era, era.color);
-      this.avatar.innerHTML = avatarSvg(g.state.era, era.color);
+      const art = sceneArt(g.state.era, era.color);
+      this.backdrop.innerHTML = art.backdrop;
+      this.avatar.innerHTML = art.avatar;
       this.root.dataset.era = String(g.state.era);
     }
     setText(this.tierChip, `${st.tier.emoji} ${st.tier.name} · ${fmtTokens(st.tokensPerQ)}`);

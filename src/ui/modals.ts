@@ -11,6 +11,10 @@ export interface ModalButton {
 
 export interface ModalSpec {
   icon?: string;
+  /** 머리 그림 (art.ts의 heroHtml: 코드에서 만든 고정 SVG만) */
+  hero?: string;
+  /** 아이콘 자리에 앱 로고 */
+  logo?: boolean;
   title: string;
   sub?: string;
   body?: (Node | string)[];
@@ -56,8 +60,10 @@ function next(): void {
   );
   const modal = h(
     "div",
-    { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": spec.title },
-    spec.icon ? h("div", { class: "m-ico" }, spec.icon) : null,
+    { class: `modal ${spec.hero ? "has-hero" : ""}`, role: "dialog", "aria-modal": "true", "aria-label": spec.title },
+    spec.hero ? heroEl(spec.hero) : null,
+    spec.logo ? h("img", { class: "m-logo", src: "./icon.svg", alt: "" }) : null,
+    spec.icon && !spec.hero && !spec.logo ? h("div", { class: "m-ico" }, spec.icon) : null,
     h("h2", null, spec.title),
     spec.sub ? h("div", { class: "m-sub" }, spec.sub) : null,
     ...(spec.body ?? []).map((b) => (typeof b === "string" ? h("p", null, b) : b)),
@@ -73,6 +79,12 @@ function next(): void {
   modal.onkeydown = (e) => {
     if (e.key === "Escape" && spec.dismissable) close();
   };
+}
+
+function heroEl(html: string): HTMLElement {
+  const el = h("div", { class: "m-hero", "aria-hidden": "true" });
+  el.innerHTML = html;
+  return el;
 }
 
 export function toast(title: string, text = "", kind = ""): void {

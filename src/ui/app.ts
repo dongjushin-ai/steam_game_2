@@ -8,6 +8,7 @@ import { $, clear, h, setText } from "./dom";
 import { modalOpen, showModal, toast } from "./modals";
 import { Panels, TABS, shareSummary, statLabel, type TabId } from "./panels";
 import { Scene } from "./scene";
+import { heroHtml } from "./art";
 import { questText } from "../core/quests";
 import type { QuizQuestion } from "../core/types";
 import { setSound, setVibrate, sfx } from "./sound";
@@ -54,6 +55,12 @@ export class App {
     fresh.settings.lang = lang;
     this.boot(fresh, !saved);
     requestAnimationFrame((t) => this.frame(t));
+    // 시작 화면은 첫 화면이 그려진 뒤 걷어낸다
+    const splash = document.getElementById("splash");
+    if (splash) setTimeout(() => {
+      splash.classList.add("gone");
+      setTimeout(() => splash.remove(), 600);
+    }, 350);
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) saveGame(this.game.state);
       else {
@@ -300,7 +307,7 @@ export class App {
         setTimeout(() => sfx("era"), 600);
         const era = ERAS[n.era];
         showModal({
-          icon: era.avatar, title: era.name, sub: era.years, body: [era.intro, L("🔓 새 유닛·연구·질문이 열렸어요!", "🔓 New units, research and questions unlocked!")],
+          icon: era.avatar, hero: heroHtml(n.era, era.color), title: era.name, sub: era.years, body: [era.intro, L("🔓 새 유닛·연구·질문이 열렸어요!", "🔓 New units, research and questions unlocked!")],
           buttons: [{ label: L("시작하기", "Let's go"), onClick: () => { this.panels.update(); } }],
         });
         saveGame(g.state);
@@ -386,6 +393,7 @@ export class App {
     const era = ERAS[0];
     showModal({
       icon: "🤖",
+      logo: true,
       title: L("AI 키우기", "Grow Your AI"),
       sub: "Attention Is All You Idle",
       body: [
@@ -397,7 +405,7 @@ export class App {
         label: L("시작!", "Start!"),
         onClick: () => {
           this.game.state.aiName = input.value.trim() || L("나의 AI", "My AI");
-          showModal({ icon: era.avatar, title: era.name, sub: era.years, body: [era.intro], buttons: [{ label: L("첫 질문 받기", "Take the first question") }] });
+          showModal({ icon: era.avatar, hero: heroHtml(0, era.color), title: era.name, sub: era.years, body: [era.intro], buttons: [{ label: L("첫 질문 받기", "Take the first question") }] });
         },
       }],
     });
@@ -435,7 +443,7 @@ export class App {
     const g = this.game;
     const end = (text: string) => () => {
       showModal({
-        icon: "✨", title: "Q.E.D.", sub: `${g.state.aiName} · ${L("플레이", "played")} ${fmtDuration(g.state.stats.playSeconds)}`,
+        icon: "✨", hero: heroHtml(ERAS.length - 1, ERAS[ERAS.length - 1].color), title: "Q.E.D.", sub: `${g.state.aiName} · ${L("플레이", "played")} ${fmtDuration(g.state.stats.playSeconds)}`,
         body: [text, L("끝까지 함께해줘서 고마워요. 이제 무한 모드입니다. 계속 키워도 좋아요!", "Thanks for playing to the end. Endless mode is on now, so feel free to keep growing!")],
         buttons: [{ label: L("📤 기록 자랑하기", "📤 Share my run"), kind: "ghost", onClick: () => { shareSummary(g); return false; } }, { label: L("계속 플레이", "Keep playing") }],
       });
