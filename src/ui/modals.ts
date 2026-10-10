@@ -1,5 +1,6 @@
 import { $, clear, h } from "./dom";
 import { L } from "../i18n/lang";
+import { pxi } from "./art";
 
 export interface ModalButton {
   label: string | Node;
@@ -63,7 +64,7 @@ function next(): void {
     { class: `modal ${spec.hero ? "has-hero" : ""}`, role: "dialog", "aria-modal": "true", "aria-label": spec.title },
     spec.hero ? heroEl(spec.hero) : null,
     spec.logo ? h("img", { class: "m-logo", src: "./icon.svg", alt: "" }) : null,
-    spec.icon && !spec.hero && !spec.logo ? h("div", { class: "m-ico" }, spec.icon) : null,
+    spec.icon && !spec.hero && !spec.logo ? h("div", { class: "m-ico" }, pxi(spec.icon)) : null,
     h("h2", null, spec.title),
     spec.sub ? h("div", { class: "m-sub" }, spec.sub) : null,
     ...(spec.body ?? []).map((b) => (typeof b === "string" ? h("p", null, b) : b)),

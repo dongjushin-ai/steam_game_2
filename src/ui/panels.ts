@@ -12,7 +12,7 @@ import { append, clear, h, setText } from "./dom";
 import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
 import { L } from "../i18n/lang";
-import { avatarThumb, heroHtml } from "./art";
+import { avatarThumb, heroHtml, pxi } from "./art";
 
 export type TabId = "service" | "infra" | "research" | "bench" | "codex";
 
@@ -155,7 +155,7 @@ export class Panels {
         this.update();
       } else sfx("error");
     };
-    const row = h("div", { class: "row" }, h("div", { class: "ico" }, b.emoji), h("div", null, name, h("div", { class: "desc" }, b.desc), fx), btn);
+    const row = h("div", { class: "row" }, h("div", { class: "ico" }, pxi(b.emoji)), h("div", null, name, h("div", { class: "desc" }, b.desc), fx), btn);
     this.rows.push({
       update: () => {
         const s = g.state;
@@ -208,7 +208,7 @@ export class Panels {
       }
     };
     const row = h("div", { class: `row ${owned ? "owned" : missing.length ? "locked" : ""}` },
-      h("div", { class: "ico" }, u.emoji),
+      h("div", { class: "ico" }, pxi(u.emoji)),
       h("div", null, h("div", { class: "name" }, u.name, h("small", null, u.year)), h("div", { class: "desc" }, u.desc), fx),
       owned ? h("span", { class: "hint" }, "✅") : btn);
     if (!owned) {
@@ -248,7 +248,7 @@ export class Panels {
     const s = this.game.state;
     const list = BUILDINGS.filter((b) => b.kind === kind && b.era <= s.era).map((b) => this.buildingRow(b));
     const next = BUILDINGS.find((b) => b.kind === kind && b.era === s.era + 1);
-    if (next) list.push(h("div", { class: "row locked" }, h("div", { class: "ico" }, "❔"), h("div", null, h("div", { class: "name" }, "???"), h("div", { class: "desc" }, L("다음 시대에 해금", "Unlocks next era"))), h("span")));
+    if (next) list.push(h("div", { class: "row locked" }, h("div", { class: "ico" }, pxi("❔")), h("div", null, h("div", { class: "name" }, "???"), h("div", { class: "desc" }, L("다음 시대에 해금", "Unlocks next era"))), h("span")));
     return list;
   }
 
@@ -340,7 +340,7 @@ export class Panels {
           this.update();
         } else sfx("error");
       };
-      const row = h("div", { class: `row ${running ? "running" : ""}` }, h("div", { class: "ico" }, m.emoji),
+      const row = h("div", { class: `row ${running ? "running" : ""}` }, h("div", { class: "ico" }, pxi(m.emoji)),
         h("div", null, h("div", { class: "name" }, m.name, h("small", null, fmtDurationShort(m.duration) + L("분", "m"))), h("div", { class: "desc" }, m.desc),
           h("div", { class: "fx" }, ...reward.map((r) => h("span", null, r)))), btn);
       this.rows.push({
@@ -465,7 +465,7 @@ export class Panels {
       this.title(`${era.years} · ${era.name}`),
       h("div", { class: "card boss-card" },
         bossBanner(s.era, era.color),
-        h("div", { class: "big" }, boss.emoji),
+        h("div", { class: "big" }, pxi(boss.emoji)),
         h("h3", null, boss.name),
         h("div", { class: "hint" }, boss.year),
         h("p", { class: "desc" }, boss.desc),
@@ -547,7 +547,7 @@ export class Panels {
           this.update();
         } else sfx("error");
       };
-      const el = h("div", { class: `row ${won ? "owned" : ""}` }, h("div", { class: "ico" }, b.emoji),
+      const el = h("div", { class: `row ${won ? "owned" : ""}` }, h("div", { class: "ico" }, pxi(b.emoji)),
         h("div", null, h("div", { class: "name" }, b.name, h("small", null, b.year)), h("div", { class: "desc" }, won ? `✅ ${b.winText}` : b.desc), fx),
         won ? h("span", { class: "hint" }, "✅") : btn);
       if (!won) {
@@ -631,12 +631,12 @@ export class Panels {
       }
       this.root.append(eraBanner(era.id, era.color, era.name, era.years));
       for (const c of CODEX.filter((x) => x.era === era.id)) {
-        this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, c.emoji),
+        this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, pxi(c.emoji)),
           h("div", null, h("b", null, c.title, h("small", null, c.year)), h("p", null, c.text))));
       }
       const b = era.boss;
       if (s.bossesBeaten.includes(era.id)) {
-        this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, b.emoji),
+        this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, pxi(b.emoji)),
           h("div", null, h("b", null, `🏆 ${b.name}`, h("small", null, b.year)), h("p", null, b.winText))));
       }
     }
@@ -652,7 +652,7 @@ export class Panels {
         lastEra = u.era;
         this.root.append(h("div", { class: "codex-era" }, `${ERAS[u.era].avatar} ${ERAS[u.era].name}`));
       }
-      this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, u.emoji),
+      this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, pxi(u.emoji)),
         h("div", null, h("b", null, u.name, h("small", null, u.year)), h("p", null, u.desc))));
     }
     if (!owned.length) this.root.append(h("p", { class: "hint" }, L("아직 없어요. 🧠 연구 탭에서 첫 연구를 해보세요.", "Nothing yet. Try your first research in the 🧠 Research tab.")));
@@ -665,7 +665,7 @@ export class Panels {
     const st = g.stats;
     const rows = [...s.models].reverse();
     const line = (v: string, era: number, intel: number, ctx: number, tier: number, hall: number, at: string, now = false) =>
-      h("div", { class: `codex-item ${now ? "now" : ""}` }, h("div", { class: "e" }, ERAS[era]?.avatar ?? "🤖"),
+      h("div", { class: `codex-item ${now ? "now" : ""}` }, h("div", { class: "e" }, pxi(ERAS[era]?.avatar ?? "🤖")),
         h("div", null, h("b", null, `${s.aiName} ${v}`), h("small", null, ` · ${ERAS[era]?.name ?? ""} · ${at}`),
           h("div", { class: "hint" }, `🧠 ${fmt(intel)} · 📜 ${fmtTokens(ctx)} · ${TIERS[tier]?.emoji ?? ""} ${TIERS[tier]?.name ?? ""} · ${L("환각", "Hall.")} ${fmtPct(hall)}`)));
     this.root.append(
@@ -763,8 +763,8 @@ export class Panels {
       h("div", { class: "card hint" },
         L("AI 키우기 — Attention Is All You Idle. 비상업 팬메이드 게임입니다. 실제 기업·제품·인물 이름은 역사 설명(도감)에서만 사용하며, 게임 속 수치와 사건 효과는 재미를 위해 단순화·과장했습니다. ",
           "Grow Your AI — Attention Is All You Idle. A non-commercial fan-made game. Real company, product and people names appear only in the history notes (Codex); in-game numbers and event effects are simplified and exaggerated for fun. "),
-        L("역사 자료 출처: Wikipedia (CC BY-SA 4.0), Obscura 헤드리스 브라우저로 수집. 소스 코드와 자료는 GitHub 저장소에 있습니다.",
-          "History sources: Wikipedia (CC BY-SA 4.0), collected with the Obscura headless browser. Source code and data are in the GitHub repository.")),
+        L("역사 자료 출처: Wikipedia (CC BY-SA 4.0), Obscura 헤드리스 브라우저로 수집. 도트 글꼴: 갈무리(Galmuri, SIL OFL 1.1, quiple). 소스 코드와 자료는 GitHub 저장소에 있습니다.",
+          "History sources: Wikipedia (CC BY-SA 4.0), collected with the Obscura headless browser. Pixel font: Galmuri (SIL OFL 1.1, quiple). Source code and data are in the GitHub repository.")),
     );
   }
 }
@@ -772,14 +772,14 @@ export class Panels {
 /** 도감 시대 머리: 그 시대 방 그림 위에 이름 (움직임 없는 정지 그림) */
 function eraBanner(era: number, color: string, name: string, years: string): HTMLElement {
   const el = h("div", { class: "codex-banner" });
-  el.innerHTML = heroHtml(era, color, { still: true });
+  el.innerHTML = heroHtml(era, color);
   el.append(h("div", { class: "cb-text" }, h("b", null, name), h("small", null, years)));
   return el;
 }
 
 function bossBanner(era: number, color: string): HTMLElement {
   const el = h("div", { class: "boss-banner", "aria-hidden": "true" });
-  el.innerHTML = heroHtml(era, color, { still: true });
+  el.innerHTML = heroHtml(era, color, { avatar: false });
   return el;
 }
 

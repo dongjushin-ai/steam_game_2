@@ -5,7 +5,10 @@
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 
 const assets = readdirSync("dist/assets");
-const css = readFileSync(`dist/assets/${assets.find((f) => f.endsWith(".css"))}`, "utf8");
+// 글꼴 같은 CSS 속 파일은 data URL로 바꿔 넣는다
+const MIME = { woff2: "font/woff2", woff: "font/woff", png: "image/png", svg: "image/svg+xml" };
+const css = readFileSync(`dist/assets/${assets.find((f) => f.endsWith(".css"))}`, "utf8").replace(/url\(["']?\.?\/?(?:assets\/)?([\w.-]+\.(woff2|woff|png|svg))["']?\)/g, (_, file, ext) =>
+  `url(data:${MIME[ext]};base64,${readFileSync(`dist/assets/${file}`).toString("base64")})`);
 const js = readFileSync(`dist/assets/${assets.find((f) => f.endsWith(".js"))}`, "utf8");
 const icon = `data:image/svg+xml;base64,${readFileSync("dist/icon.svg").toString("base64")}`;
 if (js.includes("</script")) throw new Error("스크립트 안에 </script 가 있어 인라인할 수 없음");

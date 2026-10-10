@@ -8,7 +8,7 @@ import { $, clear, h, setText } from "./dom";
 import { modalOpen, showModal, toast } from "./modals";
 import { Panels, TABS, shareSummary, statLabel, type TabId } from "./panels";
 import { Scene } from "./scene";
-import { heroHtml } from "./art";
+import { heroHtml, pxi } from "./art";
 import { questText } from "../core/quests";
 import type { QuizQuestion } from "../core/types";
 import { setSound, setVibrate, sfx } from "./sound";
@@ -163,7 +163,7 @@ export class App {
     );
     const nav = $("#nav");
     for (const t of TABS) {
-      const b = h("button", { onclick: () => this.selectTab(t.id), "aria-label": t.label }, h("span", { class: "i" }, t.icon), t.label);
+      const b = h("button", { onclick: () => this.selectTab(t.id), "aria-label": t.label }, h("span", { class: "i" }, pxi(t.icon)), t.label);
       this.navButtons.set(t.id, b);
       nav.append(b);
     }
@@ -178,8 +178,13 @@ export class App {
     this.panels.setTab(id);
   }
 
+  /** 시대 색과 화면 '옷': 0~2 도트 게임 → 3~4 90년대 OS → 5~7 Y2K → 8~10 브루탈리즘 */
   private applyEraColor(): void {
-    document.documentElement.style.setProperty("--era", ERAS[this.game.state.era].color);
+    const era = this.game.state.era;
+    const root = document.documentElement;
+    root.style.setProperty("--era", ERAS[era].color);
+    root.dataset.era = String(era);
+    root.dataset.skin = era <= 2 ? "pixel" : era <= 4 ? "retro" : era <= 7 ? "y2k" : "brutal";
   }
 
   private frame(t: number): void {

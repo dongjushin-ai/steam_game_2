@@ -7,11 +7,17 @@ import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
 import { $, clear, h, setText } from "./dom";
 import { L } from "../i18n/lang";
-import { sceneArt } from "./art";
+import { AV, PH, PW, drawScene } from "./pixel";
+import { pxi } from "./art";
 
 export class Scene {
   private root = $("#scene");
-  private avatar = h("div", { class: "avatar", "aria-hidden": "true" });
+  /** 도트 장면 (192×120을 키워서 보여준다) */
+  private canvas = h("canvas", { class: "px-scene", width: String(PW), height: String(PH), "aria-hidden": "true" }) as HTMLCanvasElement;
+  private ctx = this.canvas.getContext("2d")!;
+  private t = 0;
+  private drawAcc = 1;
+  private chompLeft = 0;
   private say = h("div", { class: "say" });
   private hud = h("div", { class: "scene-hud" });
   private top = h("div", { class: "scene-top" });
@@ -29,9 +35,6 @@ export class Scene {
   private spawnAcc = 0;
   private sayTimer = 4;
   private onTap: () => void;
-  private backdrop = h("div", { class: "backdrop-wrap", "aria-hidden": "true" });
-  /** 배경·아바타를 마지막으로 그린 시대 */
-  private drawnEra = -1;
   private hintTab: GuideTab | null = null;
 
   constructor(private game: Game, onTap: () => void, onHint: (tab: GuideTab) => void) {
@@ -44,12 +47,7 @@ export class Scene {
       e.stopPropagation();
       game.toggleThinking();
     };
-    // 떠다니는 먼지(옛 시대)·데이터 입자(현대): 모양은 CSS가 시대별로 정한다
-    const motes = h("div", { class: "motes", "aria-hidden": "true" });
-    for (let i = 0; i < 14; i++) {
-      motes.append(h("i", { style: { left: `${(i * 37) % 100}%`, animationDelay: `-${(i * 1.7) % 11}s`, animationDuration: `${9 + ((i * 5) % 7)}s` } }));
-    }
-    this.root.append(this.backdrop, motes, this.avatar, this.say, this.top, this.comboEl, this.hud);
+    this.root.append(this.canvas, this.say, this.top, this.comboEl, this.hud);
     this.hud.append(this.bottleneck, h("div", { class: "hud-row" }, this.tierChip, this.hallChip, this.autoChip, this.thinkBtn));
     // 빈 곳을 탭해도 답변 하나
     this.root.addEventListener("pointerdown", (e) => {
@@ -77,17 +75,23 @@ export class Scene {
   /** AI가 질문을 삼킬 때 아바타에서 튀는 불꽃 */
   private burst(bad: boolean): void {
     if (!this.game.state.settings.effects) return;
-    const r = this.root.getBoundingClientRect();
-    const a = this.avatar.getBoundingClientRect();
-    const el = h("div", { class: `burst ${bad ? "bad" : ""}`, style: { left: `${a.left - r.left + a.width * 0.45}px`, top: `${a.top - r.top + a.height * 0.45}px` } });
-    for (let i = 0; i < 8; i++) el.append(h("i", { style: { transform: `rotate(${i * 45 + Math.random() * 20}deg)` } }));
+    const [x, y] = this.avatarCenter();
+    const el = h("div", { class: `burst ${bad ? "bad" : ""}`, style: { left: `${x}px`, top: `${y}px` } });
+    for (let i = 0; i < 8; i++) el.append(h("i", { style: { transform: `rotate(${i * 45}deg)` } }));
     this.root.append(el);
     setTimeout(() => el.remove(), 650);
   }
 
   private chomp(): void {
-    this.avatar.classList.add("chomp");
-    setTimeout(() => this.avatar.classList.remove("chomp"), 110);
+    this.chompLeft = 0.25;
+  }
+
+  /** 캔버스는 바닥 기준으로 '꽉 채우기(cover)'로 늘어난다. AI 가운데의 화면 좌표. */
+  private avatarCenter(): [number, number] {
+    const w = this.root.clientWidth, hgt = this.root.clientHeight;
+    const k = Math.max(w / PW, hgt / PH);
+    const ox = (w - PW * k) / 2, oy = hgt - PH * k;
+    return [ox + (AV.x + AV.w / 2) * k, oy + (AV.y + AV.h / 2) * k];
   }
 
   private pop(x: number, y: number, text: string, cls = ""): void {
@@ -102,10 +106,9 @@ export class Scene {
     // 현재 티어 위주로, 가끔 아래 티어도
     const tier = Math.random() < 0.7 ? st.tier : unlocked[Math.floor(Math.random() * unlocked.length)];
     const q = tier.examples[Math.floor(Math.random() * tier.examples.length)];
-    const w = this.root.clientWidth;
     const hgt = this.root.clientHeight;
     const y = 44 + Math.random() * Math.max(10, hgt - 150);
-    const to = Math.max(80, w * 0.62);
+    const to = Math.max(80, this.avatarCenter()[0] - 40);
     const dur = 2.6 + Math.random() * 1.2;
     const b = h("button", { class: "bubble", style: { top: `${y}px` } }, h("span", { class: "t" }, tier.emoji), q);
     b.style.setProperty("--to", `${to}px`);
@@ -131,6 +134,19 @@ export class Scene {
   frame(dt: number): void {
     const st = this.game.stats;
     if (document.hidden) return;
+    // 도트 장면은 초당 10장이면 충분하다 (옛날 게임처럼 뚝뚝 끊기는 맛)
+    this.t += dt;
+    this.chompLeft = Math.max(0, this.chompLeft - dt);
+    this.drawAcc += dt;
+    if (this.drawAcc >= 0.1) {
+      this.drawAcc = 0;
+      const s = this.game.state;
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      drawScene(this.ctx, s.era, ERAS[s.era].color, {
+        t: reduce ? 0.5 : this.t, thinking: s.thinking, chomp: this.chompLeft,
+        fight: !!(s.boss || s.sideFight), breach: !reduce && s.active.some((a) => a.id === "breach"),
+      });
+    }
     const rate = Math.max(0.35, Math.min(1.2, st.answered)) * (this.game.state.settings.effects ? 1 : 0.4);
     this.spawnAcc += dt * rate;
     if (this.spawnAcc >= 1 && this.root.querySelectorAll(".bubble").length < 6) {
@@ -158,7 +174,7 @@ export class Scene {
         const def = GOLDENS.find((d) => d.kind === gold.kind)!;
         const ask = def.asks[Math.floor(Math.random() * def.asks.length)];
         const el = h("button", { class: "golden", style: { top: `${gold.y * 100}%` }, "aria-label": `${L("VIP 질문", "VIP question")}: ${def.name}` },
-          h("span", { class: "g-ico" }, def.emoji), h("span", null, h("b", null, `⭐ ${def.name}`), h("small", null, ask)));
+          h("span", { class: "g-ico" }, pxi(def.emoji)), h("span", null, h("b", null, `⭐ ${def.name}`), h("small", null, ask)));
         el.addEventListener("pointerdown", (e) => {
           e.stopPropagation();
           const r = this.root.getBoundingClientRect();
@@ -186,7 +202,7 @@ export class Scene {
       if (t) {
         const text = THREATS[t.text] ?? THREATS[0];
         const el = h("button", { class: "threat", style: { top: `${t.y * 100}%` }, "aria-label": `${L("탈옥 시도 막기", "Block jailbreak attempt")}: ${text}` },
-          h("span", { class: "g-ico" }, "🦹"), h("span", null, h("b", null, L("탈옥 시도! 탭해서 차단", "Jailbreak! Tap to block")), h("small", null, text)));
+          h("span", { class: "g-ico" }, pxi("🦹")), h("span", null, h("b", null, L("탈옥 시도! 탭해서 차단", "Jailbreak! Tap to block")), h("small", null, text)));
         el.addEventListener("pointerdown", (e) => {
           e.stopPropagation();
           const r = this.root.getBoundingClientRect();
@@ -207,15 +223,7 @@ export class Scene {
   update(): void {
     const g = this.game;
     const st = g.stats;
-    const era = ERAS[g.state.era];
-    if (this.drawnEra !== g.state.era) {
-      // 직접 만든 고정 SVG 문자열이라 innerHTML로 넣어도 안전하다
-      this.drawnEra = g.state.era;
-      const art = sceneArt(g.state.era, era.color);
-      this.backdrop.innerHTML = art.backdrop;
-      this.avatar.innerHTML = art.avatar;
-      this.root.dataset.era = String(g.state.era);
-    }
+    this.root.dataset.era = String(g.state.era);
     setText(this.tierChip, `${st.tier.emoji} ${st.tier.name} · ${fmtTokens(st.tokensPerQ)}`);
     this.tierChip.title = L(`담당 질문: ${st.tier.name}, 질문당 ${fmtTokens(st.tokensPerQ)} 토큰`, `Handles: ${st.tier.name}, ${fmtTokens(st.tokensPerQ)} tokens per question`);
     setText(this.hallChip, `🌀 ${L("환각", "Halluc.")} ${fmtPct(st.hall)}`);
@@ -265,13 +273,9 @@ export class Scene {
     setText(this.thinkBtn, `🤔 ${L("생각", "Think")} ${g.state.thinking ? "ON" : "OFF"}`);
     this.thinkBtn.setAttribute("aria-label", `${L("생각 모드", "Thinking Mode")} ${g.state.thinking ? "ON" : "OFF"}`);
     this.thinkBtn.classList.toggle("on", g.state.thinking);
-    // 장면 분위기: 보스전 경보등, 생각 모드 오라, 탈옥 사고 글리치
     // HUD 줄이 넘치면 오른쪽을 흐리게 해서 옆으로 밀 수 있다는 걸 알린다
     const row = this.thinkBtn.parentElement;
     if (row) row.classList.toggle("more", row.scrollWidth > row.clientWidth + 2 && row.scrollLeft + row.clientWidth < row.scrollWidth - 2);
-    this.root.classList.toggle("fight", !!(g.state.boss || g.state.sideFight));
-    this.root.classList.toggle("thinking", g.state.thinking);
-    this.root.classList.toggle("breach", g.state.active.some((a) => a.id === "breach"));
 
     // 진행 중 이벤트 / 보스
     const side = g.state.sideFight;
