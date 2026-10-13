@@ -68,3 +68,15 @@ export const EXTRA_ACHIEVEMENTS_EN: Record<string, { name: string; desc: string 
   daily_7: { name: "Perfect Attendance", desc: "Log in 7 days in a row" },
   models_5: { name: "Model Family", desc: "Record 5 models in the chronicle" },
 };
+
+export const WEEKLIES_EN: Record<string, { name: string; desc: string }> = {
+  w_hackathon: { name: "Hackathon Week", desc: "All-nighter season. Your fingers get faster." },
+  w_gpu_sale: { name: "GPU Fire Sale", desc: "Used GPUs flooded the market. Everything costs less." },
+  w_reviewer2: { name: "Paper Deadline Week", desc: "The lab lights stay on to get past Reviewer 2." },
+  w_meme: { name: "Meme Wave", desc: "AI chat screenshots took over the timeline. Questions pour in." },
+  w_leaderboard: { name: "Leaderboard Season", desc: "Everyone spins up GPUs to climb the benchmarks." },
+  w_open_weights: { name: "Open Weights Fest", desc: "Open models drop one after another. Answers are worth more." },
+  w_bug_bounty: { name: "Bug Bounty", desc: "People report wrong answers for you. Fewer hallucinations." },
+  w_freeze: { name: "Deploy Freeze", desc: "No Friday deploys. You earn more while you rest." },
+};
+

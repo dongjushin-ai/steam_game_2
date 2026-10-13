@@ -1,5 +1,5 @@
 import { ERAS, MISSIONS, QUIZ, THREATS } from "../data";
-import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP } from "./formulas";
+import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP, WEEKLY_MAP } from "./formulas";
 import { SAVE_VERSION, newState } from "./game";
 import type { ActiveMission, GameState, ModelRecord, Quest, QuestKind } from "./types";
 
@@ -74,6 +74,7 @@ export function migrate(raw: unknown): GameState | null {
     missions,
     models,
     daily,
+    weekly: typeof r.weekly === "string" && WEEKLY_MAP[r.weekly] ? r.weekly : null,
     nextEventIn: num(r.nextEventIn, base.nextEventIn),
     nextGoldenIn: num(r.nextGoldenIn, base.nextGoldenIn),
     stats,

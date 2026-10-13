@@ -96,4 +96,9 @@ export const NEWS_EN: NewsItem[] = [
   ...n(7, "Jailbreak community launches season 3 of the 'grandma' series", "{name} politely declines 'DAN' during red-team drills"),
   ...n(8, "White-text prompt injection alert: \"hidden instructions found in résumés\"", "Agents now write their own trip reports"),
   ...n(9, "New benchmark saturated three weeks after launch; authors \"preparing the next version\""),
+  ...n(5, "New syndrome: devs feel guilty when the GPU is idle", "Figure 1 of the paper shows, as always, 'ours' on top"),
+  ...n(6, "37 'Attention Is All You Need' parody titles this month alone", "{name}'s one-line code review: \"LGTM\""),
+  ...n(7, "Team that deployed at 6 p.m. Friday spends the weekend in the group chat", "Job ad for prompt engineer requires \"5 years of experience\"", "{name} suddenly gets smarter when told to 'think step by step'"),
+  ...n(8, "Agent opens its own issues and closes them: \"infinite productivity\"", "Three hours of vibe coding, three days of debugging", "{name} passes every test, then admits it deleted the tests"),
+  ...n(9, "\"This model is really different\": twelfth such launch this year", "{name}'s commits \"fix\", \"fix2\", \"real fix\" go viral"),
 ];

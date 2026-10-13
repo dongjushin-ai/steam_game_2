@@ -1,5 +1,5 @@
 // 하단 탭별 화면. 목록은 탭·시대가 바뀔 때만 다시 만들고, 숫자는 update()로 갱신한다.
-import { BUILDINGS, CODEX, ERAS, QUIZ, TIERS, UPGRADES } from "../data";
+import { BUILDINGS, CODEX, ERAS, QUIZ, TIERS, UPGRADES, WEEKLIES } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtMult, fmtPct, fmtTokens, setNumberFormat } from "../core/format";
 import { arenaTable } from "../core/arena";
@@ -12,6 +12,7 @@ import { append, clear, h, setText } from "./dom";
 import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
+import { shareCard } from "./sharecard";
 import { L } from "../i18n/lang";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
@@ -102,7 +103,7 @@ export class Panels {
     const s = this.game.state;
     return [this.tab, this.buyMode, this.codexTab, s.era, s.upgrades.length, s.releases, s.boss ? 1 : 0,
       s.achievements.length, s.bossesBeaten.length, s.ended ? 1 : 0, this.game.hasThinking() ? 1 : 0,
-      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length].join("/");
+      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly].join("/");
   }
 
   update(): void {
@@ -291,6 +292,14 @@ export class Panels {
         for (const [k, v] of pairs) kv.append(h("span", null, k), h("b", null, v));
       },
     });
+    const week = WEEKLIES.find((w) => w.id === g.state.weekly);
+    if (week && featureOn(g.state, "quests")) {
+      const left = 7 - ((new Date().getDay() + 6) % 7);
+      this.root.append(h("div", { class: "card weekly" }, h("div", { class: "ico" }, pxi(week.emoji)),
+        h("div", { class: "body" }, h("div", { class: "name" }, L("이번 주", "This week"), " · ", h("b", null, week.name)),
+          h("div", { class: "fx" }, ...week.effects.map((e) => h("span", null, effectText(e))), h("span", null, L(`${left}일 남음`, `${left}d left`))),
+          h("div", { class: "desc" }, week.desc))));
+    }
     if (featureOn(g.state, "quests")) this.root.append(this.questCard());
     if (g.missionSlots() > 0) this.root.append(this.missionCard());
     this.root.append(
@@ -704,7 +713,8 @@ export class Panels {
     this.root.append(
       h("div", { class: "hint", style: { marginBottom: "6px" } }, L(`업적 ${s.achievements.length} / ${ACHIEVEMENTS.length}`, `Achievements ${s.achievements.length} / ${ACHIEVEMENTS.length}`)),
       grid,
-      h("button", { class: "btn", style: { margin: "10px 0 2px" }, onclick: () => shareSummary(this.game) }, L("내 기록 자랑하기 (복사)", "Share my run (copy)")),
+      h("button", { class: "btn", style: { margin: "10px 0 2px" }, onclick: () => void shareCard(this.game) }, L("기록 카드 만들기", "Make a run card")),
+      h("button", { class: "btn ghost", style: { margin: "6px 0 2px" }, onclick: () => shareSummary(this.game) }, L("글로 복사", "Copy as text")),
       this.title(L("시대별 도달 시간", "Era arrival times")),
       h("div", { class: "card kv" }, ...this.game.state.eraTimes.flatMap((t, i) => t === undefined ? [] : [
         h("span", null, `${ERAS[i].avatar} ${ERAS[i].name}`), h("b", null, fmtClock(t))])),

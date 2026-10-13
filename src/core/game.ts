@@ -77,6 +77,7 @@ export function newState(aiName = "나의 AI"): GameState {
     missions: [],
     models: [],
     daily: { last: "", streak: 0 },
+    weekly: null,
     boss: null,
     bossesBeaten: [],
     achievements: [],

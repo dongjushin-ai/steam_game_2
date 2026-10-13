@@ -1,12 +1,12 @@
 // 언어 전환. UI 문구는 L("한국어", "English"), 콘텐츠 데이터는 applyLanguage()가 id별 번역표로 덮어쓴다.
-import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES } from "../data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES, WEEKLIES } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import type { NewsItem } from "../core/types";
 import { BUILDINGS_EN } from "./en/buildings";
 import { CODEX_EN } from "./en/codex";
 import { ERAS_EN, TIERS_EN } from "./en/eras";
 import { EVENTS_EN } from "./en/events";
-import { BENCHES_EN, EXTRA_ACHIEVEMENTS_EN, EXTRA_UPGRADES_EN, MISSIONS_EN, THREATS_EN } from "./en/extra";
+import { BENCHES_EN, EXTRA_ACHIEVEMENTS_EN, EXTRA_UPGRADES_EN, MISSIONS_EN, THREATS_EN, WEEKLIES_EN } from "./en/extra";
 import { ACHIEVEMENTS_EN, GOLDENS_EN, RIVALS_EN } from "./en/misc";
 import { NEWS_EN } from "./en/news";
 import { QUIZ_EN } from "./en/quiz";
@@ -41,6 +41,7 @@ const KO = {
   benches: SIDE_BENCHES.map((b) => ({ name: b.name, desc: b.desc, winText: b.winText, year: b.year })),
   missions: MISSIONS.map((m) => ({ name: m.name, desc: m.desc })),
   threats: [...THREATS],
+  weeklies: WEEKLIES.map((w) => ({ name: w.name, desc: w.desc })),
 };
 const UPG_EN = { ...UPGRADES_EN, ...EXTRA_UPGRADES_EN };
 const ACH_EN = { ...ACHIEVEMENTS_EN, ...EXTRA_ACHIEVEMENTS_EN };
@@ -144,6 +145,11 @@ export function applyLanguage(next: Lang): void {
     const t = en ? pick(MISSIONS_EN, x.id, "mission") : undefined;
     x.name = t?.name ?? KO.missions[i].name;
     x.desc = t?.desc ?? KO.missions[i].desc;
+  });
+  WEEKLIES.forEach((x, i) => {
+    const t = en ? pick(WEEKLIES_EN, x.id, "weekly") : undefined;
+    x.name = t?.name ?? KO.weeklies[i].name;
+    x.desc = t?.desc ?? KO.weeklies[i].desc;
   });
   if (en && THREATS_EN.length !== KO.threats.length) missing.push("threats:length");
   THREATS.splice(0, THREATS.length, ...(en ? THREATS_EN : KO.threats));

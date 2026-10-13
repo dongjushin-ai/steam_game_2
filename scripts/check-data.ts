@@ -1,5 +1,5 @@
 // 콘텐츠 데이터 무결성 검사: npm test 에서 실행된다.
-import { BUILDINGS, CODEX, ERAS, EVENTS, MISSIONS, SIDE_BENCHES, TIERS, UPGRADES } from "../src/data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, MISSIONS, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES } from "../src/data";
 import { ACHIEVEMENTS } from "../src/core/achievements";
 
 const errors: string[] = [];
@@ -22,6 +22,8 @@ unique("all ids", [...BUILDINGS.map((b) => b.id), ...UPGRADES.map((u) => u.id)])
 
 unique("side benches", SIDE_BENCHES.map((b) => b.id));
 unique("missions", MISSIONS.map((m) => m.id));
+unique("weeklies", WEEKLIES.map((w) => w.id));
+for (const w of WEEKLIES) if (!w.effects.length) fail(`${w.id}: 효과 없음`);
 
 const maxEra = ERAS.length - 1;
 for (const b of SIDE_BENCHES) {

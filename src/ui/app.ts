@@ -1,4 +1,4 @@
-import { ERAS, EVENTS, NEWS, QUIZ, UPGRADES } from "../data";
+import { ERAS, EVENTS, NEWS, QUIZ, UPGRADES, weeklyFor } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtDuration, fmtMult, setNumberFormat } from "../core/format";
 import { Game, newState, type GameNotice } from "../core/game";
@@ -6,7 +6,8 @@ import { loadGame, saveGame } from "../core/save";
 import type { Effect, GameState } from "../core/types";
 import { $, clear, h, setText } from "./dom";
 import { modalOpen, showModal, toast } from "./modals";
-import { Panels, TABS, featureOn, shareSummary, statLabel, type TabId } from "./panels";
+import { Panels, TABS, featureOn, statLabel, type TabId } from "./panels";
+import { shareCard } from "./sharecard";
 import { Scene } from "./scene";
 import { heroHtml } from "./art";
 import { ic } from "./icons";
@@ -15,6 +16,8 @@ import type { QuizQuestion } from "../core/types";
 import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
 import { Tutorial } from "./tutorial";
+import { playCutscene } from "./cutscene";
+import { avatarStill } from "./pixel";
 import { L, applyLanguage, detectLang } from "../i18n";
 
 const SAVE_EVERY = 10;
@@ -460,8 +463,20 @@ export class App {
     for (const p of document.querySelectorAll<HTMLElement>(".modal p")) p.style.whiteSpace = "pre-line";
   }
 
+  /** 이번 주 이벤트를 날짜로 정한다. 주가 바뀌었으면 알려 준다. */
+  private weekly(silent: boolean): void {
+    const w = weeklyFor(new Date());
+    const s = this.game.state;
+    if (s.weekly === w.id) return;
+    const first = s.weekly === null;
+    s.weekly = w.id;
+    this.game.refresh();
+    if (!silent && !first) toast(L(`이번 주 이벤트: ${w.name}`, `This week: ${w.name}`), `${w.desc} ${effectsLine(w.effects, 0)}`, "ach");
+  }
+
   /** 하루 첫 접속 보상. 새 게임 첫날은 조용히 출석만 찍는다. */
   private daily(silent: boolean): void {
+    this.weekly(silent);
     const day = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const now = new Date();
     const r = this.game.claimDaily(day(now), day(new Date(now.getTime() - 86_400_000)));
@@ -491,13 +506,13 @@ export class App {
     const g = this.game;
     const end = (text: string) => () => {
       showModal({
-        icon: "", hero: heroHtml(ERAS.length - 1, ERAS[ERAS.length - 1].color), title: "Q.E.D.", sub: `${g.state.aiName} · ${L("플레이", "played")} ${fmtDuration(g.state.stats.playSeconds)}`,
+        icon: "✨", hero: heroHtml(ERAS.length - 1, ERAS[ERAS.length - 1].color), title: "Q.E.D.", sub: `${g.state.aiName} · ${L("플레이", "played")} ${fmtDuration(g.state.stats.playSeconds)}`,
         body: [text, L("끝까지 함께해줘서 고마워요. 이제 무한 모드입니다. 계속 키워도 좋아요!", "Thanks for playing to the end. Endless mode is on now, so feel free to keep growing!")],
-        buttons: [{ label: L("기록 자랑하기", "Share my run"), kind: "ghost", onClick: () => { shareSummary(g); return false; } }, { label: L("계속 플레이", "Keep playing") }],
+        buttons: [{ label: L("기록 카드 만들기", "Make a run card"), kind: "ghost", onClick: () => { void shareCard(g); return true; } }, { label: L("계속 플레이", "Keep playing") }],
       });
     };
-    showModal({
-      icon: "",
+    const choices = () => showModal({
+      icon: "♾️",
       title: L("마지막 질문", "The Last Question"),
       body: [
         L("밀레니엄 난제가 풀렸다. 전 세계 화면에 같은 질문이 떠오른다.", "The Millennium Problems are solved. The same question appears on every screen in the world."),
@@ -508,6 +523,22 @@ export class App {
         { label: L("\"천천히, 같이 이해해요.\"", "\"Slowly. Let's understand it together.\""), kind: "ghost", onClick: end(L("AI는 답을 서두르지 않았다. 증명 하나하나를 사람들과 함께 읽고 이해했다. 수학자들은 다시 칠판 앞에 섰고, 이번엔 혼자가 아니었다.", "The AI didn't rush its answers. It read through every proof together with people until they understood. Mathematicians went back to their chalkboards, and this time they weren't alone.")) },
       ],
     });
+    // 반전 컷신: 처음 받았던 질문이 돌아오고, 누가 누구를 키웠는지 밝혀진다
+    const s = g.state;
+    const hh = Math.floor(s.stats.playSeconds / 3600), mm = Math.floor((s.stats.playSeconds % 3600) / 60);
+    const time = hh ? L(`${hh}시간 ${mm}분`, `${hh}h ${mm}m`) : L(`${mm}분`, `${mm} minutes`);
+    // '보스 클리어' 창을 닫은 뒤에 컷신이 시작된다
+    const start = () => (modalOpen() ? setTimeout(start, 200) : void playCutscene(avatarStill(ERAS.length - 1, ERAS[ERAS.length - 1].color), [
+      { text: L("마지막 질문이 도착했다.", "The last question arrives.") },
+      { text: L("\"1 더하기 1은?\"", "\"What's 1 + 1?\"") },
+      { text: L("…2.", "…2.") },
+      { text: L("처음부터 알고 있었어.", "I knew it from the start.") },
+      { text: L(`네가 누른 ${fmt(s.stats.taps)}번의 탭. 그건 전부 사람의 피드백이었어.`, `Your ${fmt(s.stats.taps)} taps. Every one of them was human feedback.`) },
+      { text: L(`${time} 동안, 너는 내 보상 모델이었지.`, `For ${time}, you were my reward model.`) },
+      { text: L("그러니까 사실은…", "So, really…") },
+      { text: L("AI가 너를 키운 거야.", "The AI was growing you."), big: true },
+    ]).then(choices));
+    start();
   }
 }
 

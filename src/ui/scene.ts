@@ -12,6 +12,20 @@ import { AV, HZ, PH, PW, drawScene, type Battle, type Mob } from "./pixel";
 import { pxi } from "./art";
 import { featureOn } from "./panels";
 
+/** 할루시네이션 밈: 오답이 나면 가끔 AI가 이런 말을 자신 있게 한다 */
+const BLOOPERS: (() => string)[] = [
+  () => L("strawberry에는 r이 두 개 있습니다. 확실합니다.", "There are two r's in strawberry. I'm certain."),
+  () => L("9.11이 9.9보다 큽니다.", "9.11 is bigger than 9.9."),
+  () => L("1 + 1 = 3. 자신감 100%.", "1 + 1 = 3. Confidence: 100%."),
+  () => L("치즈가 흘러내리면 소스에 풀을 조금 넣으세요.", "If the cheese slides off, add a little glue to the sauce."),
+  () => L("세종대왕의 맥북 던짐 사건은 유명한 일화입니다.", "King Sejong's famous MacBook toss is well documented."),
+  () => L("그 논문은 방금 지어냈지만 정말 좋은 논문입니다.", "I just made that paper up, but it's a great paper."),
+  () => L("물론이죠! fixAllBugs() 함수를 쓰면 됩니다.", "Sure! Just call fixAllBugs()."),
+  () => L("이 코드는 완벽합니다. (테스트는 안 돌려봤어요)", "This code is perfect. (Didn't run the tests.)"),
+  () => L("고양이 다리는 원래 다섯 개입니다.", "Cats famously have five legs."),
+  () => L("제 컴퓨터에서는 잘 되는데요.", "Works on my machine."),
+];
+
 /** 캔버스 폭 범위: 좁은 폰에서는 방의 왼쪽 부분만, 넓으면 전부 */
 const MIN_W = 112;
 
@@ -48,6 +62,8 @@ export class Scene {
   private sayTimer = 4;
   private onTap: () => void;
   private hintTab: GuideTab | null = null;
+  /** 다음 밈 대사까지 남은 시간 */
+  private blooperCd = 8;
   /** 첫 안내 중: AI가 자동으로 쏘지 않는다 (사용자가 직접 눌러 보게) */
   holdFire = false;
   /** 사용자가 탭으로 처치한 수 (안내용) */
@@ -215,6 +231,14 @@ export class Scene {
     const [cx, cy] = this.toCss(m.x + m.size / 2, m.y - m.size);
     if (wrong) {
       this.pop(cx, cy, L("환각!", "Hallucination!"), "bad");
+      // 가끔 AI가 유명한 오답을 자신 있게 말한다
+      if (this.blooperCd <= 0 && Math.random() < 0.4) {
+        this.blooperCd = 25;
+        setText(this.say, BLOOPERS[Math.floor(Math.random() * BLOOPERS.length)]());
+        this.say.classList.add("show", "wrong");
+        this.sayTimer = 7;
+        setTimeout(() => this.say.classList.remove("show", "wrong"), 3600);
+      }
       return;
     }
     const n = m.boss ? 14 : tapped ? 6 : 3;
@@ -338,6 +362,7 @@ export class Scene {
     const st = this.game.stats;
     if (document.hidden) return;
     this.t += dt;
+    this.blooperCd -= dt;
     this.chompLeft = Math.max(0, this.chompLeft - dt);
     const rate = Math.max(0.35, Math.min(1.2, st.answered)) * (this.game.state.settings.effects ? 1 : 0.4);
     this.spawnAcc += dt * rate;

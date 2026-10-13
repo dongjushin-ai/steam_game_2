@@ -1104,6 +1104,15 @@ export function sceneStill(era: number, accent: string, withAvatar = true): stri
   return url;
 }
 
+/** 공유 카드용: 장면 한 장을 캔버스로 */
+export function sceneCanvas(era: number, accent: string): HTMLCanvasElement {
+  const cv = document.createElement("canvas");
+  cv.width = PW;
+  cv.height = PH;
+  drawScene(cv.getContext("2d")!, era, accent, { t: 0.5, thinking: false, chomp: 0, fight: false, breach: false });
+  return cv;
+}
+
 /** AI 얼굴만 (연표 썸네일) */
 export function avatarStill(era: number, accent: string): string {
   const key = `av|${era}|${accent}`;

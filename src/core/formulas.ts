@@ -1,4 +1,4 @@
-import { BUILDINGS, SIDE_BENCHES, TIERS, UPGRADES } from "../data";
+import { BUILDINGS, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES } from "../data";
 import type { Building, GameState, MultStat, SideBench, Tier, Upgrade } from "./types";
 
 /** 티어 보상(tiers.ts)에 곱하는 전역 배율. */
@@ -29,6 +29,7 @@ export const COMBO_WINDOW = 1.2;
 export const BUILDING_MAP: Record<string, Building> = Object.fromEntries(BUILDINGS.map((b) => [b.id, b]));
 export const UPGRADE_MAP: Record<string, Upgrade> = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));
 export const BENCH_MAP: Record<string, SideBench> = Object.fromEntries(SIDE_BENCHES.map((b) => [b.id, b]));
+export const WEEKLY_MAP = Object.fromEntries(WEEKLIES.map((w) => [w.id, w]));
 /** 탈옥 자동 차단 확률 상한 */
 export const AUTO_BLOCK_MAX = 0.95;
 
@@ -75,6 +76,8 @@ export function multipliers(state: GameState): Record<MultStat, number> {
     const b = BENCH_MAP[id];
     if (b) for (const e of b.effects) m[e.stat] *= e.mul;
   }
+  const week = state.weekly ? WEEKLY_MAP[state.weekly] : undefined;
+  if (week) for (const e of week.effects) m[e.stat] *= e.mul;
   for (const a of state.active) for (const e of a.effects) m[e.stat] *= e.mul;
   return m;
 }

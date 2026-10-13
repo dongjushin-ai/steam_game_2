@@ -1,6 +1,6 @@
 // 핵심 로직 테스트 (npm test). 외부 테스트 프레임워크 없이 node:assert만 쓴다.
 import assert from "node:assert/strict";
-import { ERAS, EVENTS } from "../src/data";
+import { ERAS, EVENTS, WEEKLIES, weeklyFor } from "../src/data";
 import { Game, newState } from "../src/core/game";
 import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
@@ -510,6 +510,17 @@ test("세이브: 첫 안내는 새 게임에만 (1분 넘게 한 옛 세이브�
   assert.equal(migrate({ era: 0, credits: 1, stats: { playSeconds: 5 }, settings: { lang: "ko" } })!.settings.tutorialDone, false);
   assert.equal(migrate({ era: 0, credits: 1, stats: { playSeconds: 3600 }, settings: { lang: "ko" } })!.settings.tutorialDone, true);
   assert.equal(migrate({ era: 0, credits: 1, stats: { playSeconds: 3600 }, settings: { tutorialDone: false } })!.settings.tutorialDone, false);
+});
+
+test("주간 이벤트: 날짜로 정해지고, 효과가 배수에 들어간다", () => {
+  const a = weeklyFor(new Date(2026, 9, 12)), b = weeklyFor(new Date(2026, 9, 18)), c = weeklyFor(new Date(2026, 9, 19));
+  assert.equal(a.id, b.id, "같은 주(월~일)는 같은 이벤트");
+  assert.notEqual(b.id, c.id, "다음 주에는 바뀐다");
+  const s = newState();
+  const base = computeStats(s).mult.tap;
+  s.weekly = WEEKLIES.find((w) => w.id === "w_hackathon")!.id;
+  assert.equal(computeStats(s).mult.tap, base * 1.5);
+  assert.equal(migrate({ era: 0, credits: 1, weekly: "w_nope" })!.weekly, null);
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

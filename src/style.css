@@ -558,3 +558,24 @@ details.stats[open] > summary { margin-bottom: 6px; }
 @keyframes coach { 50% { margin-top: -3px; } }
 @media (prefers-reduced-motion: reduce) { .coach { animation: none; } }
 
+/* 주간 이벤트 띠 */
+.card.weekly { display: grid; grid-template-columns: 36px 1fr; gap: 8px; align-items: center; border-style: dashed; }
+.card.weekly .ico { width: 36px; height: 36px; display: grid; place-items: center; }
+.card.weekly .ico img { width: 28px; height: 28px; }
+.card.weekly .name { font-size: 12px; }
+.card.weekly .fx { display: flex; flex-wrap: wrap; gap: 3px; font-size: 11px; margin-top: 2px; }
+.card.weekly .fx span { border: 1px solid var(--line); padding: 0 4px; }
+.card.weekly .desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.share-img { display: block; width: 100%; max-width: 320px; margin: 4px auto 0; image-rendering: pixelated; border: var(--bw) solid var(--line); }
+
+/* 엔딩 컷신 */
+.cutscene { position: fixed; inset: 0; z-index: 60; background: #000; color: #fff; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; padding: 48px 20px 28px; font-family: "Galmuri11", monospace; cursor: pointer; }
+.cut-img { width: 160px; height: 160px; }
+.cut-lines { width: min(420px, 100%); align-self: start; margin-top: 18px; }
+.cut-lines p { margin: 0 0 12px; font-size: 15px; line-height: 1.5; min-height: 1.5em; }
+.cut-lines p.big { font-size: 26px; font-weight: 700; color: #ffe600; margin-top: 18px; }
+.cut-hint { font-size: 14px; animation: coach 0.8s steps(2) infinite; }
+.cut-skip { position: absolute; top: 12px; right: 12px; background: #000; color: #fff; border: 2px solid #fff; padding: 3px 10px; font: inherit; font-size: 12px; }
+.say.wrong { background: #ff2d2d; color: #fff; border-color: #000; }
+.say.wrong::before { content: "?! "; font-weight: 700; }
+

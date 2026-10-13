@@ -317,6 +317,8 @@ export interface GameState {
   models: ModelRecord[];
   /** 출석: 마지막 접속 날짜(YYYY-MM-DD)와 연속 일수 */
   daily: { last: string; streak: number };
+  /** 이번 주 이벤트 id (화면이 날짜로 정해 넣는다. 시뮬레이션에서는 없음) */
+  weekly: string | null;
   boss: BossFight | null;
   bossesBeaten: number[];
   achievements: string[];
