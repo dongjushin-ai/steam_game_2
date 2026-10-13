@@ -27,12 +27,12 @@ export function questProgress(s: GameState, q: Quest): number {
 export function questText(q: Quest, fmt: (n: number) => string): string {
   switch (q.kind) {
     case "answer": return L(`질문 ${fmt(q.target)}개 더 답변하기`, `Answer ${fmt(q.target)} more questions`);
-    case "earn": return L(`💵 ${fmt(q.target)} 더 벌기`, `Earn 💵 ${fmt(q.target)} more`);
+    case "earn": return L(`${fmt(q.target)} 더 벌기`, `Earn ${fmt(q.target)} more`);
     case "buy": return L(`건물 ${q.target}개 더 구매하기`, `Buy ${q.target} more buildings`);
     case "research": return L(`연구 ${q.target}개 완료하기`, `Finish ${q.target} research project${q.target > 1 ? "s" : ""}`);
     case "taps": return L(`직접 ${q.target}번 답변하기 (탭)`, `Answer ${q.target} questions by tapping`);
     case "think": return L(`생각 모드로 ${q.target}초 운영하기`, `Run Thinking Mode for ${q.target}s`);
-    case "golden": return L(`⭐VIP 질문 ${q.target}개 잡기`, `Catch ${q.target} ⭐VIP question${q.target > 1 ? "s" : ""}`);
+    case "golden": return L(`VIP 질문 ${q.target}개 잡기`, `Catch ${q.target} VIP question${q.target > 1 ? "s" : ""}`);
     case "combo": return L(`${q.target}콤보 달성하기`, `Reach a ${q.target} combo`);
   }
 }

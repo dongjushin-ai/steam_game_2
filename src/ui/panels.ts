@@ -13,16 +13,17 @@ import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
 import { L } from "../i18n/lang";
 import { avatarThumb, heroHtml, pxi } from "./art";
+import { ic, type IconName } from "./icons";
 
 export type TabId = "service" | "infra" | "research" | "bench" | "codex";
 
 /** 하단 탭. 라벨은 언어 설정을 따라야 해서 getter로 둔다. */
-export const TABS: { id: TabId; icon: string; readonly label: string }[] = [
-  { id: "service", icon: "💬", get label() { return L("서비스", "Service"); } },
-  { id: "infra", icon: "🖥️", get label() { return L("인프라", "Infra"); } },
-  { id: "research", icon: "🧠", get label() { return L("연구", "Research"); } },
-  { id: "bench", icon: "🏆", get label() { return L("벤치마크", "Bench"); } },
-  { id: "codex", icon: "📖", get label() { return L("도감", "Codex"); } },
+export const TABS: { id: TabId; icon: IconName; readonly label: string }[] = [
+  { id: "service", icon: "chat", get label() { return L("서비스", "Service"); } },
+  { id: "infra", icon: "chip", get label() { return L("인프라", "Infra"); } },
+  { id: "research", icon: "flask", get label() { return L("연구", "Research"); } },
+  { id: "bench", icon: "trophy", get label() { return L("벤치마크", "Bench"); } },
+  { id: "codex", icon: "book", get label() { return L("도감", "Codex"); } },
 ];
 
 /** 스탯 이름 */
@@ -66,7 +67,7 @@ export class Panels {
     private history: () => number[],
   ) {}
 
-  /** 비용 대비 순이익 증가가 가장 큰 건물 (💡추천) */
+  /** 비용 대비 순이익 증가가 가장 큰 건물 (추천) */
   private recommended(): string {
     const g = this.game;
     const s = g.state;
@@ -149,13 +150,13 @@ export class Panels {
         sfx("buy");
         const owned = g.state.buildings[b.id];
         if (b.kind !== "param" && milestoneMult(owned) > milestoneMult(owned - n)) {
-          toast(L(`🎉 ${b.emoji} ${b.name} ${owned}개 달성!`, `🎉 ${b.emoji} ${b.name} ×${owned}!`), L("마일스톤: 이 건물의 생산량 ×2", "Milestone: this building's output ×2"));
+          celebrate(L(`${b.name} ${owned}개 · 생산 ×2`, `${b.name} ×${owned} · output ×2`));
           sfx("quest");
         }
         this.update();
       } else sfx("error");
     };
-    const row = h("div", { class: "row" }, h("div", { class: "ico" }, pxi(b.emoji)), h("div", null, name, h("div", { class: "desc" }, b.desc), fx), btn);
+    const row = h("div", { class: "row" }, h("div", { class: "ico" }, pxi(b.emoji)), foldable(h("div", { class: "body" }, name, fx, h("div", { class: "desc" }, b.desc))), btn);
     this.rows.push({
       update: () => {
         const s = g.state;
@@ -168,7 +169,7 @@ export class Panels {
           name.dataset.k = nameKey;
           clear(name);
           name.append(owned ? `${b.name} ×${owned}` : b.name);
-          if (reco) name.append(h("span", { class: "badge reco" }, L("💡추천", "💡Best")));
+          if (reco) name.append(h("span", { class: "badge reco" }, L("추천", "Best")));
           if (ms && owned > 0) name.append(h("span", { class: "badge ms" }, L(`${ms}개 ×2`, `×2 at ${ms}`)));
         }
         const n = this.buyMode === "max" ? Math.max(1, maxAffordable(s, b, g.stats.mult.cost)) : this.buyMode;
@@ -176,11 +177,11 @@ export class Panels {
         const can = cost <= s.credits;
         btn.className = `buy ${can ? "can" : ""}`;
         btn.disabled = !can;
-        const label = `💵 ${fmt(cost)}`;
+        const label = fmt(cost);
         if (btn.dataset.l !== label + n) {
           btn.dataset.l = label + n;
           clear(btn);
-          btn.append(label, h("small", null, n > 1 ? L(`${n}개 구매`, `Buy ${n}`) : L("구매", "Buy")));
+          btn.append(h("span", { class: "price" }, ic("coin"), label), h("small", null, n > 1 ? `×${n}` : L("구매", "Buy")));
         }
         setText(fx, buildingFx(b, g));
       },
@@ -188,59 +189,74 @@ export class Panels {
     return row;
   }
 
-  private upgradeRow(u: Upgrade): HTMLElement {
+  /** 업그레이드 효과 칩들 */
+  private upgradeFx(u: Upgrade): HTMLElement {
+    const fx = h("div", { class: "fx" }, ...u.effects.map((e) => h("span", null, effectText(e))));
+    if (u.ctx) fx.append(h("span", null, `${L("컨텍스트", "Context")} ${fmtTokens(u.ctx)}`));
+    if (u.unlockThinking) fx.append(h("span", null, L("생각 모드", "Thinking Mode")));
+    if (u.autoTap) fx.append(h("span", null, L(`자동 답변 +${u.autoTap}/초`, `Auto-answer +${u.autoTap}/s`)));
+    if (u.autoBlock) fx.append(h("span", null, L(`탈옥 자동 차단 +${Math.round(u.autoBlock * 100)}%`, `Jailbreak auto-block +${Math.round(u.autoBlock * 100)}%`)));
+    if (u.missionSlots) fx.append(h("span", null, L(`파견 슬롯 +${u.missionSlots}`, `Mission slot +${u.missionSlots}`)));
+    return fx;
+  }
+
+  /** 업그레이드 상세 창 (타일을 누르면) */
+  private upgradeSheet(u: Upgrade): void {
     const g = this.game;
     const owned = g.state.upgrades.includes(u.id);
     const missing = (u.requires ?? []).filter((r) => !g.state.upgrades.includes(r));
-    const fx = h("div", { class: "fx" }, ...u.effects.map((e) => h("span", null, effectText(e))));
-    if (u.ctx) fx.append(h("span", null, `${L("컨텍스트", "Context")} ${fmtTokens(u.ctx)}`));
-    if (u.unlockThinking) fx.append(h("span", null, L("🤔 생각 모드", "🤔 Thinking Mode")));
-    if (u.autoTap) fx.append(h("span", null, L(`🤖 자동 답변 +${u.autoTap}/초`, `🤖 Auto-answer +${u.autoTap}/s`)));
-    if (u.autoBlock) fx.append(h("span", null, L(`🛡️ 탈옥 자동 차단 +${Math.round(u.autoBlock * 100)}%`, `🛡️ Jailbreak auto-block +${Math.round(u.autoBlock * 100)}%`)));
-    if (u.missionSlots) fx.append(h("span", null, L(`🛰️ 파견 슬롯 +${u.missionSlots}`, `🛰️ Mission slot +${u.missionSlots}`)));
     const isRp = u.currency === "rp";
-    const btn = h("button", { class: `buy ${isRp ? "rp" : ""}` });
-    btn.onclick = () => {
-      if (g.buyUpgrade(u.id)) {
-        sfx(isRp ? "research" : "buy");
-        toast(`${u.emoji} ${u.name}`, u.effects.map(effectText).join(" · ") || L("해금!", "Unlocked!"));
-        this.update();
-      }
-    };
-    const row = h("div", { class: `row ${owned ? "owned" : missing.length ? "locked" : ""}` },
-      h("div", { class: "ico" }, pxi(u.emoji)),
-      h("div", null, h("div", { class: "name" }, u.name, h("small", null, u.year)), h("div", { class: "desc" }, u.desc), fx),
-      owned ? h("span", { class: "hint" }, "✅") : btn);
-    if (!owned) {
-      if (missing.length) {
-        btn.disabled = true;
-        btn.append("🔒", h("small", null, L(`${missing.map((m) => UPGRADES.find((x) => x.id === m)?.name).join(", ")} 필요`, `Needs ${missing.map((m) => UPGRADES.find((x) => x.id === m)?.name).join(", ")}`)));
-      } else {
-        this.rows.push({
-          update: () => {
-            const can = g.canBuyUpgrade(u.id);
-            btn.className = `buy ${isRp ? "rp" : ""} ${can ? "can" : ""}`;
-            btn.disabled = !can;
-            setText(btn, `${isRp ? "🧠" : "💵"} ${fmt(u.cost)}`);
+    const price = h("span", { class: "price" }, ic(isRp ? "rp" : "coin"), fmt(u.cost));
+    showModal({
+      icon: u.emoji, title: u.name, sub: u.year,
+      body: [u.desc, this.upgradeFx(u),
+        missing.length ? h("p", { class: "hint warn" }, L(`먼저 필요: ${missing.map((m) => UPGRADES.find((x) => x.id === m)?.name).join(", ")}`, `Needs first: ${missing.map((m) => UPGRADES.find((x) => x.id === m)?.name).join(", ")}`)) : null,
+      ].filter((x): x is string | HTMLElement => !!x),
+      buttons: owned ? [{ label: L("닫기", "Close"), kind: "ghost" }] : [
+        {
+          label: h("span", null, isRp ? L("연구하기 ", "Research ") : L("구매하기 ", "Buy "), price),
+          className: isRp ? "rp" : "",
+          onClick: () => {
+            if (!g.buyUpgrade(u.id)) {
+              sfx("error");
+              toast(L("아직 살 수 없어요", "Can't afford it yet"), missing.length ? L("먼저 필요한 기술이 있어요", "Another tech comes first") : L("조금 더 모아 보세요", "Save up a bit more"));
+              return false;
+            }
+            sfx(isRp ? "research" : "buy");
+            celebrate(u.name);
+            this.update();
+            return true;
           },
-        });
-      }
-    }
-    return row;
+        },
+        { label: L("닫기", "Close"), kind: "ghost" },
+      ],
+      dismissable: true,
+    });
   }
 
-  private upgradeList(currency: "rp" | "credits"): HTMLElement[] {
-    const s = this.game.state;
+  /** 업그레이드를 아이콘 타일 격자로 */
+  private upgradeTiles(currency: "rp" | "credits"): HTMLElement[] {
+    const g = this.game;
+    const s = g.state;
     const list = UPGRADES.filter((u) => u.currency === currency && u.era <= s.era);
     const open = list.filter((u) => !s.upgrades.includes(u.id)).sort((a, b) => a.cost - b.cost);
     const owned = list.filter((u) => s.upgrades.includes(u.id)).reverse();
-    const out = open.map((u) => this.upgradeRow(u));
+    const grid = h("div", { class: "tiles" });
+    const tile = (u: Upgrade) => {
+      const has = s.upgrades.includes(u.id);
+      const price = h("span", { class: "price" });
+      const t = h("button", { class: `tile ${has ? "owned" : ""}`, "aria-label": u.name, onclick: () => this.upgradeSheet(u) },
+        h("span", { class: "t-ico" }, pxi(u.emoji)), has ? h("span", { class: "price" }, ic("check")) : price);
+      if (!has) {
+        price.append(ic(currency === "rp" ? "rp" : "coin"), fmt(u.cost));
+        this.rows.push({ update: () => t.classList.toggle("can", g.canBuyUpgrade(u.id)) });
+      }
+      return t;
+    };
+    grid.append(...open.map(tile), ...owned.map(tile));
+    const out: HTMLElement[] = [grid];
     const nextCount = UPGRADES.filter((u) => u.currency === currency && u.era === s.era + 1).length;
-    if (nextCount) out.push(h("div", { class: "hint", style: { margin: "4px 2px 10px" } }, L(`🔒 다음 시대에 ${nextCount}개 더 열려요`, `🔒 ${nextCount} more unlock in the next era`)));
-    if (owned.length) {
-      const details = h("details", null, h("summary", { class: "hint" }, L(`보유 중 ${owned.length}개`, `Owned (${owned.length})`)), ...owned.map((u) => this.upgradeRow(u)));
-      out.push(details);
-    }
+    if (nextCount) out.push(h("div", { class: "hint", style: { margin: "2px 2px 10px" } }, L(`다음 시대에 ${nextCount}개 더`, `${nextCount} more next era`)));
     return out;
   }
 
@@ -248,7 +264,7 @@ export class Panels {
     const s = this.game.state;
     const list = BUILDINGS.filter((b) => b.kind === kind && b.era <= s.era).map((b) => this.buildingRow(b));
     const next = BUILDINGS.find((b) => b.kind === kind && b.era === s.era + 1);
-    if (next) list.push(h("div", { class: "row locked" }, h("div", { class: "ico" }, pxi("❔")), h("div", null, h("div", { class: "name" }, "???"), h("div", { class: "desc" }, L("다음 시대에 해금", "Unlocks next era"))), h("span")));
+    if (next) list.push(h("div", { class: "row locked" }, h("div", { class: "ico" }, ic("lock")), h("div", { class: "body" }, h("div", { class: "name" }, "???"), h("div", { class: "fx" }, L("다음 시대에 열림", "Opens next era"))), h("span")));
     return list;
   }
 
@@ -266,23 +282,23 @@ export class Panels {
           [L("질문 유입", "Incoming questions"), `${fmt(st.demand)} /${L("초", "s")}`],
           [L("처리 가능", "Capacity"), `${fmt(st.capacityQ)} /${L("초", "s")}`],
           [L("실제 답변", "Answered"), `${fmt(st.answered)} /${L("초", "s")}`],
-          [L("질문당 보상", "Reward / question"), `💵 ${fmt(st.rewardPerQ)}`],
-          [L("토큰 단가", "Token price"), `💵 ${fmt(st.price)} /${L("토큰", "token")}`],
+          [L("질문당 보상", "Reward / question"), `${fmt(st.rewardPerQ)}`],
+          [L("토큰 단가", "Token price"), `${fmt(st.price)} /${L("토큰", "token")}`],
           [L("토큰 가성비", "Token value ratio"), isFinite(eff) ? L(`${fmt(eff)}배`, `${fmt(eff)}×`) : "∞"],
           [L("매출 − 추론비", "Revenue − inference"), `${fmt(st.gross)} − ${fmt(st.cost)}`],
         ];
         for (const [k, v] of pairs) kv.append(h("span", null, k), h("b", null, v));
       },
     });
-    this.root.append(this.questCard());
+    if (featureOn(g.state, "quests")) this.root.append(this.questCard());
     if (g.missionSlots() > 0) this.root.append(this.missionCard());
     this.root.append(
-      h("div", { class: "card" }, kv, h("div", { class: "hint", style: { marginTop: "6px" } },
-        L("토큰 가성비 = 매출 ÷ 추론 비용. 어려운 질문일수록 토큰도 비싸요. 🧠연구의 효율 기술(양자화·캐싱·증류…)로 단가를 낮추고, 할루시네이션을 줄이면 이익이 늘어요.", "Token value ratio = revenue ÷ inference cost. Harder questions cost more per token. Lower the price with 🧠Research efficiency tech (quantization, caching, distillation…) and cut hallucinations to grow profit."))),
-      this.title(L("👥 유저 확보", "👥 Get users"), this.buyModeSeg()),
+      this.title(L("유저", "Users"), this.buyModeSeg()),
       ...this.buildingList("demand"),
-      this.title(L("🧩 제품 · 플러그인 · 커넥터", "🧩 Products · Plugins · Connectors")),
-      ...this.upgradeList("credits"),
+      this.title(L("제품", "Products")),
+      ...this.upgradeTiles("credits"),
+      h("details", { class: "card stats" }, h("summary", null, L("장부 보기", "Show the books")), kv,
+        h("p", { class: "hint" }, L("어려운 질문일수록 토큰이 비싸다. 단가를 낮추고 환각을 줄이면 남는다.", "Harder questions burn pricier tokens. Cut the price and the hallucinations to keep more."))),
     );
   }
 
@@ -299,7 +315,7 @@ export class Panels {
           clear(box);
           for (const q of s.quests) {
             const bar = h("i");
-            const reroll = h("button", { onclick: () => { g.rerollQuest(q.id); this.update(); }, "aria-label": L("다른 임무로 바꾸기", "Swap for another quest") }, L("🔄 바꾸기", "🔄 Swap"));
+            const reroll = h("button", { onclick: () => { g.rerollQuest(q.id); this.update(); }, "aria-label": L("다른 임무로 바꾸기", "Swap for another quest") }, L("바꾸기", "Swap"));
             const label = h("span");
             box.append(h("div", { class: "quest" }, label, reroll, h("div", { class: "bar" }, bar)));
           }
@@ -315,7 +331,7 @@ export class Panels {
       },
     });
     return h("div", { class: "card" },
-      h("div", { class: "section-title", style: { margin: "0 0 2px" } }, h("span", null, L("📋 임무", "📋 Quests")), h("span", { class: "hint" }, L("달성하면 자동 보상 (수익·RP)", "Auto-rewarded on completion (income·RP)"))),
+      h("div", { class: "section-title", style: { margin: "0 0 2px" } }, h("span", null, ic("quest"), L("임무", "Quests")), h("span", { class: "hint" }, L("끝내면 자동 보상", "Auto-rewarded"))),
       box);
   }
 
@@ -329,31 +345,31 @@ export class Panels {
     for (const m of [...g.availableMissions()].reverse()) {
       const running = s.missions.some((x) => x.id === m.id);
       const reward: string[] = [];
-      if (m.incomeSeconds) reward.push(L(`💵 수익 ${fmtDurationShort(m.incomeSeconds)}분`, `💵 ${fmtDurationShort(m.incomeSeconds)} min of income`));
-      if (m.rpSeconds) reward.push(L(`🧠 RP ${fmtDurationShort(m.rpSeconds)}분`, `🧠 ${fmtDurationShort(m.rpSeconds)} min of RP`));
+      if (m.incomeSeconds) reward.push(L(`수익 ${fmtDurationShort(m.incomeSeconds)}분`, `${fmtDurationShort(m.incomeSeconds)} min of income`));
+      if (m.rpSeconds) reward.push(L(`RP ${fmtDurationShort(m.rpSeconds)}분`, `${fmtDurationShort(m.rpSeconds)} min of RP`));
       if (m.effects) reward.push(...m.effects.map(effectText));
       const btn = h("button", { class: "buy" });
       btn.onclick = () => {
         if (g.startMission(m.id)) {
           sfx("buy");
-          toast(`${m.emoji} ${m.name}`, L("파견 출발! 앱을 꺼도 시간은 흘러요", "Dispatched! Time keeps running while you're away"));
+          toast(`${m.name}`, L("출발! 앱을 꺼도 시간은 흐른다", "Off they go. The clock runs even when you're away"));
           this.update();
         } else sfx("error");
       };
       const row = h("div", { class: `row ${running ? "running" : ""}` }, h("div", { class: "ico" }, pxi(m.emoji)),
-        h("div", null, h("div", { class: "name" }, m.name, h("small", null, fmtDurationShort(m.duration) + L("분", "m"))), h("div", { class: "desc" }, m.desc),
-          h("div", { class: "fx" }, ...reward.map((r) => h("span", null, r)))), btn);
+        foldable(h("div", { class: "body" }, h("div", { class: "name" }, m.name, h("small", null, fmtDurationShort(m.duration) + L("분", "m"))),
+          h("div", { class: "fx" }, ...reward.map((r) => h("span", null, r))), h("div", { class: "desc" }, m.desc))), btn);
       this.rows.push({
         update: () => {
           if (running) {
             btn.disabled = true;
             btn.className = "buy";
-            setText(btn, `⏳ ${fmtClock(g.missionLeft(m.id))}`);
+            setText(btn, `${fmtClock(g.missionLeft(m.id))}`);
           } else {
             const can = g.canStartMission(m.id);
             btn.disabled = !can;
             btn.className = `buy ${can ? "can" : ""}`;
-            setText(btn, can ? L("🚀 파견", "🚀 Send") : L("슬롯 없음", "No slot"));
+            setText(btn, can ? L("파견", "Send") : L("슬롯 없음", "No slot"));
           }
         },
       });
@@ -361,7 +377,7 @@ export class Panels {
     }
     this.rows.push({ update: () => setText(head, L(`파견 중 ${s.missions.length} / ${slots}`, `Out ${s.missions.length} / ${slots}`)) });
     return h("div", null,
-      this.title(L("🛰️ 에이전트 파견", "🛰️ Agent missions"), head),
+      this.title(L("파견", "Missions"), head),
       list);
   }
 
@@ -378,17 +394,17 @@ export class Panels {
         append(power,
           h("div", { class: "kv" },
             h("span", null, L("처리량", "Throughput")), h("b", null, `${fmt(st.tps)} ${L("토큰/초", "tokens/s")}`),
-            h("span", null, L("전력 사용 / 공급", "Power use / supply")), h("b", null, `⚡ ${fmt(st.powerUse)} / ${fmt(st.powerCap)}`)),
+            h("span", null, L("전력 사용 / 공급", "Power use / supply")), h("b", null, `${fmt(st.powerUse)} / ${fmt(st.powerCap)}`)),
           h("div", { class: `bar ${ratio > 1 ? "red" : ""}`, style: { marginTop: "6px" } }, h("i", { style: { width: `${Math.min(100, ratio * 100)}%` } })),
-          ratio > 1 ? h("div", { class: "hint warn", style: { marginTop: "4px" } }, L(`전력이 모자라 처리량이 ${fmtPct(st.powerEff)}로 떨어졌어요. 데이터센터를 늘리세요.`, `Not enough power: throughput dropped to ${fmtPct(st.powerEff)}. Build more datacenters.`)) : null,
+          ratio > 1 ? h("div", { class: "hint warn", style: { marginTop: "4px" } }, L(`전력 부족! 처리량 ${fmtPct(st.powerEff)}`, `Low power! Throughput ${fmtPct(st.powerEff)}`)) : null,
         );
       },
     });
     this.root.append(
       h("div", { class: "card" }, power),
-      this.title(L("🖥️ 컴퓨트", "🖥️ Compute"), this.buyModeSeg()),
+      this.title(L("컴퓨트", "Compute"), this.buyModeSeg()),
       ...this.buildingList("compute"),
-      this.title(L("🏢 데이터센터 · 전력", "🏢 Datacenters · Power")),
+      this.title(L("전력", "Power")),
       ...this.buildingList("power"),
     );
   }
@@ -407,9 +423,9 @@ export class Panels {
           h("div", { class: "kv" },
             h("span", null, L("지능", "Intelligence")), h("b", null, fmt(st.intel)),
             h("span", null, L("컨텍스트 창", "Context window")), h("b", null, st.ctx ? `${fmtTokens(st.ctx)} ${L("토큰", "tokens")}` : L("없음", "None")),
-            h("span", null, L("연구 포인트", "Research points")), h("b", null, `🧠 ${fmt(g.state.rp)} (+${fmt(st.rpRate)}/${L("초", "s")})`)),
+            h("span", null, L("연구 포인트", "Research points")), h("b", null, `${fmt(g.state.rp)} (+${fmt(st.rpRate)}/${L("초", "s")})`)),
           next ? h("div", { class: "hint", style: { marginTop: "6px" } },
-            `${L("다음 질문", "Next question")} ${next.emoji} ${next.name}: ${L("지능", "intelligence")} ${fmt(next.intelReq)}${next.ctxReq ? ` · ${L("컨텍스트", "context")} ${fmtTokens(next.ctxReq)}` : ""}` +
+            `${L("다음 질문", "Next question")} ${next.name}: ${L("지능", "intelligence")} ${fmt(next.intelReq)}${next.ctxReq ? ` · ${L("컨텍스트", "context")} ${fmtTokens(next.ctxReq)}` : ""}` +
             (st.intel >= next.intelReq && st.ctx < next.ctxReq ? L(" ← 컨텍스트 연구 필요!", " ← research more context!") : "")) : null,
         );
       },
@@ -417,12 +433,12 @@ export class Panels {
     const param = BUILDINGS.filter((b) => b.kind === "param");
     this.root.append(
       h("div", { class: "card" }, info),
-      this.title(L("🧠 모델 키우기", "🧠 Grow the model"), this.buyModeSeg()),
+      this.title(L("모델", "Model"), this.buyModeSeg()),
       ...param.map((b) => this.buildingRow(b)),
-      this.title(L("👩‍🔬 연구팀", "👩‍🔬 Research team")),
+      this.title(L("연구팀", "Research team")),
       ...this.buildingList("rp"),
-      this.title(L("🔬 연구 (🧠 RP로 구매)", "🔬 Research (costs 🧠 RP)")),
-      ...this.upgradeList("rp"),
+      this.title(L("연구", "Research")),
+      ...this.upgradeTiles("rp"),
     );
   }
 
@@ -446,8 +462,8 @@ export class Panels {
         const st = g.stats;
         clear(req);
         const ok = (b: boolean) => (b ? "chip good" : "chip bad");
-        req.append(h("span", { class: ok(st.intel >= boss.intelReq) }, `🧠 ${L("지능", "Intelligence")} ${fmt(st.intel)} / ${fmt(boss.intelReq)}`));
-        if (boss.ctxReq) req.append(h("span", { class: ok(st.ctx >= boss.ctxReq) }, `📜 ${L("컨텍스트", "Context")} ${fmtTokens(st.ctx)} / ${fmtTokens(boss.ctxReq)}`));
+        req.append(h("span", { class: ok(st.intel >= boss.intelReq) }, `${L("지능", "Intelligence")} ${fmt(st.intel)} / ${fmt(boss.intelReq)}`));
+        if (boss.ctxReq) req.append(h("span", { class: ok(st.ctx >= boss.ctxReq) }, `${L("컨텍스트", "Context")} ${fmtTokens(st.ctx)} / ${fmtTokens(boss.ctxReq)}`));
         const expect = bossDps(st) * boss.time;
         const pct = Math.min(1, expect / boss.hp);
         clear(ready);
@@ -457,7 +473,7 @@ export class Panels {
         );
         const r = g.bossReady();
         btn.disabled = !r.ok;
-        setText(btn, s.boss ? L("도전 중! 장면을 탭하세요", "Challenge on! Tap the scene") : done ? L("모든 벤치마크 정복 ✨", "Every benchmark conquered ✨") : r.ok ? (pct >= 1 ? L("도전하기!", "Challenge!") : L(`도전하기 (예상 ${fmtPct(pct)} · 처리량을 더 늘리세요)`, `Challenge (est. ${fmtPct(pct)})`)) : `🔒 ${r.reason}`);
+        setText(btn, s.boss ? L("도전 중! 장면을 탭하세요", "Challenge on! Tap the scene") : done ? L("모든 벤치마크 정복", "Every benchmark conquered") : r.ok ? (pct >= 1 ? L("도전!", "Challenge!") : L(`도전 (승률 ${fmtPct(pct)})`, `Challenge (${fmtPct(pct)})`)) : r.reason ?? "");
       },
     });
 
@@ -486,17 +502,17 @@ export class Panels {
         const nextAt = nextCheckpointAt(s.totalEarned, s.checkpoints + gain + 1);
         rel.append(
           h("div", { class: "kv" },
-            h("span", null, L("보유 체크포인트", "Checkpoints")), h("b", null, `💾 ${fmt(s.checkpoints)} (${L("보상·연구", "reward·research")} ×${now.toFixed(2)})`),
+            h("span", null, L("보유 체크포인트", "Checkpoints")), h("b", null, `${fmt(s.checkpoints)} (${L("보상·연구", "reward·research")} ×${now.toFixed(2)})`),
             h("span", null, L("지금 출시하면", "Release now for")), h("b", null, gain ? `+${fmt(gain)} → ×${after.toFixed(2)}` : L("아직 없음", "Nothing yet")),
-            h("span", null, L("다음 체크포인트", "Next checkpoint")), h("b", null, `${L("누적", "Total")} 💵 ${fmt(nextAt)}`)),
+            h("span", null, L("다음 체크포인트", "Next checkpoint")), h("b", null, `${L("누적", "Total")} ${fmt(nextAt)}`)),
           h("div", { class: "hint", style: { margin: "6px 0 8px" } },
-            L("모델을 처음부터 다시 학습합니다. 크레딧·연구 포인트·파라미터·연구팀은 초기화되고, 인프라·유저·연구·상품·시대는 그대로 남아요.", "Retrain the model from scratch. Credits, research points, parameters and the research team reset; infrastructure, users, research, products and era stay.")),
+            L("크레딧·RP·모델·연구팀은 처음부터. 나머지는 그대로.", "Credits, RP, model and research team reset. Everything else stays.")),
         );
         relBtn.disabled = gain < 1;
-        setText(relBtn, gain >= 1 ? L(`🚀 v${s.releases + 2} 출시하기`, `🚀 Release v${s.releases + 2}`) : L("🚀 출시할 체크포인트가 없어요", "🚀 No checkpoints to claim yet"));
+        setText(relBtn, gain >= 1 ? L(`v${s.releases + 2} 출시하기`, `Release v${s.releases + 2}`) : L("출시할 체크포인트가 없어요", "No checkpoints to claim yet"));
       },
     });
-    this.root.append(this.title(L(`🚀 새 모델 출시 (현재 v${s.releases + 1})`, `🚀 Release a new model (now v${s.releases + 1})`)), h("div", { class: "card" }, rel, relBtn));
+    this.root.append(this.title(L(`새 모델 출시 (현재 v${s.releases + 1})`, `Release a new model (now v${s.releases + 1})`)), h("div", { class: "card" }, rel, relBtn));
 
     // 연표
     const tl = h("ul", { class: "timeline" });
@@ -504,9 +520,9 @@ export class Panels {
       const beaten = s.bossesBeaten.includes(e.id);
       const cls = e.id === s.era ? "now" : e.id > s.era ? "future" : "";
       tl.append(h("li", { class: cls },
-        e.id > s.era ? h("span", null, "❔") : thumb(e.id, e.color),
+        e.id > s.era ? ic("lock") : thumb(e.id, e.color),
         h("span", null, e.id > s.era + 1 ? "???" : `${e.name}`, h("div", { class: "hint" }, e.years)),
-        h("span", null, beaten ? `✅ ${e.boss.emoji}` : e.id === s.era ? "▶" : "")));
+        beaten ? ic("check") : h("span", null, e.id === s.era ? "▶" : "")));
     });
     // 아레나
     const arena = h("ul", { class: "timeline arena" });
@@ -518,14 +534,14 @@ export class Panels {
         arena.dataset.k = k;
         clear(arena);
         rows.forEach((r, i) => arena.append(h("li", { class: r.me ? "me" : "" },
-          h("span", null, i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`),
-          h("span", null, r.emoji),
+          h("b", null, `${i + 1}`),
+          h("span", null, pxi(r.emoji)),
           h("span", null, r.name, h("div", { class: "hint" }, r.lab)),
           h("b", null, String(r.elo)))));
       },
     });
-    this.root.append(this.title(L("🏟️ 챗봇 아레나 (Elo)", "🏟️ Chatbot Arena (Elo)"), h("span", { class: "hint" }, L("보스 준비도·정답률이 오르면 순위 상승", "Boss readiness & accuracy raise your rank"))), h("div", { class: "card" }, arena));
-    this.root.append(this.title(L("🗺️ AI 연표", "🗺️ AI Timeline")), h("div", { class: "card" }, tl));
+    this.root.append(this.title(L("챗봇 아레나 (Elo)", "Chatbot Arena (Elo)"), h("span", { class: "hint" }, L("준비될수록 오른다", "Climbs as you get ready"))), h("div", { class: "card" }, arena));
+    this.root.append(this.title(L("AI 연표", "AI Timeline")), h("div", { class: "card" }, tl));
   }
 
   /** 지난 시대의 명작 벤치마크들. 깨면 영구 보너스. */
@@ -534,7 +550,7 @@ export class Panels {
     const s = g.state;
     const list = g.sideBenches();
     if (!list.length) return [];
-    const out: HTMLElement[] = [this.title(L(`🎯 사이드 벤치마크 ${s.benchDone.length}/${list.length}`, `🎯 Side benchmarks ${s.benchDone.length}/${list.length}`), h("span", { class: "hint" }, L("깨면 영구 보너스 · 20초", "Permanent bonus · 20s")))];
+    const out: HTMLElement[] = [this.title(L(`사이드 벤치마크 ${s.benchDone.length}/${list.length}`, `Side benchmarks ${s.benchDone.length}/${list.length}`), h("span", { class: "hint" }, L("깨면 영구 보너스 · 20초", "Permanent bonus · 20s")))];
     const open = list.filter((b) => !s.benchDone.includes(b.id));
     const cleared = list.filter((b) => s.benchDone.includes(b.id));
     const row = (b: (typeof list)[number]) => {
@@ -548,8 +564,8 @@ export class Panels {
         } else sfx("error");
       };
       const el = h("div", { class: `row ${won ? "owned" : ""}` }, h("div", { class: "ico" }, pxi(b.emoji)),
-        h("div", null, h("div", { class: "name" }, b.name, h("small", null, b.year)), h("div", { class: "desc" }, won ? `✅ ${b.winText}` : b.desc), fx),
-        won ? h("span", { class: "hint" }, "✅") : btn);
+        foldable(h("div", { class: "body" }, h("div", { class: "name" }, b.name, h("small", null, b.year)), fx, h("div", { class: "desc" }, won ? b.winText : b.desc))),
+        won ? ic("check", "ic big") : btn);
       if (!won) {
         this.rows.push({
           update: () => {
@@ -564,7 +580,7 @@ export class Panels {
             const pct = Math.min(1, (bossDps(g.stats) * b.time) / g.benchHp(b));
             btn.disabled = !r.ok;
             btn.className = `buy ${r.ok && pct >= 1 ? "can" : ""}`;
-            setText(btn, r.ok ? L(`도전 ${fmtPct(pct)}`, `Try ${fmtPct(pct)}`) : `🔒 ${r.reason}`);
+            setText(btn, r.ok ? L(`도전 ${fmtPct(pct)}`, `Try ${fmtPct(pct)}`) : r.reason ?? "");
           },
         });
       }
@@ -582,8 +598,8 @@ export class Panels {
       icon: "🚀",
       title: L(`v${g.state.releases + 2} 출시할까요?`, `Release v${g.state.releases + 2}?`),
       body: [
-        L(`체크포인트 💾 +${fmt(gain)}개를 받아 보상과 연구가 영구히 빨라집니다.`, `Get 💾 +${fmt(gain)} checkpoints for a permanent boost to rewards and research.`),
-        L("크레딧, 연구 포인트, 파라미터 확장, 연구팀이 초기화돼요. 인프라·유저·연구·상품·시대는 그대로입니다.", "Credits, research points, parameter scaling and the research team reset. Infrastructure, users, research, products and era stay."),
+        L(`체크포인트 +${fmt(gain)}개를 받아 보상과 연구가 영구히 빨라집니다.`, `Get +${fmt(gain)} checkpoints for a permanent boost to rewards and research.`),
+        L("크레딧·RP·모델·연구팀은 처음부터. 나머지는 그대로.", "Credits, RP, model and research team reset. Everything else stays."),
       ],
       buttons: [
         {
@@ -607,7 +623,7 @@ export class Panels {
 
   private buildCodex(): void {
     const seg = h("div", { class: "seg", style: { marginBottom: "8px" } });
-    const tabs: [typeof this.codexTab, string][] = [["history", L("📜 역사", "📜 History")], ["tech", L("🔬 기술", "🔬 Tech")], ["models", L("🗂️ 모델", "🗂️ Models")], ["ach", L("🏅 업적", "🏅 Feats")], ["settings", L("⚙️ 설정", "⚙️ Settings")]];
+    const tabs: [typeof this.codexTab, string][] = [["history", L("역사", "History")], ["tech", L("기술", "Tech")], ["models", L("모델", "Models")], ["ach", L("업적", "Feats")], ["settings", L("설정", "Settings")]];
     for (const [id, label] of tabs) {
       seg.append(h("button", { class: this.codexTab === id ? "on" : "", onclick: () => { this.codexTab = id; this.update(); } }, label));
     }
@@ -626,7 +642,7 @@ export class Panels {
     this.root.append(h("div", { class: "hint" }, L(`수집 ${seen} / ${total} · 시대에 도달하면 카드가 열립니다. 출처: Wikipedia (CC BY-SA)`, `Collected ${seen} / ${total} · Cards unlock as you reach each era. Source: Wikipedia (CC BY-SA)`)));
     for (const era of ERAS) {
       if (era.id > s.era) {
-        this.root.append(h("div", { class: "codex-era" }, `❔ ??? (${CODEX.filter((c) => c.era === era.id).length + 1}${L("장", " cards")})`));
+        this.root.append(h("div", { class: "codex-era" }, `??? (${CODEX.filter((c) => c.era === era.id).length + 1}${L("장", " cards")})`));
         continue;
       }
       this.root.append(eraBanner(era.id, era.color, era.name, era.years));
@@ -637,7 +653,7 @@ export class Panels {
       const b = era.boss;
       if (s.bossesBeaten.includes(era.id)) {
         this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, pxi(b.emoji)),
-          h("div", null, h("b", null, `🏆 ${b.name}`, h("small", null, b.year)), h("p", null, b.winText))));
+          h("div", null, h("b", null, `${b.name}`, h("small", null, b.year)), h("p", null, b.winText))));
       }
     }
   }
@@ -655,7 +671,7 @@ export class Panels {
       this.root.append(h("div", { class: "codex-item" }, h("div", { class: "e" }, pxi(u.emoji)),
         h("div", null, h("b", null, u.name, h("small", null, u.year)), h("p", null, u.desc))));
     }
-    if (!owned.length) this.root.append(h("p", { class: "hint" }, L("아직 없어요. 🧠 연구 탭에서 첫 연구를 해보세요.", "Nothing yet. Try your first research in the 🧠 Research tab.")));
+    if (!owned.length) this.root.append(h("p", { class: "hint" }, L("아직 없어요. 연구 탭에서 첫 연구를 해보세요.", "Nothing yet. Try your first research in the Research tab.")));
   }
 
   /** 모델 연대기: 출시할 때마다 남긴 스펙 */
@@ -665,15 +681,15 @@ export class Panels {
     const st = g.stats;
     const rows = [...s.models].reverse();
     const line = (v: string, era: number, intel: number, ctx: number, tier: number, hall: number, at: string, now = false) =>
-      h("div", { class: `codex-item ${now ? "now" : ""}` }, h("div", { class: "e" }, pxi(ERAS[era]?.avatar ?? "🤖")),
+      h("div", { class: `codex-item ${now ? "now" : ""}` }, h("div", { class: "e" }, pxi(ERAS[era]?.avatar ?? "")),
         h("div", null, h("b", null, `${s.aiName} ${v}`), h("small", null, ` · ${ERAS[era]?.name ?? ""} · ${at}`),
-          h("div", { class: "hint" }, `🧠 ${fmt(intel)} · 📜 ${fmtTokens(ctx)} · ${TIERS[tier]?.emoji ?? ""} ${TIERS[tier]?.name ?? ""} · ${L("환각", "Hall.")} ${fmtPct(hall)}`)));
+          h("div", { class: "hint" }, `${fmt(intel)} · ${fmtTokens(ctx)} · ${TIERS[tier]?.emoji ?? ""} ${TIERS[tier]?.name ?? ""} · ${L("환각", "Hall.")} ${fmtPct(hall)}`)));
     this.root.append(
-      h("p", { class: "hint" }, L("🚀 새 모델을 출시할 때마다 그 순간의 스펙이 여기 기록돼요.", "🚀 Every model you release leaves its spec sheet here.")),
+      h("p", { class: "hint" }, L("새 모델을 출시할 때마다 그 순간의 스펙이 여기 기록돼요.", "Every model you release leaves its spec sheet here.")),
       line(L(`v${s.releases + 1} (개발 중)`, `v${s.releases + 1} (in training)`), s.era, st.intel, st.ctx, st.tier.id, st.hall, fmtClock(s.stats.playSeconds), true),
       ...rows.map((m) => line(`v${m.version}`, m.era, m.intel, m.ctx, m.tier, m.hall, fmtClock(m.at))),
     );
-    if (!rows.length) this.root.append(h("p", { class: "hint" }, L("아직 출시한 모델이 없어요. 🏆 벤치마크 탭에서 첫 출시를 해보세요.", "No releases yet. Ship your first model from the 🏆 Bench tab.")));
+    if (!rows.length) this.root.append(h("p", { class: "hint" }, L("아직 출시한 모델이 없어요. 벤치마크 탭에서 첫 출시를 해보세요.", "No releases yet. Ship your first model from the Bench tab.")));
   }
 
   private buildAchievements(): void {
@@ -681,19 +697,19 @@ export class Panels {
     const grid = h("div", { class: "ach-grid" });
     for (const a of ACHIEVEMENTS) {
       const got = s.achievements.includes(a.id);
-      grid.append(h("div", { class: `ach ${got ? "" : "off"}` }, h("b", null, `${a.emoji} ${a.name}`), a.desc));
+      grid.append(h("div", { class: `ach ${got ? "" : "off"}` }, h("b", null, pxi(a.emoji), a.name), a.desc));
     }
     const st = s.stats;
     this.root.append(
       h("div", { class: "hint", style: { marginBottom: "6px" } }, L(`업적 ${s.achievements.length} / ${ACHIEVEMENTS.length}`, `Achievements ${s.achievements.length} / ${ACHIEVEMENTS.length}`)),
       grid,
-      h("button", { class: "btn", style: { margin: "10px 0 2px" }, onclick: () => shareSummary(this.game) }, L("📤 내 기록 자랑하기 (복사)", "📤 Share my run (copy)")),
-      this.title(L("⏱️ 시대별 도달 시간", "⏱️ Era arrival times")),
+      h("button", { class: "btn", style: { margin: "10px 0 2px" }, onclick: () => shareSummary(this.game) }, L("내 기록 자랑하기 (복사)", "Share my run (copy)")),
+      this.title(L("시대별 도달 시간", "Era arrival times")),
       h("div", { class: "card kv" }, ...this.game.state.eraTimes.flatMap((t, i) => t === undefined ? [] : [
         h("span", null, `${ERAS[i].avatar} ${ERAS[i].name}`), h("b", null, fmtClock(t))])),
-      this.title(L("📈 초당 순이익 (최근 10분)", "📈 Net income per second (last 10 min)")),
+      this.title(L("초당 순이익 (최근 10분)", "Net income per second (last 10 min)")),
       h("div", { class: "card" }, sparkline(this.history())),
-      this.title(L("📊 기록", "📊 Stats")),
+      this.title(L("기록", "Stats")),
       h("div", { class: "card kv" },
         h("span", null, L("답변한 질문", "Questions answered")), h("b", null, fmt(st.answered)),
         h("span", null, L("할루시네이션", "Hallucinations")), h("b", null, fmt(st.hallucinations)),
@@ -701,7 +717,7 @@ export class Panels {
         h("span", null, L("겪은 이벤트", "Events")), h("b", null, fmt(st.eventsSeen)),
         h("span", null, L("누적 크레딧", "Total credits")), h("b", null, fmt(s.totalEarned)),
         h("span", null, L("모델 출시", "Model releases")), h("b", null, String(s.releases)),
-        h("span", null, L("⭐VIP 질문", "⭐VIP questions")), h("b", null, fmt(st.goldens)),
+        h("span", null, L("VIP 질문", "VIP questions")), h("b", null, fmt(st.goldens)),
         h("span", null, L("퀴즈 정답", "Quizzes solved")), h("b", null, `${s.quizSolved.length} / ${QUIZ.length}`),
         h("span", null, L("완료한 임무", "Quests done")), h("b", null, fmt(st.questsDone)),
         h("span", null, L("최고 콤보", "Best combo")), h("b", null, fmt(st.maxCombo)),
@@ -732,19 +748,19 @@ export class Panels {
     };
     const io = h("textarea", { placeholder: L("여기에 세이브 코드를 붙여넣으세요", "Paste a save code here"), "aria-label": L("세이브 코드", "Save code") }) as HTMLTextAreaElement;
     this.root.append(
-      this.title(L("🤖 AI 이름", "🤖 AI name")), name,
-      this.title(L("🌐 언어", "🌐 Language")), langSelect(s),
-      this.title(L("🔢 숫자 표기", "🔢 Number format")), format,
-      this.title(L("🎛️ 환경", "🎛️ Preferences")),
+      this.title(L("AI 이름", "AI name")), name,
+      this.title(L("언어", "Language")), langSelect(s),
+      this.title(L("숫자 표기", "Number format")), format,
+      this.title(L("환경", "Preferences")),
       h("div", { class: "card" },
-        toggle(L("🔊 효과음", "🔊 Sound effects"), s.settings.sound, (v) => { s.settings.sound = v; setSound(v); if (v) sfx("buy"); }),
-        toggle(L("📳 진동", "📳 Vibration"), s.settings.vibrate, (v) => { s.settings.vibrate = v; setVibrate(v); }),
-        toggle(L("✨ 화려한 효과 (끄면 말풍선·숫자 감소)", "✨ Fancy effects (off = fewer bubbles & numbers)"), s.settings.effects, (v) => { s.settings.effects = v; }),
-        toggle(L("💡 다음 할 일 가이드", "💡 Next-step guide"), s.settings.hints, (v) => { s.settings.hints = v; })),
+        toggle(L("효과음", "Sound effects"), s.settings.sound, (v) => { s.settings.sound = v; setSound(v); if (v) sfx("buy"); }),
+        toggle(L("진동", "Vibration"), s.settings.vibrate, (v) => { s.settings.vibrate = v; setVibrate(v); }),
+        toggle(L("화려한 효과 (끄면 말풍선·숫자 감소)", "Fancy effects (off = fewer bubbles & numbers)"), s.settings.effects, (v) => { s.settings.effects = v; }),
+        toggle(L("다음 할 일 가이드", "Next-step guide"), s.settings.hints, (v) => { s.settings.hints = v; })),
       h("div", { class: "hint", style: { margin: "6px 2px" } },
         L("키보드: ", "Keyboard: "), h("span", { class: "kbd" }, "Space"), L(" 답변 · ", " answer · "), h("span", { class: "kbd" }, "1~5"), L(" 탭 이동 · ", " tabs · "),
         h("span", { class: "kbd" }, "B"), L(" 보스 도전 · ", " boss · "), h("span", { class: "kbd" }, "T"), L(" 생각 모드 · ", " thinking · "), h("span", { class: "kbd" }, "V"), L(" VIP 질문", " VIP question")),
-      this.title(L("💾 세이브", "💾 Save")),
+      this.title(L("세이브", "Save")),
       h("div", { class: "stack" },
         io,
         h("button", { class: "btn ghost", onclick: () => { io.value = exportSave(s); io.select(); toast(L("세이브 코드를 만들었어요", "Save code created"), L("복사해서 보관하세요", "Copy it somewhere safe")); } }, L("내보내기", "Export")),
@@ -754,7 +770,7 @@ export class Panels {
           this.onReset(st);
         } }, L("불러오기", "Import")),
         h("button", { class: "btn danger", onclick: () => showModal({
-          icon: "⚠️", title: L("정말 처음부터?", "Really start over?"), body: [L("모든 진행 상황이 사라집니다. 되돌릴 수 없어요.", "All progress will be lost. This can't be undone.")], dismissable: true,
+          icon: "", title: L("정말 처음부터?", "Really start over?"), body: [L("모든 진행 상황이 사라집니다. 되돌릴 수 없어요.", "All progress will be lost. This can't be undone.")], dismissable: true,
           buttons: [{ label: L("초기화", "Reset"), kind: "danger", onClick: () => { clearSave(); this.onReset(null); } }, { label: L("취소", "Cancel"), kind: "ghost" }],
         }) }, L("처음부터 다시", "Start over")),
         h("button", { class: "btn ghost", onclick: () => { saveGame(s); toast(L("저장했어요", "Saved")); } }, L("지금 저장", "Save now")),
@@ -775,6 +791,35 @@ function eraBanner(era: number, color: string, name: string, years: string): HTM
   el.innerHTML = heroHtml(era, color);
   el.append(h("div", { class: "cb-text" }, h("b", null, name), h("small", null, years)));
   return el;
+}
+
+/** 행 가운데를 누르면 설명이 펼쳐진다 (평소엔 이름과 숫자만) */
+function foldable(body: HTMLElement): HTMLElement {
+  body.setAttribute("role", "button");
+  body.tabIndex = 0;
+  const toggle = () => body.classList.toggle("open");
+  body.addEventListener("click", toggle);
+  body.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggle();
+    }
+  });
+  return body;
+}
+
+/** 장면에 '레벨 업' 연출을 띄운다 (scene.ts가 듣는다) */
+export function celebrate(text: string): void {
+  window.dispatchEvent(new CustomEvent("ai-celebrate", { detail: text }));
+}
+
+/** 기능을 한 번에 다 보여주지 않고 차례로 연다 */
+export function featureOn(s: GameState, f: "quests" | "hud" | "ticker"): boolean {
+  const t = s.stats.playSeconds;
+  if (s.era > 0 || s.releases > 0) return true;
+  if (f === "quests") return s.stats.bought >= 3 || t > 60;
+  if (f === "hud") return t > 90 || s.stats.bought >= 6;
+  return t > 45;
 }
 
 function bossBanner(era: number, color: string): HTMLElement {
@@ -805,19 +850,19 @@ export function shareSummary(g: Game): void {
   const s = g.state;
   const st = g.stats;
   const text = [
-    `🤖 ${L("AI 키우기", "Grow Your AI")} — ${s.aiName} v${s.releases + 1}`,
-    `${ERAS[s.era].avatar} ${L("도달", "Reached")}: ${ERAS[s.era].name} (${ERAS[s.era].years})${s.ended ? L(" · ✨엔딩 완료", " · ✨Ending cleared") : ""}`,
-    `🏆 ${L("벤치마크", "Benchmarks")} ${s.bossesBeaten.map((e) => ERAS[e].boss.emoji).join("") || "-"}`,
-    `🧠 ${L("지능", "Intelligence")} ${fmt(st.intel)} · 📜 ${L("컨텍스트", "Context")} ${fmtTokens(st.ctx)} · 🌀 ${L("할루시네이션", "Hallucination")} ${fmtPct(st.hall)}`,
-    L(`💬 답변 ${fmt(s.stats.answered)}개 · 💵 누적 ${fmt(s.totalEarned)} · 🏅 업적 ${s.achievements.length}개`, `💬 ${fmt(s.stats.answered)} answers · 💵 ${fmt(s.totalEarned)} earned · 🏅 ${s.achievements.length} achievements`),
-    `⏱️ ${L("플레이", "Played")} ${fmtClock(s.stats.playSeconds)}`,
+    `${L("AI 키우기", "Grow Your AI")} — ${s.aiName} v${s.releases + 1}`,
+    `${ERAS[s.era].avatar} ${L("도달", "Reached")}: ${ERAS[s.era].name} (${ERAS[s.era].years})${s.ended ? L(" · 엔딩 완료", " · Ending cleared") : ""}`,
+    `${L("벤치마크", "Benchmarks")} ${s.bossesBeaten.map((e) => ERAS[e].boss.emoji).join("") || "-"}`,
+    `${L("지능", "Intelligence")} ${fmt(st.intel)} · ${L("컨텍스트", "Context")} ${fmtTokens(st.ctx)} · ${L("할루시네이션", "Hallucination")} ${fmtPct(st.hall)}`,
+    L(`답변 ${fmt(s.stats.answered)}개 · 누적 ${fmt(s.totalEarned)} · 업적 ${s.achievements.length}개`, `${fmt(s.stats.answered)} answers · ${fmt(s.totalEarned)} earned · ${s.achievements.length} achievements`),
+    `${L("플레이", "Played")} ${fmtClock(s.stats.playSeconds)}`,
     L("#AI키우기 #AttentionIsAllYouIdle", "#GrowYourAI #AttentionIsAllYouIdle"),
   ].join("\n");
   const nav = navigator as Navigator & { share?: (d: { text: string }) => Promise<void> };
   if (nav.share) {
     nav.share({ text }).catch(() => {});
   } else {
-    navigator.clipboard?.writeText(text).then(() => toast(L("📋 복사했어요", "📋 Copied"), L("어디든 붙여넣어 자랑하세요!", "Paste it anywhere to show off!")), () => toast(L("복사 실패", "Copy failed"), text));
+    navigator.clipboard?.writeText(text).then(() => toast(L("복사했어요", "Copied"), L("어디든 붙여넣어 자랑하세요!", "Paste it anywhere to show off!")), () => toast(L("복사 실패", "Copy failed"), text));
   }
 }
 
@@ -874,7 +919,7 @@ function modelCard(g: Game): string {
     `${L("시대", "Era")}: ${ERAS[s.era].name} (${ERAS[s.era].years})`,
     `${L("지능", "Intelligence")}: ${fmt(st.intel)} · ${L("컨텍스트", "Context")}: ${fmtTokens(st.ctx)}`,
     `${L("처리량", "Throughput")}: ${fmt(st.tps)} ${L("토큰/초", "tokens/s")}`,
-    `${L("할루시네이션", "Hallucination")}: ${fmtPct(st.hall)} · ${L("담당 질문", "Handles")}: ${st.tier.emoji} ${st.tier.name}`,
+    `${L("할루시네이션", "Hallucination")}: ${fmtPct(st.hall)} · ${L("담당 질문", "Handles")}: ${st.tier.name}`,
     `${L("벤치마크", "Benchmarks")}: ${beaten || L("없음", "none")}`,
     `${L("보유 기술", "Tech owned")}: ${s.upgrades.length}`,
   ].join("\n");
@@ -885,10 +930,10 @@ function buildingFx(b: Building, g: Game): string {
   const ms = milestoneMult(g.state.buildings[b.id] ?? 0);
   const msText = ms > 1 ? ` (${L("마일스톤", "milestone")} ×${fmt(ms)})` : "";
   switch (b.kind) {
-    case "compute": return `+${fmt((b.tps ?? 0) * st.mult.tps * ms)} ${L("토큰/초", "tokens/s")} · ⚡${fmt((b.powerUse ?? 0) * st.mult.powerUse)}${msText}`;
-    case "power": return `+⚡${fmt((b.power ?? 0) * st.mult.power * ms)} ${L("전력", "power")}${msText}`;
+    case "compute": return `+${fmt((b.tps ?? 0) * st.mult.tps * ms)} ${L("토큰/초", "tokens/s")} · ${fmt((b.powerUse ?? 0) * st.mult.powerUse)}${msText}`;
+    case "power": return `+${fmt((b.power ?? 0) * st.mult.power * ms)} ${L("전력", "power")}${msText}`;
     case "demand": return `+${fmt((b.demand ?? 0) * st.mult.demand * ms)} ${L("질문/초", "questions/s")}${msText}`;
-    case "rp": return `+🧠${fmt((b.rp ?? 0) * st.mult.rp * st.cpMult * ms)} RP/${L("초", "s")}${msText}`;
+    case "rp": return `+${fmt((b.rp ?? 0) * st.mult.rp * st.cpMult * ms)} RP/${L("초", "s")}${msText}`;
     case "param": {
       const next = TIERS.find((t) => t.intelReq > st.intel);
       return `${L("지능", "Intelligence")} ${fmt(st.intel)} → ${fmt(st.intel * (b.intelPerLevel ?? 1))}${next ? ` · ${L("다음 질문까지", "next question at")} ${fmt(next.intelReq)}` : ""}`;

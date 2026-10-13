@@ -911,28 +911,40 @@ export function drawAvatar(g: G, era: number, accent: string, ox: number, oy: nu
 }
 
 /** 장면 한 프레임 */
-export function drawScene(g: G, era: number, accent: string, f: SceneFlags): void {
+/** 장면 한 프레임. avx = AI가 서는 x (화면 폭에 따라 달라진다), b = 전투 장면(몬스터·탄·동전) */
+export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx: number = AV.x, b?: Battle): void {
   g.imageSmoothingEnabled = false;
+  const W = g.canvas.width;
   g.drawImage(background(era, accent), 0, 0);
   const p = new Px(g);
   (ROOMS[era] ?? ROOMS[ROOMS.length - 1]).fg(p, f.t, accent);
   // AI: 바닥 그림자 + 계단식으로 둥실
   const bob = Math.round(Math.sin(f.t * 1.8) * 1.5);
-  const dark = era >= 8 && era !== 9 ? "#000000" : "#000000";
-  p.d(AV.x + 8, HZ - 3, 24, 3, dark, null, era === 8 ? 10 : 8);
+  p.d(avx + 8, HZ - 3, 24, 3, "#000000", null, era === 8 ? 10 : 8);
   if (f.thinking) {
     for (let k = 0; k < 8; k++) {
       const a = f.t * 2.4 + (k / 8) * Math.PI * 2;
-      p.r(AV.x + 20 + Math.cos(a) * 24 - 1, AV.y + 20 + bob + Math.sin(a) * 22 - 1, 2, 2, k % 2 ? accent : "#ffffff");
+      p.r(avx + 20 + Math.cos(a) * 24 - 1, AV.y + 20 + bob + Math.sin(a) * 22 - 1, 2, 2, k % 2 ? accent : "#ffffff");
     }
   }
-  drawAvatar(g, era, accent, AV.x, AV.y + bob - (f.chomp > 0 ? 1 : 0), f.t, { happy: f.chomp > 0 });
+  if (b) drawBattle(p, era, accent, b, f.t, false);
+  drawAvatar(g, era, accent, avx, AV.y + bob - (f.chomp > 0 ? 1 : 0), f.t, { happy: f.chomp > 0 });
+  if (b) drawBattle(p, era, accent, b, f.t, true);
+  // 레벨 업: 아바타 둘레로 퍼지는 반짝이
+  if (b && b.levelUp > 0) {
+    const u = 1 - b.levelUp / 0.9;
+    const r = 10 + u * 26;
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2 + u;
+      p.sparkle(Math.round(avx + 20 + Math.cos(a) * r), Math.round(AV.y + 20 + Math.sin(a) * r * 0.8), k % 2 ? "#ffffff" : accent, k % 3 === 0);
+    }
+  }
   // 보스전: 테두리가 빨갛게 깜박 / 탈옥: 줄이 어긋나는 글리치
   if (f.fight && Math.floor(f.t * 3) % 2 === 0) {
-    p.d(0, 0, PW, 3, "#ff2d2d", null, 10);
-    p.d(0, PH - 3, PW, 3, "#ff2d2d", null, 10);
+    p.d(0, 0, W, 3, "#ff2d2d", null, 10);
+    p.d(0, PH - 3, W, 3, "#ff2d2d", null, 10);
     p.d(0, 0, 3, PH, "#ff2d2d", null, 10);
-    p.d(PW - 3, 0, 3, PH, "#ff2d2d", null, 10);
+    p.d(W - 3, 0, 3, PH, "#ff2d2d", null, 10);
   }
   if (f.breach) {
     const fr = Math.floor(f.t * 8);
@@ -940,9 +952,134 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags): voi
       const y = Math.floor(hash(k, fr) * PH);
       const h = 2 + Math.floor(hash(k, fr, 1) * 5);
       const dx = Math.floor((hash(k, fr, 2) - 0.5) * 10);
-      g.drawImage(g.canvas, 0, y, PW, h, dx, y, PW, h);
-      p.d(0, y, PW, 1, "#ff2d55", null, 6);
+      g.drawImage(g.canvas, 0, y, W, h, dx, y, W, h);
+      p.d(0, y, W, 1, "#ff2d55", null, 6);
     }
+  }
+}
+
+// ── 전투: 질문 몬스터, 답변 탄, 동전 ──────────────────
+
+export interface Mob {
+  id: number;
+  x: number;
+  /** 발 위치 */
+  y: number;
+  size: number;
+  tier: number;
+  boss?: boolean;
+  /** 남은 맞은-깜박임 시간 */
+  flash: number;
+  /** 죽는 중 (0~1, 1이면 사라짐) */
+  dying: number;
+  wrong: boolean;
+  targeted: boolean;
+}
+export interface Shot { x: number; y: number; mob: Mob; bad: boolean; v: number }
+export interface Coin { x: number; y: number; vx: number; vy: number; t: number }
+export interface Battle { mobs: Mob[]; shots: Shot[]; coins: Coin[]; levelUp: number }
+
+const MOB_COLORS = ["#9be37a", "#6fd3ff", "#ffd36f", "#ff9f6f", "#ff7eb6", "#b48cff", "#ff5e4d", "#5ee0c0", "#ffe600", "#7f9cff", "#ff6fd8", "#ff9a3a"];
+
+/** 색을 어둡게 (몸통 아래 그림자용) */
+function shade(hex: string, k = 0.65): string {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (v: number) => Math.round(v * k).toString(16).padStart(2, "0");
+  return `#${f(n >> 16)}${f((n >> 8) & 255)}${f(n & 255)}`;
+}
+
+/** 몬스터 색: 브루탈 시대에는 바탕과 반대인 흑/백 */
+function mobFill(era: number, tier: number, boss = false, accent = "#ff4a1c"): [string, string] {
+  if (boss) return [accent, "#000000"];
+  if (era === 8) return ["#000000", "#f2f2ed"];
+  if (era >= 9) return ["#f2f2ed", "#000000"];
+  return [MOB_COLORS[tier % MOB_COLORS.length], "#000000"];
+}
+
+function drawMob(p: Px, era: number, accent: string, m: Mob, t: number): void {
+  const [fill, line] = mobFill(era, m.tier, m.boss, accent);
+  const s = m.size;
+  const step = Math.floor(t * 8 + m.id) % 2;
+  const x = Math.round(m.x), y = Math.round(m.y) - (m.boss ? 0 : step);
+  const top = y - s;
+  if (m.dying > 0) {
+    // 터지는 중: 점점 작아지는 조각
+    const k = 1 - m.dying;
+    const c = m.wrong ? "#ff2d2d" : fill;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      p.r(x + s / 2 + Math.cos(a) * (2 + m.dying * 8) - 1, top + s / 2 + Math.sin(a) * (2 + m.dying * 8) - 1, Math.max(1, Math.round(3 * k)), Math.max(1, Math.round(3 * k)), c);
+    }
+    if (m.wrong) {
+      p.line(x + 2, top + 2, x + s - 2, top + s - 2, "#ff2d2d");
+      p.line(x + s - 2, top + 2, x + 2, top + s - 2, "#ff2d2d");
+    }
+    return;
+  }
+  const body = m.flash > 0 ? "#ffffff" : fill;
+  const mono = era >= 8;
+  // 말풍선 몸통: 검은 외곽선 → 몸통 → 아래쪽 그늘 → 위쪽 하이라이트
+  p.r(x + 1, top - 1, s - 2, s + 2, line);
+  p.r(x - 1, top + 1, s + 2, s - 2, line);
+  p.r(x, top, s, s, line);
+  p.r(x + 1, top + 1, s - 2, s - 2, body);
+  if (!mono && m.flash <= 0) {
+    p.r(x + 1, top + s - 3, s - 2, 2, shade(fill));
+    p.r(x + s - 3, top + 2, 2, s - 4, shade(fill, 0.8));
+  }
+  p.r(x + 2, top + 1, Math.max(1, s - 6), 1, mono ? body : "#ffffff");
+  p.p(x + 1, top + 2, mono ? body : "#ffffff");
+  // 말풍선 꼬리 (왼쪽 아래)
+  p.r(x - 2, y - 1, 3, 2, line);
+  p.p(x - 1, y - 1, m.flash > 0 ? "#ffffff" : mono ? body : shade(fill));
+  if (!m.boss) {
+    p.r(x + 2 + step * 2, y + 1, 2, 1, line);
+    p.r(x + s - 4 - step * 2, y + 1, 2, 1, line);
+  }
+  // 눈: AI 쪽(오른쪽)을 본다
+  const e = m.boss ? 3 : Math.max(2, Math.floor(s / 5));
+  const ey = top + Math.floor(s * 0.35);
+  for (const ex of [x + Math.floor(s * 0.35), x + Math.floor(s * 0.68)]) {
+    p.r(ex, ey, e, e + (m.boss ? 1 : 0), "#ffffff");
+    p.r(ex + e - 1, ey + 1, 1, e - 1, line === "#000000" && era >= 8 ? accent : "#000000");
+  }
+  if (!m.boss) {
+    // 입: 질문하느라 벌린 작은 입
+    const my = ey + e + 1;
+    p.r(x + Math.floor(s * 0.48), my, Math.max(2, Math.floor(s * 0.22)), 1, line === "#000000" && era < 8 ? "#000000" : line);
+  }
+  if (m.boss) {
+    // 화난 눈썹, 이빨, 왕관
+    p.line(x + Math.floor(s * 0.3), ey - 3, x + Math.floor(s * 0.45), ey - 1, line);
+    p.line(x + Math.floor(s * 0.82), ey - 3, x + Math.floor(s * 0.66), ey - 1, line);
+    p.r(x + Math.floor(s * 0.3), top + Math.floor(s * 0.72), Math.floor(s * 0.45), 3, line);
+    for (let k = 0; k < 4; k++) p.r(x + Math.floor(s * 0.32) + k * 3, top + Math.floor(s * 0.72), 2, 2, "#ffffff");
+    for (let k = 0; k < 3; k++) p.r(x + Math.floor(s * 0.25) + k * Math.floor(s * 0.2), top - 4 + (k % 2), 3, 4, "#ffd23f");
+  } else {
+    // 물음표 볏
+    p.r(x + Math.floor(s / 2) - 1, top - 3, 3, 1, line);
+    p.p(x + Math.floor(s / 2) + 1, top - 2, line);
+  }
+}
+
+function drawBattle(p: Px, era: number, accent: string, b: Battle, t: number, front: boolean): void {
+  if (!front) {
+    // 보스는 맨 앞에
+    for (const m of b.mobs) if (!m.boss) drawMob(p, era, accent, m, t);
+    for (const m of b.mobs) if (m.boss) drawMob(p, era, accent, m, t);
+    return;
+  }
+  for (const sh of b.shots) {
+    const c = sh.bad ? "#ff2d2d" : era >= 8 && era !== 9 ? accent : "#ffffff";
+    p.r(Math.round(sh.x) - 2, Math.round(sh.y) - 1, 4, 2, c);
+    p.r(Math.round(sh.x) + 1, Math.round(sh.y) - 1, 2, 2, sh.bad ? "#ffb0b0" : accent);
+  }
+  for (const c of b.coins) {
+    const spin = Math.floor(c.t * 12) % 3;
+    const w = spin === 1 ? 1 : 3;
+    p.r(Math.round(c.x) - Math.floor(w / 2), Math.round(c.y) - 1, w, 3, "#ffd23f");
+    if (w === 3) p.p(Math.round(c.x) - 1, Math.round(c.y) - 1, "#ffffff");
+    p.p(Math.round(c.x), Math.round(c.y) + 1, "#b8860b");
   }
 }
 
