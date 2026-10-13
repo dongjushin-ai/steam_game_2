@@ -48,6 +48,10 @@ export class Scene {
   private sayTimer = 4;
   private onTap: () => void;
   private hintTab: GuideTab | null = null;
+  /** 첫 안내 중: AI가 자동으로 쏘지 않는다 (사용자가 직접 눌러 보게) */
+  holdFire = false;
+  /** 사용자가 탭으로 처치한 수 (안내용) */
+  tapKills = 0;
 
   constructor(private game: Game, onTap: () => void, onHint: (tab: GuideTab) => void) {
     this.onTap = onTap;
@@ -114,7 +118,10 @@ export class Scene {
     const [px, py] = this.toPx(x - r.left, y - r.top);
     // 손가락 근처 몬스터가 있으면 바로 처치
     const hit = this.battle.mobs.find((m) => !m.boss && m.dying === 0 && px >= m.x - 4 && px <= m.x + m.size + 4 && py >= m.y - m.size - 6 && py <= m.y + 4);
-    if (hit) this.kill(hit, false, true);
+    if (hit) {
+      this.kill(hit, false, true);
+      this.tapKills++;
+    }
     else this.fireAt(this.target() ?? this.battle.mobs.filter((m) => m.dying === 0 && !m.targeted).sort((a, b) => b.x - a.x)[0], false);
     // 연타해도 숫자가 한 점에 쌓이지 않게 조금씩 흩뿌린다
     const jx = (Math.random() - 0.5) * 36, jy = (Math.random() - 0.5) * 16;
@@ -196,7 +203,7 @@ export class Scene {
     if (!m) return;
     const bad = auto && !m.boss && Math.random() < this.game.stats.hall;
     if (!m.boss) m.targeted = true;
-    this.battle.shots.push({ x: this.avx + 8, y: AV.y + 22, mob: m, bad, v: m.boss ? 220 : 170 });
+    this.battle.shots.push({ x: this.avx + 8, y: AV.y + 22, mob: m, bad, v: m.boss ? 220 : 170, byTap: !auto });
     this.chomp();
   }
 
@@ -246,7 +253,7 @@ export class Scene {
     b.mobs = b.mobs.filter((m) => m.dying < 1);
     // 자동 발사: 초당 답변 수만큼 (화면에서는 0.6~3발로)
     const rate = fightOn ? 4 : Math.max(0.6, Math.min(3, this.game.stats.answered));
-    this.fireAcc += dt * rate;
+    this.fireAcc += dt * (this.holdFire ? 0 : rate);
     while (this.fireAcc >= 1) {
       this.fireAcc -= 1;
       this.fireAt(this.target(), true);
@@ -262,7 +269,10 @@ export class Scene {
           if (sh.mob.boss) {
             sh.mob.flash = 0.06;
             this.shake = Math.max(this.shake, 0.08);
-          } else this.kill(sh.mob, sh.bad, false);
+          } else {
+            this.kill(sh.mob, sh.bad, false);
+            if (sh.byTap) this.tapKills++;
+          }
         }
       } else {
         sh.x += (dx / d) * step;
@@ -290,6 +300,24 @@ export class Scene {
     b.coins = b.coins.filter((c) => !(c.t > 1.1 || (c.t > 0.35 && c.y < 2)));
     b.levelUp = Math.max(0, b.levelUp - dt);
     this.shake = Math.max(0, this.shake - dt);
+  }
+
+  /** 안내용: 천천히 걸어오는 첫 몬스터 (질문 글씨를 붙여서) */
+  introMob(text: string): void {
+    const mob: Mob = { id: ++this.mobSeq, x: -12, y: HZ + 6, size: 12, tier: 0, flash: 0, dying: 0, wrong: false, targeted: false };
+    this.battle.mobs.push(mob);
+    const el = h("div", { class: "mob-label" }, text);
+    this.labels.set(mob.id, el);
+    this.root.append(el);
+  }
+
+  /** 안내 화살표가 가리킬 곳: 가장 앞선 몬스터의 머리 (화면 좌표) */
+  leadMobPoint(): [number, number] | null {
+    const m = this.battle.mobs.filter((x) => !x.boss && x.dying === 0).sort((a, b) => b.x - a.x)[0];
+    if (!m) return null;
+    const r = this.root.getBoundingClientRect();
+    const [x, y] = this.toCss(m.x + m.size / 2, m.y - m.size - 2);
+    return [r.left + x, r.top + y];
   }
 
   /** 질문 글씨가 몬스터를 따라다닌다 */

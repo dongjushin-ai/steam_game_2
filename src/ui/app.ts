@@ -13,6 +13,8 @@ import { ic } from "./icons";
 import { questText } from "../core/quests";
 import type { QuizQuestion } from "../core/types";
 import { setSound, setVibrate, sfx } from "./sound";
+import { music } from "./music";
+import { Tutorial } from "./tutorial";
 import { L, applyLanguage, detectLang } from "../i18n";
 
 const SAVE_EVERY = 10;
@@ -45,6 +47,7 @@ export class App {
   private saveAcc = 0;
   /** 화면에 보이는 크레딧·RP (실제 값을 향해 굴러가듯 따라간다) */
   private shown = { money: 0, rp: 0 };
+  private tutorial: Tutorial | null = null;
 
   start(): void {
     const saved = loadGame();
@@ -65,6 +68,7 @@ export class App {
       setTimeout(() => splash.remove(), 600);
     }, 350);
     document.addEventListener("visibilitychange", () => {
+      music.pause(document.hidden);
       if (document.hidden) saveGame(this.game.state);
       else {
         this.offline();
@@ -72,6 +76,12 @@ export class App {
       }
     });
     window.addEventListener("pagehide", () => saveGame(this.game.state));
+    // 브라우저는 사용자가 한 번 누르기 전엔 소리를 막는다 → 첫 입력에 음악 시작
+    const unlock = () => {
+      if (this.game.state.settings.music) music.start();
+    };
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
     // 동전이 크레딧 칸에 닿으면 숫자가 통 튄다
     window.addEventListener("ai-coin", () => {
       const el = document.querySelector(".res.money");
@@ -127,11 +137,14 @@ export class App {
 
   /** 새 게임/불러오기/초기화 시 호출 */
   private boot(state: GameState, fresh: boolean): void {
+    this.tutorial?.dispose();
+    this.tutorial = null;
     this.game = new Game(state);
     this.shown = { money: state.credits, rp: state.rp };
     setNumberFormat(state.settings.format);
     setSound(state.settings.sound);
     setVibrate(state.settings.vibrate);
+    music.setEnabled(state.settings.music);
     this.history = [];
     this.game.onNotice((n) => this.notice(n));
     clear($("#scene"));
@@ -195,7 +208,9 @@ export class App {
     const root = document.documentElement;
     root.style.setProperty("--era", ERAS[era].color);
     root.dataset.era = String(era);
-    root.dataset.skin = era <= 2 ? "pixel" : era <= 4 ? "retro" : era <= 7 ? "y2k" : "brutal";
+    const skin = era <= 2 ? "pixel" : era <= 4 ? "retro" : era <= 7 ? "y2k" : "brutal";
+    root.dataset.skin = skin;
+    music.setStyle(skin, era);
   }
 
   private frame(t: number): void {
@@ -203,6 +218,14 @@ export class App {
     this.last = t;
     if (!modalOpen() || this.game.state.boss) this.game.tick(dt);
     this.scene.frame(dt);
+    // 첫 30초 안내: 처음 하는 사람에게만, 창이 닫힌 뒤에
+    if (!this.game.state.settings.tutorialDone && !modalOpen()) {
+      this.tutorial ??= new Tutorial(this.game, this.scene, () => {
+        this.tutorial = null;
+        saveGame(this.game.state);
+      });
+      this.tutorial?.frame(dt);
+    }
     this.rollCounters(dt);
     this.uiAcc += dt;
     this.saveAcc += dt;

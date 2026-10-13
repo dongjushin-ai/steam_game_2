@@ -77,7 +77,11 @@ export function migrate(raw: unknown): GameState | null {
     nextEventIn: num(r.nextEventIn, base.nextEventIn),
     nextGoldenIn: num(r.nextGoldenIn, base.nextGoldenIn),
     stats,
-    settings: { ...base.settings, ...(r.settings ?? {}) },
+    settings: {
+      ...base.settings, ...(r.settings ?? {}),
+      // 첫 안내가 생기기 전 세이브: 이미 1분 넘게 했으면 안내를 건너뛴다
+      tutorialDone: r.settings?.tutorialDone ?? num(r.stats?.playSeconds) > 60,
+    },
     lastSaved: num(r.lastSaved, Date.now()),
   };
 }

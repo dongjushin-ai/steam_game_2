@@ -12,8 +12,8 @@ export function setVibrate(on: boolean): void {
   vibrateOn = on;
 }
 
-function audio(): AudioContext | null {
-  if (!enabled) return null;
+/** 효과음·음악이 함께 쓰는 오디오 컨텍스트 (사용자가 한 번 누른 뒤에만 소리가 난다) */
+export function audioContext(): AudioContext | null {
   try {
     ctx ??= new AudioContext();
     if (ctx.state === "suspended") void ctx.resume();
@@ -21,6 +21,10 @@ function audio(): AudioContext | null {
   } catch {
     return null;
   }
+}
+
+function audio(): AudioContext | null {
+  return enabled ? audioContext() : null;
 }
 
 /** 음 하나: 주파수(Hz), 시작(초), 길이(초), 파형, 음량 */

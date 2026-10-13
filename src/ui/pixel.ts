@@ -975,7 +975,7 @@ export interface Mob {
   wrong: boolean;
   targeted: boolean;
 }
-export interface Shot { x: number; y: number; mob: Mob; bad: boolean; v: number }
+export interface Shot { x: number; y: number; mob: Mob; bad: boolean; v: number; byTap?: boolean }
 export interface Coin { x: number; y: number; vx: number; vy: number; t: number }
 export interface Battle { mobs: Mob[]; shots: Shot[]; coins: Coin[]; levelUp: number }
 

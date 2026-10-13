@@ -342,6 +342,12 @@ export interface GameState {
     benchWins: number;
   };
   ended: boolean;
-  settings: { format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean; lang: "ko" | "en" };
+  settings: {
+    format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean; lang: "ko" | "en";
+    /** 배경음악 */
+    music: boolean;
+    /** 첫 30초 안내를 마쳤는지 */
+    tutorialDone: boolean;
+  };
   lastSaved: number;
 }

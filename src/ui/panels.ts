@@ -11,6 +11,7 @@ import type { Building, BuildingKind, Effect, GameState, MultStat, NumberFormat,
 import { append, clear, h, setText } from "./dom";
 import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
+import { music } from "./music";
 import { L } from "../i18n/lang";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
@@ -753,6 +754,7 @@ export class Panels {
       this.title(L("숫자 표기", "Number format")), format,
       this.title(L("환경", "Preferences")),
       h("div", { class: "card" },
+        toggle(L("배경음악", "Music"), s.settings.music, (v) => { s.settings.music = v; music.setEnabled(v); }),
         toggle(L("효과음", "Sound effects"), s.settings.sound, (v) => { s.settings.sound = v; setSound(v); if (v) sfx("buy"); }),
         toggle(L("진동", "Vibration"), s.settings.vibrate, (v) => { s.settings.vibrate = v; setVibrate(v); }),
         toggle(L("화려한 효과 (끄면 말풍선·숫자 감소)", "Fancy effects (off = fewer bubbles & numbers)"), s.settings.effects, (v) => { s.settings.effects = v; }),

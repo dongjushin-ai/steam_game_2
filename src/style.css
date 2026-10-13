@@ -547,3 +547,14 @@ details.stats[open] > summary { margin-bottom: 6px; }
 [data-skin="brutal"] .mob-label { border-width: 3px; }
 @media (prefers-reduced-motion: reduce) { .levelup.show { animation: none; opacity: 1; } .res.bump { animation: none; } }
 
+/* 첫 안내 말풍선 */
+.coach {
+  position: fixed; left: 0; top: 0; z-index: 35; max-width: min(260px, calc(100vw - 16px)); pointer-events: none;
+  background: #ffd23f; color: #000; border: 2px solid #000; padding: 5px 9px; font-family: "Galmuri11", var(--font);
+  font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 #000; animation: coach 0.8s steps(2) infinite;
+}
+.coach-arrow { position: absolute; bottom: -10px; width: 0; height: 0; margin-left: -7px; border: 7px solid transparent; border-top: 8px solid #000; border-bottom: 0; }
+.coach-arrow::after { content: ""; position: absolute; left: -5px; top: -10px; border: 5px solid transparent; border-top: 6px solid #ffd23f; border-bottom: 0; }
+@keyframes coach { 50% { margin-top: -3px; } }
+@media (prefers-reduced-motion: reduce) { .coach { animation: none; } }
+

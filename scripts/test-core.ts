@@ -504,4 +504,12 @@ test("세이브: 새 시스템 필드 정리", () => {
   assert.equal(old.stats.blocked, 0);
 });
 
+test("세이브: 첫 안내는 새 게임에만 (1분 넘게 한 옛 세이브는 건너뜀)", () => {
+  assert.equal(newState().settings.tutorialDone, false);
+  assert.equal(newState().settings.music, true);
+  assert.equal(migrate({ era: 0, credits: 1, stats: { playSeconds: 5 }, settings: { lang: "ko" } })!.settings.tutorialDone, false);
+  assert.equal(migrate({ era: 0, credits: 1, stats: { playSeconds: 3600 }, settings: { lang: "ko" } })!.settings.tutorialDone, true);
+  assert.equal(migrate({ era: 0, credits: 1, stats: { playSeconds: 3600 }, settings: { tutorialDone: false } })!.settings.tutorialDone, false);
+});
+
 console.log(`핵심 로직 테스트 ${passed}개 통과`);
