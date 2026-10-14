@@ -1,3 +1,4 @@
+import { SEEDS, newGacha, pull, type PullResult } from "./gacha";
 import { ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSlots } from "../data";
 import type { GoldenDef } from "../data/golden";
 import { ACHIEVEMENTS } from "./achievements";
@@ -54,6 +55,7 @@ export function newState(aiName = "나의 AI"): GameState {
     totalEarned: 0,
     checkpoints: 0,
     releases: 0,
+    gacha: newGacha(),
     buildings: { ...START_KIT },
     upgrades: [],
     thinking: false,
@@ -87,7 +89,7 @@ export function newState(aiName = "나의 AI"): GameState {
       blocked: 0, breaches: 0, missionsDone: 0, benchWins: 0,
     },
     ended: false,
-    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null } },
+    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
     lastSaved: Date.now(),
   };
 }
@@ -306,6 +308,7 @@ export class Game {
     const def = GOLDENS.find((g) => g.kind === s.golden!.kind)!;
     s.golden = null;
     s.stats.goldens += 1;
+    s.gacha.seeds += SEEDS.golden;
     let amount = 0;
     if (def.effects && def.duration) {
       s.active = s.active.filter((a) => a.id !== `golden_${def.kind}`);
@@ -350,6 +353,7 @@ export class Game {
       this.earnBonus(credits);
       s.rp += rp;
       s.stats.questsDone += 1;
+      s.gacha.seeds += SEEDS.quest;
       this.emit({ kind: "quest", quest: q, credits, rp });
     }
     // 조건이 사라진 임무(예: 남은 연구 없음)는 교체
@@ -392,6 +396,8 @@ export class Game {
     if (fight.dealt >= boss.hp) {
       s.boss = null;
       if (!s.bossesBeaten.includes(fight.era)) s.bossesBeaten.push(fight.era);
+      // 첫 보스는 뽑기를 처음 열어 주는 선물 (두 번 뽑을 만큼)
+      s.gacha.seeds += fight.era === 0 && s.gacha.pulls === 0 ? SEEDS.firstBoss : SEEDS.boss;
       this.emit({ kind: "bossWin", era: fight.era });
       if (fight.era === ERAS.length - 1) {
         s.ended = true;
@@ -460,6 +466,7 @@ export class Game {
       s.sideFight = null;
       if (!s.benchDone.includes(b.id)) s.benchDone.push(b.id);
       s.stats.benchWins += 1;
+      s.gacha.seeds += SEEDS.bench;
       this.refresh();
       this.emit({ kind: "benchWin", bench: b });
     } else if (fight.remaining <= 0) {
@@ -577,6 +584,7 @@ export class Game {
     const rp = Math.max(this.stats.rpRate, 1) * 30 * k;
     this.earnBonus(credits);
     this.state.rp += rp;
+    this.state.gacha.seeds += SEEDS.daily * k;
     return { streak: d.streak, credits, rp };
   }
 
@@ -668,6 +676,11 @@ export class Game {
   }
 
   // ── 새 모델 출시(프레스티지) ──────────────────────────
+
+  /** 시드 뽑기 1번 또는 10연차 */
+  pullSeeds(n: 1 | 10, date = new Date(this.clock())): PullResult[] {
+    return pull(this.state.gacha, n, this.rng, date);
+  }
 
   releaseGain(): number {
     return Math.max(0, checkpointsFor(this.state.totalEarned) - this.state.checkpoints);

@@ -4,15 +4,17 @@
 
 /** 0 일반 · 1 희귀 · 2 영웅 · 3 전설 */
 export type Rarity = 0 | 1 | 2 | 3;
-export type LookSlot = "color" | "hat" | "fx";
+export type LookSlot = "color" | "hat" | "fx" | "pet";
 
 export interface LookItem {
   id: string;
   slot: LookSlot;
   name: string;
   rarity: Rarity;
-  /** 이 업적을 깨면 열린다 */
-  ach: string;
+  /** 이 업적을 깨면 열린다 (없으면 시드 뽑기 전용) */
+  ach?: string;
+  /** 시드 뽑기에서만 나온다 */
+  gacha?: boolean;
   /** 색 아이템: 강조색 */
   hex?: string;
 }
@@ -45,6 +47,32 @@ export const LOOKS: LookItem[] = [
   { id: "f_wings", slot: "fx", name: "황금 날개", rarity: 3, ach: "golden_25" },
   { id: "f_rainbow", slot: "fx", name: "무지개 오라", rarity: 3, ach: "arena_1" },
   { id: "f_galaxy", slot: "fx", name: "은하", rarity: 3, ach: "tier_11" },
+
+  // ── 시드 뽑기 전용 (24종). 펫은 AI 옆에서 통통 뛰어다니는 작은 친구 ──
+  { id: "p_duck", slot: "pet", name: "고무 오리", rarity: 0, gacha: true },
+  { id: "p_coffee", slot: "pet", name: "커피잔", rarity: 0, gacha: true },
+  { id: "p_floppy", slot: "pet", name: "플로피 디스크", rarity: 0, gacha: true },
+  { id: "p_bug", slot: "pet", name: "버그", rarity: 0, gacha: true },
+  { id: "c_leaf", slot: "color", name: "연두", rarity: 0, gacha: true, hex: "#8fe36a" },
+  { id: "c_sky", slot: "color", name: "하늘", rarity: 0, gacha: true, hex: "#6fb8ff" },
+  { id: "c_sand", slot: "color", name: "모래", rarity: 0, gacha: true, hex: "#e8c48a" },
+  { id: "c_lavender", slot: "color", name: "라벤더", rarity: 0, gacha: true, hex: "#c8a8ff" },
+  { id: "p_cat", slot: "pet", name: "키보드 고양이", rarity: 1, gacha: true },
+  { id: "p_clip", slot: "pet", name: "클립 비서", rarity: 1, gacha: true },
+  { id: "p_drone", slot: "pet", name: "미니 드론", rarity: 1, gacha: true },
+  { id: "p_chair", slot: "pet", name: "아보카도 의자", rarity: 1, gacha: true },
+  { id: "h_headset", slot: "hat", name: "헤드셋", rarity: 1, gacha: true },
+  { id: "h_ribbon", slot: "hat", name: "왕리본", rarity: 1, gacha: true },
+  { id: "p_robodog", slot: "pet", name: "로봇 강아지", rarity: 2, gacha: true },
+  { id: "p_whale", slot: "pet", name: "아기 고래", rarity: 2, gacha: true },
+  { id: "h_visor", slot: "hat", name: "네온 바이저", rarity: 2, gacha: true },
+  { id: "f_bubbles", slot: "fx", name: "비눗방울", rarity: 2, gacha: true },
+  { id: "f_hearts", slot: "fx", name: "하트 뿅뿅", rarity: 2, gacha: true },
+  { id: "c_neon", slot: "color", name: "네온 핑크", rarity: 2, gacha: true, hex: "#ff2bd6" },
+  { id: "p_dragon", slot: "pet", name: "아기 드래곤", rarity: 3, gacha: true },
+  { id: "p_unicorn", slot: "pet", name: "유니콘", rarity: 3, gacha: true },
+  { id: "f_aurora", slot: "fx", name: "오로라", rarity: 3, gacha: true },
+  { id: "f_meteor", slot: "fx", name: "별똥별 비", rarity: 3, gacha: true },
 ];
 
 export const LOOK_MAP: Record<string, LookItem> = Object.fromEntries(LOOKS.map((x) => [x.id, x]));

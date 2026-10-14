@@ -25,5 +25,5 @@ export { NEWS } from "./news";
 export { RIVALS } from "./rivals";
 export { SIDE_BENCHES } from "./benchmarks";
 export { MISSIONS, THREATS, baseMissionSlots } from "./missions";
-export { WEEKLIES, weeklyFor, type Weekly } from "./weekly";
+export { WEEKLIES, weekIndex, weeklyFor, type Weekly } from "./weekly";
 export { LOOKS, LOOK_MAP, type LookItem, type LookSlot, type Rarity } from "./looks";

@@ -5,6 +5,7 @@ import { Game, newState } from "../src/core/game";
 import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
 import { resolveLook, rewardFor, sanitizeLook } from "../src/core/looks";
+import { PITY, POOL, effectiveLegendary, PULL_COST, SHARD_PRICE, exchange, newGacha, pull, sanitizeGacha } from "../src/core/gacha";
 import { LOOKS } from "../src/data";
 import { questProgress } from "../src/core/quests";
 import { QUIZ } from "../src/data";
@@ -531,7 +532,7 @@ test("주간 이벤트: 날짜로 정해지고, 효과가 배수에 들어간다
 
 test("꾸미기: 잠긴 것은 기본값, 업적을 깨면 입을 수 있다", () => {
   const s = newState();
-  s.settings.look = { avatar: 5, room: 3, hat: "h_cat", color: "c_gold", fx: "f_wings", ui: "brutal" };
+  s.settings.look = { avatar: 5, room: 3, hat: "h_cat", color: "c_gold", fx: "f_wings", ui: "brutal", pet: null };
   let lk = resolveLook(s);
   assert.equal(lk.avatar, 0);
   assert.equal(lk.room, 0);
@@ -558,10 +559,82 @@ test("꾸미기: 업적마다 보상은 하나, 등급은 4단계 모두 있다"
 
 test("꾸미기: 세이브의 이상한 값은 버리고, 옛 세이브는 기본값", () => {
   assert.deepEqual(sanitizeLook({ avatar: 99, room: 2, hat: "h_nope", color: "h_cat", fx: "f_galaxy", ui: "comic" }),
-    { avatar: null, room: 2, hat: null, color: null, fx: "f_galaxy", ui: null });
+    { avatar: null, room: 2, hat: null, color: null, fx: "f_galaxy", ui: null, pet: null });
   const old = JSON.parse(JSON.stringify(newState()));
   delete old.settings.look;
-  assert.deepEqual(migrate(old)!.settings.look, { avatar: null, room: null, hat: null, color: null, fx: null, ui: null });
+  assert.deepEqual(migrate(old)!.settings.look, { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null });
+});
+
+function seeded(seed: number): () => number {
+  let x = seed >>> 0;
+  return () => ((x = (Math.imul(x, 1664525) + 1013904223) >>> 0) / 4294967296);
+}
+
+test("뽑기: 확률이 공개한 값과 맞고, 천장 안에 전설이 반드시 나온다", () => {
+  const g = newGacha();
+  g.seeds = PULL_COST * 20000;
+  const rng = seeded(7);
+  const count = [0, 0, 0, 0];
+  let since = 0, worst = 0;
+  for (let i = 0; i < 20000; i++) {
+    const [r] = pull(g, 1, rng, new Date(2026, 9, 14));
+    count[r.item.rarity]++;
+    since = r.item.rarity === 3 ? 0 : since + 1;
+    worst = Math.max(worst, since);
+  }
+  assert.ok(worst < PITY, `전설 없이 ${worst}번`);
+  const p = count.map((c) => c / 20000);
+  assert.ok(Math.abs(p[0] - 0.6) < 0.02 && Math.abs(p[1] - 0.28) < 0.02 && Math.abs(p[2] - 0.1) < 0.015, JSON.stringify(p));
+  assert.ok(Math.abs(p[3] - effectiveLegendary()) < 0.006, `전설 ${p[3]} vs 천장 포함 ${effectiveLegendary()}`);
+  assert.equal(g.seeds, 0);
+});
+
+test("뽑기: 10연차는 영웅 이상 1개 확정, 시드가 모자라면 안 뽑힌다", () => {
+  const rng = seeded(3);
+  for (let k = 0; k < 300; k++) {
+    const g = newGacha();
+    g.seeds = PULL_COST * 10;
+    const res = pull(g, 10, rng, new Date());
+    assert.equal(res.length, 10);
+    assert.ok(res.some((r) => r.item.rarity >= 2));
+  }
+  const g = newGacha();
+  g.seeds = PULL_COST * 10 - 1;
+  assert.deepEqual(pull(g, 10, rng, new Date()), []);
+  assert.equal(g.seeds, PULL_COST * 10 - 1);
+});
+
+test("뽑기: 겹치면 조각, 조각으로 원하는 걸 고른다, 꾸미기에 바로 열린다", () => {
+  const s = newState();
+  const game = new Game(s, seeded(11));
+  s.gacha.seeds = PULL_COST * 400;
+  for (let i = 0; i < 400; i++) game.pullSeeds(1);
+  assert.ok(s.gacha.shards > 0, "400번이면 겹친다");
+  assert.equal(new Set(s.gacha.owned).size, s.gacha.owned.length);
+  const missing = POOL.find((x) => !s.gacha.owned.includes(x.id));
+  if (missing) {
+    s.gacha.shards = SHARD_PRICE[missing.rarity];
+    assert.ok(exchange(s.gacha, missing.id));
+    assert.equal(s.gacha.shards, 0);
+    assert.equal(exchange(s.gacha, missing.id), false, "두 번은 못 산다");
+  }
+  const pet = POOL.find((x) => x.slot === "pet" && s.gacha.owned.includes(x.id))!;
+  s.settings.look.pet = pet.id;
+  assert.equal(resolveLook(s).pet, pet.id);
+});
+
+test("뽑기: 시드는 플레이로 번다 (임무·보스), 출시해도 남는다, 세이브 정리", () => {
+  const g = new Game(newState());
+  g.state.boss = { era: 0, dealt: 1e30, remaining: 10 };
+  g.tick(0.1);
+  assert.equal(g.state.gacha.seeds, 10, "첫 보스는 시드 10");
+  g.state.totalEarned = 1e30;
+  g.state.gacha.owned = ["p_duck"];
+  assert.ok(g.release());
+  assert.equal(g.state.gacha.seeds, 10);
+  assert.deepEqual(g.state.gacha.owned, ["p_duck"]);
+  assert.deepEqual(sanitizeGacha({ seeds: -3, shards: 2.7, pity: 999, owned: ["p_duck", "p_duck", "nope", 5] }),
+    { seeds: 0, shards: 2, pity: PITY - 1, pulls: 0, owned: ["p_duck"] });
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

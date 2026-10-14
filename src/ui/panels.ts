@@ -14,10 +14,11 @@ import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
 import { shareCard } from "./sharecard";
+import { gachaCard } from "./gacha";
 import { L } from "../i18n/lang";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
-import { AV, PH, PW, drawScene, lookStill, sceneStill } from "./pixel";
+import { AV, PH, PW, drawScene, lookStill, petStill, sceneStill } from "./pixel";
 import { UI_SKINS, rarityName, emptyLook, eraReached, itemUnlocked, itemsOf, lookProgress, resolveLook, rewardFor, uiUnlocked } from "../core/looks";
 
 /** 스토어 등록에 적는 주소와 같아야 한다 (public/privacy.html → GitHub Pages) */
@@ -305,6 +306,12 @@ export class Panels {
         h("div", { class: "body" }, h("div", { class: "name" }, L("이번 주", "This week"), " · ", h("b", null, week.name)),
           h("div", { class: "fx" }, ...week.effects.map((e) => h("span", null, effectText(e))), h("span", null, L(`${left}일 남음`, `${left}d left`))),
           h("div", { class: "desc" }, week.desc))));
+    }
+    // 시드 뽑기: 첫 보스를 이기면 열린다
+    if (g.state.bossesBeaten.length || g.state.gacha.pulls || g.state.gacha.seeds) {
+      const card = gachaCard(g, () => { this.key = ""; this.update(); });
+      this.rows.push({ update: card.update });
+      this.root.append(card.el);
     }
     if (featureOn(g.state, "quests")) this.root.append(this.questCard());
     if (g.missionSlots() > 0) this.root.append(this.missionCard());
@@ -784,18 +791,19 @@ export class Panels {
       h("span", { class: "hint" }, L(`꾸미기 ${got} / ${total} · 업적을 깨면 모자·색·효과가, 새 시대에 가면 모습·방·화면 옷이 열려요`, `Style ${got} / ${total} · Feats unlock hats, colors and effects; new eras unlock looks, rooms and themes`)),
       h("button", { class: "btn ghost", onclick: () => set(emptyLook()) }, L("기본으로", "Reset"))));
 
-    const tile = (o: { on: boolean; locked: boolean; img?: string; swatch?: string; name: string; rarity?: Rarity; onPick: () => void; how?: string; head?: boolean }) =>
+    const tile = (o: { on: boolean; locked: boolean; img?: string; swatch?: string; name: string; rarity?: Rarity; onPick: () => void; how?: string; head?: boolean; pet?: boolean }) =>
       h("button", {
         class: `look-tile ${o.on ? "on" : ""} ${o.locked ? "locked" : ""} ${o.rarity !== undefined ? `rar${o.rarity}` : ""}`,
         "aria-pressed": o.on ? "true" : "false",
         "aria-label": o.locked ? `${o.name} (${L("잠김", "locked")})` : o.name,
         onclick: () => (o.locked ? lockedToast(o.how ?? "") : o.onPick()),
       },
-      o.locked ? h("span", { class: `lt-img ${o.head ? "head" : ""}` }, ic("lock")) : o.swatch ? h("span", { class: "lt-img swatch", style: { background: o.swatch } }) : h("img", { class: `lt-img px-img ${o.head ? "head" : ""}`, src: o.img ?? "", alt: "" }),
+      o.locked ? h("span", { class: `lt-img ${o.head ? "head" : ""}` }, ic("lock")) : o.swatch ? h("span", { class: "lt-img swatch", style: { background: o.swatch } }) : h("img", { class: `lt-img px-img ${o.head ? "head" : o.pet ? "pet" : ""}`, src: o.img ?? "", alt: "" }),
       h("span", { class: "lt-name" }, o.locked ? "???" : o.name),
       o.rarity !== undefined ? h("span", { class: "lt-rar" }, rarityName(o.rarity)) : null);
     const section = (title: string, ...tiles: HTMLElement[]) => this.root.append(this.title(title), h("div", { class: "look-grid" }, ...tiles));
     const achHow = (item: LookItem) => {
+      if (item.gacha) return L("시드 뽑기에서 나와요 (서비스 탭)", "Comes from the Seed Gacha (Service tab)");
       const a = ACHIEVEMENTS.find((x) => x.id === item.ach);
       return a ? L(`업적 '${a.name}' 달성: ${a.desc}`, `Earn '${a.name}': ${a.desc}`) : "";
     };
@@ -805,16 +813,17 @@ export class Panels {
       on: lk.avatar === e && look.avatar !== null, locked: !eraReached(s, e), name: era.years, how: eraHow(e),
       img: lookStill(e, accent, null, null), onPick: () => set({ avatar: look.avatar === e ? null : e }),
     })));
-    const itemTiles = (slot: "hat" | "fx") => [
-      tile({ on: !look[slot], locked: false, name: L("없음", "None"), head: slot === "hat", img: lookStill(lk.avatar, accent, null, null, slot === "hat"), onPick: () => set({ [slot]: null }) }),
+    const itemTiles = (slot: "hat" | "fx" | "pet") => [
+      tile({ on: !look[slot], locked: false, name: L("없음", "None"), head: slot === "hat", swatch: slot === "pet" ? "transparent" : undefined, img: lookStill(lk.avatar, accent, null, null, slot === "hat"), onPick: () => set({ [slot]: null }) }),
       ...itemsOf(slot).map((x) => tile({
-        on: lk[slot] === x.id, locked: !itemUnlocked(s, x), name: x.name, rarity: x.rarity, how: achHow(x), head: slot === "hat",
-        img: lookStill(lk.avatar, accent, slot === "hat" ? x.id : null, slot === "fx" ? x.id : null, slot === "hat"),
+        on: lk[slot] === x.id, locked: !itemUnlocked(s, x), name: x.name, rarity: x.rarity, how: achHow(x), head: slot === "hat", pet: slot === "pet",
+        img: slot === "pet" ? petStill(x.id) : lookStill(lk.avatar, accent, slot === "hat" ? x.id : null, slot === "fx" ? x.id : null, slot === "hat"),
         onPick: () => set({ [slot]: look[slot] === x.id ? null : x.id }),
       })),
     ];
     section(L("모자", "Hat"), ...itemTiles("hat"));
     section(L("효과", "Effect"), ...itemTiles("fx"));
+    section(L("펫", "Pet"), ...itemTiles("pet"));
     section(L("색", "Color"),
       tile({ on: !look.color, locked: false, name: L("시대 색", "Era color"), swatch: ERAS[lk.room].color, onPick: () => set({ color: null }) }),
       ...itemsOf("color").map((x) => tile({

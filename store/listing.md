@@ -41,11 +41,14 @@ AI 키우기: 방치형 AI 역사 게임
 ■ 업적으로 모으는 꾸미기
 업적을 깨면 모자·색·효과가 열립니다. 일반부터 희귀, 영웅, 그리고 황금 날개·무지개 오라·은하 같은 전설 등급까지. 지나온 시대의 AI 모습과 방, 화면 테마도 마음대로 섞어 입힐 수 있어요.
 
+■ 시드 뽑기와 펫
+플레이로 모은 시드로 캡슐을 열어 보세요. 고무 오리, 키보드 고양이, 아기 드래곤, 유니콘 같은 펫과 뽑기 전용 꾸미기 24종. 확률은 모두 공개, 40번 안에 전설 확정, 겹치면 조각으로 원하는 것과 교환. 돈으로는 살 수 없어요.
+
 ■ 방치해도 자란다
 게임을 꺼 둬도 AI는 계속 일합니다. 돌아오면 그동안 번 것을 받으세요. 매주 바뀌는 이벤트와 출석 보상도 있습니다.
 
 ■ 마음 편한 게임
-· 광고 없음, 결제 없음, 가입 없음
+· 광고 없음, 결제 없음, 가입 없음 (뽑기도 플레이로만)
 · 인터넷 없이 플레이
 · 개인정보를 모으지 않음 (진행 상황은 기기 안에만 저장)
 · 한국어 / 영어 지원
@@ -85,11 +88,14 @@ Every era ends with a giant benchmark boss. Stack enough correct answers before 
 ■ Collect cosmetics through feats
 Feats unlock hats, colors and effects, from Common to Rare, Epic and Legendary: golden wings, a rainbow aura, a whole galaxy. Mix and match AI looks, rooms and UI themes from every era you've reached.
 
+■ Seed gacha and pets
+Open capsules with seeds you earn by playing: rubber ducks, a keyboard cat, a baby dragon, a unicorn and 24 gacha-only cosmetics. All odds are shown, a Legendary is guaranteed within 40 pulls, and duplicates become shards you can trade for what you want. Seeds can't be bought.
+
 ■ Grows while you're away
 Your AI keeps working when the game is closed. Come back and collect. Weekly events and daily check-in rewards keep things fresh.
 
 ■ Easy on you
-· No ads, no purchases, no account
+· No ads, no purchases, no account (gacha is play-only)
 · Plays offline
 · Collects no personal data (progress stays on your device)
 · Korean and English

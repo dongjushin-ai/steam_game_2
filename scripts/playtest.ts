@@ -13,7 +13,7 @@ for (const seed of SEEDS) {
   const durations = t.map((v, i) => ((t[i + 1] ?? (s.ended ? s.stats.playSeconds : NaN)) - v) / 60);
   rows.push(durations);
   ends.push(s.ended ? s.stats.playSeconds : NaN);
-  console.log(`seed ${seed}: 엔딩 ${s.ended ? fmtTime(s.stats.playSeconds) : "실패"} · 출시 ${s.releases} · VIP ${s.stats.goldens} · 퀴즈 ${s.stats.quizCorrect}/${s.stats.quizAsked} · 임무 ${s.stats.questsDone}`);
+  console.log(`seed ${seed}: 엔딩 ${s.ended ? fmtTime(s.stats.playSeconds) : "실패"} · 출시 ${s.releases} · VIP ${s.stats.goldens} · 퀴즈 ${s.stats.quizCorrect}/${s.stats.quizAsked} · 임무 ${s.stats.questsDone} · 시드 ${s.gacha.seeds} (뽑기 약 ${Math.floor(s.gacha.seeds / 5)}회)`);
 }
 console.log("\n시대별 체류 시간(분) — 중앙값 [최소~최대]");
 ERAS.forEach((e, i) => {

@@ -968,6 +968,8 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
     p.p(x0 + 7, y0 + 4, era >= 8 ? "#000000" : "#e83b3b");
     if (Math.floor(f.t * 2) % 2 === 0) p.sparkle(cx + 16, y0 + 3, "#ffffff");
   }
+  // 펫: AI 왼쪽 바닥에서 통통 뛴다
+  if (look?.pet) drawPet(p, look.pet, avx - 14, HZ - 1, f.t);
   if (fx) drawFx(p, fx, cx, cy, f.t, accent, true);
   if (b) drawBattle(p, era, accent, b, f.t, true);
   // 레벨 업: 아바타 둘레로 퍼지는 반짝이
@@ -1157,9 +1159,24 @@ export function sceneCanvas(era: number, accent: string, look?: SceneLook, t = 0
   return cv;
 }
 
+/** 펫 칸 미리보기: 펫만 (투명 배경 16×14) */
+export function petStill(id: string): string {
+  const key = `pet|${id}`;
+  let url = stillCache.get(key);
+  if (!url) {
+    const cv = document.createElement("canvas");
+    cv.width = 16;
+    cv.height = 14;
+    drawPet(new Px(cv.getContext("2d")!), id, 14, 13, 0, true);
+    url = cv.toDataURL();
+    stillCache.set(key, url);
+  }
+  return url;
+}
+
 /** 꾸미기 칸 미리보기: AI + 모자 + 효과만 (투명 배경 56×60) */
-export function lookStill(avatar: number, accent: string, hat: string | null, fx: string | null, head = false): string {
-  const key = `look|${avatar}|${accent}|${hat}|${fx}|${head}`;
+export function lookStill(avatar: number, accent: string, hat: string | null, fx: string | null, head = false, pet: string | null = null): string {
+  const key = `look|${avatar}|${accent}|${hat}|${fx}|${head}|${pet}`;
   let url = stillCache.get(key);
   if (!url) {
     const cv = document.createElement("canvas");
@@ -1172,6 +1189,7 @@ export function lookStill(avatar: number, accent: string, hat: string | null, fx
     if (fx) drawFx(p, fx, ox + 20, oy + 20, 0.7, accent, false);
     drawAvatar(g, avatar, accent, ox, oy, 0.5, { blinkOk: false });
     if (hat) drawHat(p, hat, ox + 20, oy + headTop(avatar), 0.3, accent);
+    if (pet) drawPet(p, pet, ox + 14, oy + 40, 0);
     if (fx) drawFx(p, fx, ox + 20, oy + 20, 0.7, accent, true);
     url = cv.toDataURL();
     stillCache.set(key, url);
@@ -1224,6 +1242,7 @@ export interface SceneLook {
   avatar: number;
   hat: string | null;
   fx: string | null;
+  pet?: string | null;
 }
 
 /** 스프라이트의 머리 꼭대기 y (가운데 칸에서 처음 색이 나오는 줄) */
@@ -1252,6 +1271,7 @@ function headTop(era: number): number {
 const HAT_PAL: Record<string, string> = {
   k: "#000000", w: "#ffffff", y: "#ffd23f", o: "#b8860b", r: "#e83b3b", g: "#3fd16a", G: "#1f8a3d",
   b: "#3b6be8", s: "#c0c0c0", d: "#3a3a4a", m: "#ff9ccf", p: "#6a2fc0", P: "#a46bff", n: "#8a5a2a",
+  O: "#ff9a3a", c: "#5ee0ff", M: "#ff4fa0",
 };
 const HAT_ART: Record<string, string> = {
   h_sprout: `
@@ -1333,6 +1353,177 @@ krk..............krk
 kooyoooyoooyoook
 .kkkkkkkkkkkkkk.`,
 };
+Object.assign(HAT_ART, {
+  h_headset: `
+....kkkkkkkk....
+..kkddddddddkk..
+.kdd........ddk.
+kdk..........kdk
+kMMk........kMMk
+kMMk........kMMk
+.kk..........kk.`,
+  h_ribbon: `
+.kk.......kk.
+kMMk.....kMMk
+kMmMk.k.kMmMk
+kMmmMkMkMmmMk
+kMmMk.k.kMmMk
+kMMk.....kMMk
+.kk.......kk.`,
+  h_visor: `
+.kkkkkkkkkkkkkk.
+kccccccccccccccck
+kcwwccccccccccck
+.kkkkkkkkkkkkkk.`,
+});
+
+/** 펫 (12×10 안팎). 바닥(발)이 맨 아랫줄 */
+const PET_ART: Record<string, string> = {
+  p_duck: `
+...kkk....
+..kyyyk...
+..kykyk...
+..kyyyOkk.
+.kkyyyyOOk
+kyyyyyyyk.
+kyyyyyyyk.
+.kyyyyyk..
+..kkkkk...`,
+  p_coffee: `
+.kkkkkkk..
+.kwwwwwkkk
+.kwnnnwk.k
+.kwwwwwk.k
+.kwwwwwkkk
+..kwwwk...
+..kkkkk...`,
+  p_floppy: `
+kkkkkkkkk.
+kbbsssbbbk
+kbbsssbbbk
+kbbbbbbbbk
+kbwwwwwwbk
+kbwddddwbk
+kbwwwwwwbk
+kkkkkkkkkk`,
+  p_bug: `
+..k...k...
+...k.k....
+..kkkkk...
+.kgggggk..
+kkgkgkgkk.
+.kgggggk..
+kkgkgkgkk.
+.kgggggk..
+..kkkkk...`,
+  p_cat: `
+k.....k...
+kk...kk...
+kOk.kOk...
+kOOOOOk...
+kOkOkOk..k
+kOOmOOk.kO
+.kOOOOkkOk
+.kOOOOOOk.
+.kOkkkOk..`,
+  p_clip: `
+..kkkk....
+.ksssskk..
+ks.kk.sk..
+kswkwksk..
+ks.ks.sk..
+ks.ks.sk..
+ks.kkksk..
+.kssssk...
+..kkkk....`,
+  p_drone: `
+.kkkkkkkk.
+kssssssssk
+ksskbbkssk
+kssssssssk
+.kkkkkkkk.
+..k....k..`,
+  p_chair: `
+..kkkk....
+.kGggGk...
+kGgggggk..
+kGgnngGk..
+kGgnngGk..
+kGgggggk..
+kkGggGkkk.
+k.kkkk..k.
+k.......k.`,
+  p_robodog: `
+.........kk
+........ksk
+kkkkkkkkkck
+ksssssssskk
+ksssssssk..
+.kkskkskk..
+..ks..ks...
+..kk..kk...`,
+  p_whale: `
+..kkkkk....
+.kbbbbbk..k
+kbbwbbbbkbk
+kbbbbbbbbbk
+kbccccccbk.
+.kkkkkkkk..`,
+  p_dragon: `
+....k.k.....
+...krkrk....
+..krrrrrk...
+.krkrrrrrk..
+krrrrryrrk..
+.kkrrrrrkkk.
+..krrrrrkPk.
+.kyrrrrrkk..
+.kykkkkrk...
+..k....kk...`,
+  p_unicorn: `
+y.........
+.y........
+.kkk......
+kwwwkM....
+kwkwwMP...
+kwwwwwMb..
+.kkwwwwwk.
+..kwwwwwwk
+..kwkkkwk.
+..kk...kk.`,
+};
+const petRows = new Map<string, string[]>();
+function drawPet(p: Px, id: string, xr: number, foot: number, t: number, still = false): void {
+  let r = petRows.get(id);
+  if (!r) {
+    r = (PET_ART[id] ?? "").replace(/^\n/, "").split("\n");
+    petRows.set(id, r);
+  }
+  if (!r.length) return;
+  const w = Math.max(...r.map((row) => row.length)), h = r.length;
+  const flying = id === "p_drone" || id === "p_whale";
+  const hop = still ? 0 : flying ? Math.round(Math.sin(t * 3) * 2) + 8 : Math.round(Math.abs(Math.sin(t * 4)) * 3);
+  const x0 = xr - w, y0 = foot - h - hop;
+  if (!flying) p.d(x0 + 1, foot - 1, w - 2, 2, "#000000", null, 8);
+  r.forEach((row, y) => [...row].forEach((ch, x) => {
+    const c = HAT_PAL[ch];
+    if (c) p.p(x0 + x, y0 + y, c);
+  }));
+  // 움직이는 덧칠
+  if (id === "p_coffee") for (let k = 0; k < 2; k++) p.p(x0 + 2 + k * 2 + (Math.floor(t * 4 + k) % 2), y0 - 2 - (Math.floor(t * 3 + k) % 2), "#ffffff");
+  if (id === "p_drone") { const on = Math.floor(t * 20) % 2 === 0; p.r(x0 - 1, y0 - 1, 4, 1, on ? "#000000" : "#c0c0c0"); p.r(x0 + w - 3, y0 - 1, 4, 1, on ? "#c0c0c0" : "#000000"); }
+  if (id === "p_whale" && Math.floor(t * 2) % 2 === 0) { p.p(x0 + 3, y0 - 2, "#5ee0ff"); p.p(x0 + 2, y0 - 3, "#5ee0ff"); p.p(x0 + 4, y0 - 3, "#5ee0ff"); }
+  if (id === "p_dragon" && t % 3 < 0.8) {
+    // 전설: 가끔 불을 뿜는다
+    for (let k = 0; k < 5; k++) p.r(x0 - 2 - k * 2, y0 + 4 + ((k + Math.floor(t * 12)) % 2), 2, 2, k < 2 ? "#ffe600" : k < 4 ? "#ff9a3a" : "#e83b3b");
+  }
+  if (id === "p_unicorn") {
+    // 전설: 뒤로 무지개 자국
+    for (let k = 0; k < 6; k++) p.r(x0 + w + k * 2, y0 + 6 + Math.round(Math.sin(t * 6 + k) * 1), 2, 1, RAINBOW[(k + Math.floor(t * 8)) % 6]);
+    if (Math.floor(t * 3) % 2 === 0) p.sparkle(x0, y0 - 1, "#ffffff");
+  }
+}
+
 const hatRows = new Map<string, string[]>();
 function rows(id: string): string[] {
   let r = hatRows.get(id);
@@ -1371,6 +1562,12 @@ function drawHat(p: Px, id: string, cx: number, head: number, t: number, accent:
     p.r(cx - len + 1, y0 - 1, len - 1, 1, k > 0 ? "#e83b3b" : "#3b6be8");
     p.r(cx + 1, y0 - 1, len - 1, 1, k > 0 ? "#3b6be8" : "#e83b3b");
     return h + 2;
+  }
+  if (id === "h_visor") {
+    // 영웅: 바이저를 훑고 지나가는 빛
+    const x = x0 + 1 + Math.floor((t * 18) % (w - 2));
+    p.r(x, y0 + 1, 2, 2, "#ffffff");
+    p.p(x0 + w - 3, y0 + 1, Math.floor(t * 4) % 2 ? "#ff4fa0" : "#5ee0ff");
   }
   if (id === "h_horns") {
     // 영웅: 뿔 끝에서 불씨가 깜박
@@ -1474,6 +1671,59 @@ function drawFx(p: Px, id: string, cx: number, cy: number, t: number, accent: st
       }
       const shift = Math.floor(t * 8);
       for (let i = 0; i < 6; i++) p.ring(cx, cy, 27 - i, RAINBOW[(i + shift) % 6]);
+      return;
+    }
+    case "f_bubbles": {
+      // 영웅: 비눗방울이 떠오르다 톡 터진다
+      if (!front) return;
+      for (let k = 0; k < 6; k++) {
+        const u = (t * 0.35 + hash(k, 11)) % 1;
+        const x = Math.round(cx - 24 + hash(k, 12) * 48 + Math.sin(t * 2 + k) * 3);
+        const y = Math.round(cy + 16 - u * 46);
+        const r = 2 + (k % 3);
+        if (u > 0.92) { p.sparkle(x, y, "#ffffff"); continue; }
+        p.ring(x, y, r, "#bff4ff");
+        p.p(x - 1, y - 1, "#ffffff");
+      }
+      return;
+    }
+    case "f_hearts": {
+      // 영웅: 하트가 뿅뿅 튀어나온다
+      if (!front) return;
+      for (let k = 0; k < 5; k++) {
+        const u = (t * 0.6 + hash(k, 13)) % 1;
+        const a = hash(k, 14) * Math.PI * 2;
+        const x = Math.round(cx + Math.cos(a) * (12 + u * 16)), y = Math.round(cy - 4 + Math.sin(a) * (8 + u * 10) - u * 8);
+        if (u > 0.85) continue;
+        const c = k % 2 ? "#ff4fa0" : "#ff9ccf";
+        p.r(x - 2, y, 2, 1, c); p.r(x + 1, y, 2, 1, c); p.r(x - 2, y + 1, 5, 1, c); p.r(x - 1, y + 2, 3, 1, c); p.p(x, y + 3, c);
+      }
+      return;
+    }
+    case "f_aurora": {
+      // 전설: 등 뒤로 초록·하늘·보라 오로라 띠가 일렁인다
+      if (front) {
+        if (Math.floor(t * 2) % 2 === 0) p.sparkle(cx - 18 + Math.floor(hash(Math.floor(t * 2), 15) * 36), cy - 24, "#ffffff");
+        return;
+      }
+      const cols = ["#3fd16a", "#5ee0ff", "#a46bff"];
+      for (let band = 0; band < 3; band++) {
+        for (let x = -34; x <= 34; x++) {
+          const y = Math.round(cy - 20 + band * 6 + Math.sin(x * 0.18 + t * 2 + band) * 4);
+          p.d(cx + x, y, 1, 5, cols[band], null, 10 - band * 2);
+        }
+      }
+      return;
+    }
+    case "f_meteor": {
+      // 전설: 별똥별이 대각선으로 쏟아진다 (장면 오른쪽 하늘 전체)
+      if (front) return;
+      for (let k = 0; k < 5; k++) {
+        const u = (t * 0.7 + hash(k, 16)) % 1;
+        const x = Math.round(cx + 40 - u * 90 + hash(k, 17) * 30), y = Math.round(cy - 40 + u * 50);
+        for (let tr = 0; tr < 7; tr++) p.p(x + tr, y - Math.round(tr * 0.55), tr < 2 ? "#ffffff" : tr < 4 ? "#ffe600" : "#ff9a3a");
+        if (u > 0.8) p.sparkle(x, y, "#ffffff", k === 0);
+      }
       return;
     }
     case "f_galaxy": {

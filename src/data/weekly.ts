@@ -24,11 +24,16 @@ export const WEEKLIES: Weekly[] = [
 ];
 
 /** 날짜 → ISO 주 번호 → 이번 주 이벤트 */
-export function weeklyFor(date: Date): Weekly {
+/** ISO 주 번호를 하나의 수로 (연도 × 53 + 주). 주간 이벤트·뽑기 픽업이 같은 주기로 바뀐다 */
+export function weekIndex(date: Date): number {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const day = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - day);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return WEEKLIES[(d.getUTCFullYear() * 53 + week) % WEEKLIES.length];
+  return d.getUTCFullYear() * 53 + week;
+}
+
+export function weeklyFor(date: Date): Weekly {
+  return WEEKLIES[weekIndex(date) % WEEKLIES.length];
 }

@@ -276,6 +276,8 @@ export interface ModelRecord {
 
 export interface GameState {
   version: number;
+  /** 시드 뽑기 (출시해도 남는다) */
+  gacha: import("./gacha").GachaState;
   aiName: string;
   era: number;
   credits: number;
@@ -366,4 +368,5 @@ export interface Look {
   color: string | null;
   fx: string | null;
   ui: UiSkin | null;
+  pet: string | null;
 }

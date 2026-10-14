@@ -1,3 +1,4 @@
+import { sanitizeGacha } from "./gacha";
 import { sanitizeLook } from "./looks";
 import { ERAS, MISSIONS, QUIZ, THREATS } from "../data";
 import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP, WEEKLY_MAP } from "./formulas";
@@ -75,6 +76,7 @@ export function migrate(raw: unknown): GameState | null {
     missions,
     models,
     daily,
+    gacha: sanitizeGacha(r.gacha),
     weekly: typeof r.weekly === "string" && WEEKLY_MAP[r.weekly] ? r.weekly : null,
     nextEventIn: num(r.nextEventIn, base.nextEventIn),
     nextGoldenIn: num(r.nextGoldenIn, base.nextGoldenIn),

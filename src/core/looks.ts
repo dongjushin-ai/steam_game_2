@@ -13,7 +13,7 @@ export const UI_SKINS: UiSkin[] = ["pixel", "retro", "y2k", "brutal"];
 const UI_FROM: Record<UiSkin, number> = { pixel: 0, retro: 3, y2k: 5, brutal: 8 };
 
 export function emptyLook(): Look {
-  return { avatar: null, room: null, hat: null, color: null, fx: null, ui: null };
+  return { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null };
 }
 
 /** 시대별 기본 화면 옷 */
@@ -27,7 +27,7 @@ export function eraReached(s: GameState, era: number): boolean {
 }
 
 export function itemUnlocked(s: GameState, item: LookItem): boolean {
-  return s.achievements.includes(item.ach);
+  return item.gacha ? s.gacha.owned.includes(item.id) : !!item.ach && s.achievements.includes(item.ach);
 }
 
 export function uiUnlocked(s: GameState, ui: UiSkin): boolean {
@@ -51,7 +51,7 @@ export function lookProgress(s: GameState): [number, number] {
 }
 
 /** 실제로 쓸 값: 잠긴 것·사라진 것은 기본값으로 */
-export function resolveLook(s: GameState): { avatar: number; room: number; hat: string | null; fx: string | null; color: string | null; ui: UiSkin } {
+export function resolveLook(s: GameState): { avatar: number; room: number; hat: string | null; fx: string | null; pet: string | null; color: string | null; ui: UiSkin } {
   const l = s.settings.look;
   const era = (v: number | null) => (v !== null && v >= 0 && v < ERAS.length && eraReached(s, v) ? v : s.era);
   const item = (id: string | null, slot: LookSlot) => (id && LOOK_MAP[id]?.slot === slot && itemUnlocked(s, LOOK_MAP[id]) ? id : null);
@@ -61,6 +61,7 @@ export function resolveLook(s: GameState): { avatar: number; room: number; hat: 
     room: era(l.room),
     hat: item(l.hat, "hat"),
     fx: item(l.fx, "fx"),
+    pet: item(l.pet, "pet"),
     color: color ? LOOK_MAP[color].hex! : null,
     ui: l.ui && uiUnlocked(s, l.ui) ? l.ui : eraSkin(s.era),
   };
@@ -78,5 +79,6 @@ export function sanitizeLook(raw: unknown): Look {
     color: item(r.color, "color"),
     fx: item(r.fx, "fx"),
     ui: typeof r.ui === "string" && (UI_SKINS as string[]).includes(r.ui) ? (r.ui as UiSkin) : null,
+    pet: item(r.pet, "pet"),
   };
 }
