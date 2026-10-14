@@ -1,12 +1,12 @@
 // 언어 전환. UI 문구는 L("한국어", "English"), 콘텐츠 데이터는 applyLanguage()가 id별 번역표로 덮어쓴다.
-import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES, WEEKLIES, LOOKS } from "../data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES, WEEKLIES, LOOKS, BOARDS } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import type { NewsItem } from "../core/types";
 import { BUILDINGS_EN } from "./en/buildings";
 import { CODEX_EN } from "./en/codex";
 import { ERAS_EN, TIERS_EN } from "./en/eras";
 import { EVENTS_EN } from "./en/events";
-import { BENCHES_EN, EXTRA_ACHIEVEMENTS_EN, EXTRA_UPGRADES_EN, MISSIONS_EN, THREATS_EN, WEEKLIES_EN, LOOKS_EN } from "./en/extra";
+import { BENCHES_EN, EXTRA_ACHIEVEMENTS_EN, EXTRA_UPGRADES_EN, MISSIONS_EN, THREATS_EN, WEEKLIES_EN, LOOKS_EN, BOARDS_EN } from "./en/extra";
 import { ACHIEVEMENTS_EN, GOLDENS_EN, RIVALS_EN } from "./en/misc";
 import { NEWS_EN } from "./en/news";
 import { QUIZ_EN } from "./en/quiz";
@@ -43,6 +43,7 @@ const KO = {
   threats: [...THREATS],
   weeklies: WEEKLIES.map((w) => ({ name: w.name, desc: w.desc })),
   looks: LOOKS.map((x) => x.name),
+  boards: BOARDS.map((x) => x.name),
 };
 const UPG_EN = { ...UPGRADES_EN, ...EXTRA_UPGRADES_EN };
 const ACH_EN = { ...ACHIEVEMENTS_EN, ...EXTRA_ACHIEVEMENTS_EN };
@@ -146,6 +147,9 @@ export function applyLanguage(next: Lang): void {
     const t = en ? pick(MISSIONS_EN, x.id, "mission") : undefined;
     x.name = t?.name ?? KO.missions[i].name;
     x.desc = t?.desc ?? KO.missions[i].desc;
+  });
+  BOARDS.forEach((x, i) => {
+    x.name = (en ? pick(BOARDS_EN, x.key, "board")?.name : undefined) ?? KO.boards[i];
   });
   LOOKS.forEach((x, i) => {
     x.name = (en ? pick(LOOKS_EN, x.id, "look")?.name : undefined) ?? KO.looks[i];

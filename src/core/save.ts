@@ -1,3 +1,4 @@
+import { sanitizeRanking } from "./ranking";
 import { sanitizeGacha } from "./gacha";
 import { sanitizeLook } from "./looks";
 import { ERAS, MISSIONS, QUIZ, THREATS } from "../data";
@@ -77,6 +78,7 @@ export function migrate(raw: unknown): GameState | null {
     models,
     daily,
     gacha: sanitizeGacha(r.gacha),
+    ranking: sanitizeRanking(r.ranking),
     weekly: typeof r.weekly === "string" && WEEKLY_MAP[r.weekly] ? r.weekly : null,
     nextEventIn: num(r.nextEventIn, base.nextEventIn),
     nextGoldenIn: num(r.nextGoldenIn, base.nextGoldenIn),

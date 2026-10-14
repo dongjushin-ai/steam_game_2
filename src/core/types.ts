@@ -278,6 +278,8 @@ export interface GameState {
   version: number;
   /** 시드 뽑기 (출시해도 남는다) */
   gacha: import("./gacha").GachaState;
+  /** 랭킹 훈장·칭호·랭커 스킨 (출시해도 남는다) */
+  ranking: import("./ranking").RankingState;
   aiName: string;
   era: number;
   credits: number;

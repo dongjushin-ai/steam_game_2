@@ -27,3 +27,4 @@ export { SIDE_BENCHES } from "./benchmarks";
 export { MISSIONS, THREATS, baseMissionSlots } from "./missions";
 export { WEEKLIES, weekIndex, weeklyFor, type Weekly } from "./weekly";
 export { LOOKS, LOOK_MAP, type LookItem, type LookSlot, type Rarity } from "./looks";
+export { BOARDS, SPANS, type Board, type BoardKind, type Span } from "./leaderboards";

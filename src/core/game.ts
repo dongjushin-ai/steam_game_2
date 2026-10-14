@@ -1,3 +1,4 @@
+import { newRanking } from "./ranking";
 import { SEEDS, newGacha, pull, type PullResult } from "./gacha";
 import { ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSlots } from "../data";
 import type { GoldenDef } from "../data/golden";
@@ -56,6 +57,7 @@ export function newState(aiName = "나의 AI"): GameState {
     checkpoints: 0,
     releases: 0,
     gacha: newGacha(),
+    ranking: newRanking(),
     buildings: { ...START_KIT },
     upgrades: [],
     thinking: false,
@@ -400,6 +402,7 @@ export class Game {
       s.gacha.seeds += fight.era === 0 && s.gacha.pulls === 0 ? SEEDS.firstBoss : SEEDS.boss;
       this.emit({ kind: "bossWin", era: fight.era });
       if (fight.era === ERAS.length - 1) {
+        if (s.ranking.endAt === null) s.ranking.endAt = s.stats.playSeconds;
         s.ended = true;
         this.emit({ kind: "ending" });
       } else {

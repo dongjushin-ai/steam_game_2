@@ -1,5 +1,5 @@
 // 안드로이드 앱(Capacitor)에서만 켜지는 것들. 웹에서는 아무것도 하지 않는다.
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
@@ -33,4 +33,27 @@ export function setupNative(hooks: NativeHooks): void {
 export async function shareImage(dataUrl: string, name: string, text: string): Promise<void> {
   const res = await Filesystem.writeFile({ path: name, data: dataUrl.split(",")[1], directory: Directory.Cache });
   await Share.share({ files: [res.uri], text });
+}
+
+// ── 구글 플레이 게임즈 (android/.../PlayGamesPlugin.java) ──
+export interface PgEntry { rank: number; name: string; score: number; display: string; playerId?: string }
+export interface PgStatus { available: boolean; authenticated?: boolean; name?: string; playerId?: string }
+interface PgPlugin {
+  status(): Promise<PgStatus>;
+  signIn(): Promise<PgStatus>;
+  submitScore(o: { id: string; score: number }): Promise<void>;
+  loadTop(o: { id: string; span: string; collection?: string; max?: number }): Promise<{ available: boolean; entries?: PgEntry[]; me?: PgEntry; error?: string }>;
+  showLeaderboard(o: { id?: string }): Promise<void>;
+}
+export const PlayGames = registerPlugin<PgPlugin>("PlayGames");
+
+/** 앱이 아니거나 플레이 게임즈가 설정되지 않았으면 null */
+export async function gamesStatus(): Promise<PgStatus | null> {
+  if (!isNative()) return null;
+  try {
+    const st = await PlayGames.status();
+    return st.available ? st : null;
+  } catch {
+    return null;
+  }
 }

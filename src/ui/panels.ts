@@ -15,6 +15,8 @@ import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
 import { shareCard } from "./sharecard";
 import { gachaCard } from "./gacha";
+import { openRanking } from "./ranking";
+import { featScore, medalCount, overallScore, titleName } from "../core/ranking";
 import { L } from "../i18n/lang";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
@@ -110,7 +112,7 @@ export class Panels {
     const s = this.game.state;
     return [this.tab, this.buyMode, this.codexTab, s.era, s.upgrades.length, s.releases, s.boss ? 1 : 0,
       s.achievements.length, s.bossesBeaten.length, s.ended ? 1 : 0, this.game.hasThinking() ? 1 : 0,
-      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly, JSON.stringify(s.settings.look)].join("/");
+      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly, JSON.stringify(s.settings.look), s.ranking.title, s.ranking.medals.length].join("/");
   }
 
   update(): void {
@@ -515,6 +517,18 @@ export class Panels {
     );
     this.root.append(...this.sideBenchList());
 
+    // 랭킹 (구글 플레이 게임즈 TOP 10)
+    const [g1, g2, g3] = medalCount(s);
+    this.root.append(this.title(L("랭킹", "Rankings")), h("div", { class: "card rank-card" },
+      h("div", { class: "kv" },
+        h("span", null, L("종합 점수", "Overall score")), h("b", null, overallScore(s).toLocaleString()),
+        h("span", null, L("업적 점수", "Feat score")), h("b", null, featScore(s).toLocaleString()),
+        h("span", null, L("최고 콤보", "Best combo")), h("b", null, fmt(s.stats.maxCombo)),
+        h("span", null, L("훈장", "Medals")), h("b", null, L(`금 ${g1} · 은 ${g2} · 동 ${g3}`, `${g1} · ${g2} · ${g3}`)),
+        h("span", null, L("칭호", "Title")), h("b", null, s.ranking.title ? `「${titleName(s.ranking.title)}」` : "-")),
+      h("button", { class: "btn", style: { marginTop: "8px" }, onclick: () => void openRanking(g, () => { window.dispatchEvent(new CustomEvent("ai-look")); this.key = ""; this.update(); }) },
+        ic("trophy"), L(" TOP 10 랭킹 보기", " View Top 10"))));
+
     // 새 모델 출시
     const rel = h("div");
     const relBtn = h("button", { class: "btn ghost" });
@@ -895,8 +909,8 @@ export class Panels {
           "Grow Your AI — Attention Is All You Idle. A free, non-commercial fan-made game, not affiliated with, sponsored or endorsed by any company mentioned. Real company, product and people names are used only to describe history; in-game numbers and event effects are simplified and exaggerated for fun. "),
         L("역사 자료 출처: Wikipedia (CC BY-SA 4.0), Obscura 헤드리스 브라우저로 수집. 도트 글꼴: 갈무리(Galmuri, SIL OFL 1.1, quiple). 소스 코드와 자료는 GitHub 저장소에 있습니다.",
           "History sources: Wikipedia (CC BY-SA 4.0), collected with the Obscura headless browser. Pixel font: Galmuri (SIL OFL 1.1, quiple). Source code and data are in the GitHub repository."),
-        h("p", null, L("개인정보: 이 게임은 개인정보를 모으지 않습니다. 광고·분석 도구·계정이 없고, 진행 상황은 이 기기 안에만 저장됩니다.",
-          "Privacy: this game collects no personal data. No ads, no analytics, no accounts; progress is stored only on this device."), " ",
+        h("p", null, L("개인정보: 개발자는 개인정보를 모으지 않습니다. 광고·분석 도구·가입이 없고, 진행 상황은 이 기기 안에만 저장됩니다. 앱에서 랭킹(구글 플레이 게임즈)에 로그인하면 게이머 프로필과 점수를 구글이 처리합니다.",
+          "Privacy: the developer collects no personal data. No ads, no analytics, no sign-up; progress stays on this device. If you sign in to rankings (Google Play Games) in the app, Google processes your gamer profile and scores."), " ",
           h("a", { href: PRIVACY_URL, target: "_blank", rel: "noopener" }, L("개인정보처리방침", "Privacy policy")))),
     );
   }

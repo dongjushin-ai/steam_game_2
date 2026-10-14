@@ -44,13 +44,16 @@ AI 키우기: 방치형 AI 역사 게임
 ■ 시드 뽑기와 펫
 플레이로 모은 시드로 캡슐을 열어 보세요. 고무 오리, 키보드 고양이, 아기 드래곤, 유니콘 같은 펫과 뽑기 전용 꾸미기 24종. 확률은 모두 공개, 40번 안에 전설 확정, 겹치면 조각으로 원하는 것과 교환. 돈으로는 살 수 없어요.
 
+■ TOP 10 랭킹과 훈장
+종합 점수, 업적 점수, 최고 콤보, 시대별 타임어택을 오늘·이번 주·전체 기간으로 겨룹니다. 순위에 들면 금·은·동 훈장, 이름 옆에 다는 칭호, 랭커만 입을 수 있는 월계관·트로피 펫을 받아요.
+
 ■ 방치해도 자란다
 게임을 꺼 둬도 AI는 계속 일합니다. 돌아오면 그동안 번 것을 받으세요. 매주 바뀌는 이벤트와 출석 보상도 있습니다.
 
 ■ 마음 편한 게임
 · 광고 없음, 결제 없음, 가입 없음 (뽑기도 플레이로만)
 · 인터넷 없이 플레이
-· 개인정보를 모으지 않음 (진행 상황은 기기 안에만 저장)
+· 개발자는 개인정보를 모으지 않음 (진행 상황은 기기 안에만 저장, 랭킹은 구글 플레이 게임즈)
 · 한국어 / 영어 지원
 
 알림: 이 게임은 대화형 AI(챗봇)가 아니며 생성형 AI 기능이 없습니다. 무료 비상업 팬메이드 게임으로, 게임에 언급되는 어떤 회사와도 제휴·후원·보증 관계가 없습니다. 역사 설명 외의 수치와 사건 효과는 재미를 위해 단순화·과장했습니다.
@@ -91,13 +94,16 @@ Feats unlock hats, colors and effects, from Common to Rare, Epic and Legendary: 
 ■ Seed gacha and pets
 Open capsules with seeds you earn by playing: rubber ducks, a keyboard cat, a baby dragon, a unicorn and 24 gacha-only cosmetics. All odds are shown, a Legendary is guaranteed within 40 pulls, and duplicates become shards you can trade for what you want. Seeds can't be bought.
 
+■ Top 10 rankings and medals
+Compete on overall score, feat score, best combo and per-era time attacks, by day, week and all time. Place in the Top 10 to earn gold, silver or bronze medals, titles for your name, and ranker-only cosmetics like the laurel and the trophy pet.
+
 ■ Grows while you're away
 Your AI keeps working when the game is closed. Come back and collect. Weekly events and daily check-in rewards keep things fresh.
 
 ■ Easy on you
 · No ads, no purchases, no account (gacha is play-only)
 · Plays offline
-· Collects no personal data (progress stays on your device)
+· The developer collects no personal data (progress stays on your device; rankings use Google Play Games)
 · Korean and English
 
 Note: this game is not a chatbot and has no generative AI features. It is a free, non-commercial fan-made game, not affiliated with, sponsored or endorsed by any company mentioned in it. Outside the history notes, numbers and event effects are simplified and exaggerated for fun.

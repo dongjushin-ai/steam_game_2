@@ -27,7 +27,7 @@ for (const w of WEEKLIES) if (!w.effects.length) fail(`${w.id}: 효과 없음`);
 unique("looks", LOOKS.map((x) => x.id));
 unique("look achievements", LOOKS.flatMap((x) => (x.ach ? [x.ach] : [])));
 for (const x of LOOKS) {
-  if (!x.ach === !x.gacha) fail(`${x.id}: 업적 보상이거나 뽑기 전용이어야 함 (둘 중 하나)`);
+  if ([!!x.ach, !!x.gacha, !!x.rank].filter(Boolean).length !== 1) fail(`${x.id}: 업적 보상·뽑기 전용·랭킹 전용 중 정확히 하나`);
   if (x.ach && !ACHIEVEMENTS.some((a) => a.id === x.ach)) fail(`${x.id}: 없는 업적 ${x.ach}`);
   if (x.slot === "color" && !/^#[0-9a-f]{6}$/.test(x.hex ?? "")) fail(`${x.id}: 색 없음`);
 }

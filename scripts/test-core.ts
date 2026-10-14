@@ -5,6 +5,7 @@ import { Game, newState } from "../src/core/game";
 import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
 import { resolveLook, rewardFor, sanitizeLook } from "../src/core/looks";
+import { clearTime, grantRank, overallScore, sanitizeRanking, tierFor } from "../src/core/ranking";
 import { PITY, POOL, effectiveLegendary, PULL_COST, SHARD_PRICE, exchange, newGacha, pull, sanitizeGacha } from "../src/core/gacha";
 import { LOOKS } from "../src/data";
 import { questProgress } from "../src/core/quests";
@@ -635,6 +636,49 @@ test("뽑기: 시드는 플레이로 번다 (임무·보스), 출시해도 남�
   assert.deepEqual(g.state.gacha.owned, ["p_duck"]);
   assert.deepEqual(sanitizeGacha({ seeds: -3, shards: 2.7, pity: 999, owned: ["p_duck", "p_duck", "nope", 5] }),
     { seeds: 0, shards: 2, pity: PITY - 1, pulls: 0, owned: ["p_duck"] });
+});
+
+test("랭킹: 1위 금·2~3위 은·4~10위 동, 같은 기간엔 더 좋은 훈장으로만 바뀐다", () => {
+  assert.deepEqual([1, 2, 3, 4, 10, 11].map(tierFor), [1, 2, 2, 3, 3, null]);
+  const s = newState();
+  let r = grantRank(s, "combo", "weekly", "w1", 7);
+  assert.equal(r.medal?.tier, 3);
+  assert.ok(r.titles.includes("t_top10") && r.titles.includes("t_weekly") && r.titles.includes("t_combo"));
+  assert.deepEqual(r.looks, ["f_spotlight"]);
+  r = grantRank(s, "combo", "weekly", "w1", 9);
+  assert.equal(r.medal, undefined, "더 나쁜 순위는 무시");
+  r = grantRank(s, "combo", "weekly", "w1", 1);
+  assert.equal(r.medal?.tier, 1);
+  assert.ok(r.titles.includes("t_champion") && r.looks.includes("h_laurel") && r.looks.includes("p_trophy"));
+  assert.equal(s.ranking.medals.length, 1);
+  grantRank(s, "combo", "weekly", "w2", 1);
+  assert.equal(s.ranking.medals.length, 2, "다음 주는 새 훈장");
+  assert.equal(grantRank(s, "overall", "all", "all", 11).medal, undefined);
+  assert.equal(resolveLook({ ...s, settings: { ...s.settings, look: { ...s.settings.look, hat: "h_laurel" } } }).hat, "h_laurel");
+});
+
+test("랭킹: 타임어택 시각·종합 점수·세이브 정리", () => {
+  const g = new Game(newState());
+  assert.equal(clearTime(g.state, 0), null);
+  g.state.stats.playSeconds = 95.5;
+  g.state.boss = { era: 0, dealt: 1e30, remaining: 10 };
+  g.tick(0.1);
+  assert.equal(clearTime(g.state, 0), Math.round(g.state.eraTimes[1] * 1000));
+  assert.ok(overallScore(g.state) >= 1000);
+  const end = new Game(newState());
+  end.state.era = ERAS.length - 1;
+  end.state.stats.playSeconds = 5000;
+  end.state.boss = { era: ERAS.length - 1, dealt: 1e300, remaining: 10 };
+  end.tick(0.1);
+  assert.ok(end.state.ended && Math.abs((end.state.ranking.endAt ?? 0) - 5000) < 1);
+  assert.equal(clearTime(end.state, ERAS.length - 1), Math.round(end.state.ranking.endAt! * 1000));
+  const clean = sanitizeRanking({ medals: [{ board: "combo", span: "daily", period: "2026-10-14", tier: 1, rank: 1 }, { board: "nope", span: "daily", period: "x", tier: 1, rank: 1 }, { board: "combo", span: "yearly", period: "x", tier: 9, rank: 0 }],
+    titles: ["t_champion", "t_fake", "t_champion"], title: "t_fake", looks: ["h_laurel", "h_cat"], endAt: -5 });
+  assert.equal(clean.medals.length, 1);
+  assert.deepEqual(clean.titles, ["t_champion"]);
+  assert.equal(clean.title, null);
+  assert.deepEqual(clean.looks, ["h_laurel"]);
+  assert.equal(clean.endAt, null);
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

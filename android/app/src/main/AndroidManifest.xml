@@ -25,6 +25,11 @@
 
         </activity>
 
+        <!-- 플레이 게임즈 프로젝트 ID (strings.xml game_services_project_id, 비어 있으면 꺼짐) -->
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/game_services_project_id" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

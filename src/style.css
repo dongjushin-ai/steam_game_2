@@ -701,3 +701,30 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 .lt-img.pet { width: 48px !important; height: 42px !important; image-rendering: pixelated; object-fit: contain; }
 .cap-grid.one .lt-img.pet { width: 84px !important; height: 74px !important; }
 .look-tile:disabled { opacity: 0.45; cursor: default; animation: none; }
+
+/* ── 랭킹 ─────────────────────────────────────── */
+.rank-seg { margin: 4px 0; }
+.rank-ta { width: 100%; margin: 2px 0 4px; font: inherit; padding: 4px; background: var(--panel); color: var(--ink); border: var(--bw) solid var(--line); }
+.rank-head { display: flex; justify-content: space-between; align-items: baseline; margin: 6px 0 4px; }
+.rank-head small { color: var(--muted); font-size: 10px; }
+.rank-list { display: grid; gap: 3px; min-height: 120px; }
+.rank-row { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 4px 6px; background: var(--panel); border: 2px solid var(--line); font-size: 12px; }
+.rank-row .rk { display: grid; place-items: center; height: 20px; background: var(--panel2); font-size: 11px; }
+.rank-row.top1 .rk { background: #ffd23f; color: #000; }
+.rank-row.top2 .rk { background: #d0d6e0; color: #000; }
+.rank-row.top3 .rk { background: #e09a5a; color: #000; }
+.rank-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-row .sc { font-weight: 700; }
+.rank-row.me { outline: 3px solid var(--accent); outline-offset: -2px; }
+.rank-gap { text-align: center; color: var(--muted); line-height: 1; }
+.rank-sub { margin: 12px 0 2px; font-size: 13px; }
+.title-pick { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+.title-pick .chip { cursor: pointer; font: inherit; font-size: 11px; display: inline-flex; gap: 3px; align-items: center; }
+.title-pick .chip.on { outline: 2px solid var(--accent); }
+.title-pick .chip.locked { opacity: 0.6; cursor: default; }
+.rank-looks { display: grid; gap: 3px; margin: 6px 0; }
+.rank-looks .gift { display: flex; align-items: center; gap: 4px; padding: 2px 6px; font-size: 10px; color: #000; background: var(--rar0); }
+.rank-looks .gift.rar2 { background: var(--rar2); color: #fff; }
+.rank-looks .gift.rar3 { background: var(--rar3); }
+.rank-looks .gift.off { opacity: 0.7; }
+.rank-card .btn { display: inline-flex; gap: 4px; align-items: center; justify-content: center; }

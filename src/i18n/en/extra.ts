@@ -130,4 +130,15 @@ export const LOOKS_EN: Record<string, { name: string }> = {
   p_unicorn: { name: "Unicorn" },
   f_aurora: { name: "Aurora" },
   f_meteor: { name: "Meteor Shower" },
+  f_spotlight: { name: "Spotlight" },
+  p_trophy: { name: "Trophy" },
+  h_laurel: { name: "Champion's Laurel" },
+  c_platinum: { name: "Platinum" },
+};
+
+export const BOARDS_EN: Record<string, { name: string }> = {
+  overall: { name: "Overall Score" },
+  feats: { name: "Feat Score" },
+  combo: { name: "Best Combo" },
+  ...Object.fromEntries(Array.from({ length: 11 }, (_, e) => [`ta${e}`, { name: `Time Attack ${e + 1}` }])),
 };

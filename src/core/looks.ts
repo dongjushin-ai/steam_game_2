@@ -27,6 +27,7 @@ export function eraReached(s: GameState, era: number): boolean {
 }
 
 export function itemUnlocked(s: GameState, item: LookItem): boolean {
+  if (item.rank) return s.ranking.looks.includes(item.id);
   return item.gacha ? s.gacha.owned.includes(item.id) : !!item.ach && s.achievements.includes(item.ach);
 }
 

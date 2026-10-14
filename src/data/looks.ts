@@ -15,6 +15,8 @@ export interface LookItem {
   ach?: string;
   /** 시드 뽑기에서만 나온다 */
   gacha?: boolean;
+  /** 랭킹 순위로만 얻는다 (core/ranking.ts RANK_LOOKS) */
+  rank?: boolean;
   /** 색 아이템: 강조색 */
   hex?: string;
 }
@@ -73,6 +75,12 @@ export const LOOKS: LookItem[] = [
   { id: "p_unicorn", slot: "pet", name: "유니콘", rarity: 3, gacha: true },
   { id: "f_aurora", slot: "fx", name: "오로라", rarity: 3, gacha: true },
   { id: "f_meteor", slot: "fx", name: "별똥별 비", rarity: 3, gacha: true },
+
+  // ── 랭킹 전용 (구글 플레이 게임즈 순위로만) ──
+  { id: "f_spotlight", slot: "fx", name: "스포트라이트", rarity: 2, rank: true },
+  { id: "p_trophy", slot: "pet", name: "트로피", rarity: 3, rank: true },
+  { id: "h_laurel", slot: "hat", name: "챔피언 월계관", rarity: 3, rank: true },
+  { id: "c_platinum", slot: "color", name: "플래티넘", rarity: 3, rank: true, hex: "#d8e4f0" },
 ];
 
 export const LOOK_MAP: Record<string, LookItem> = Object.fromEntries(LOOKS.map((x) => [x.id, x]));

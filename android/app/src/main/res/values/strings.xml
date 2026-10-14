@@ -4,4 +4,6 @@
     <string name="title_activity_main">Grow Your AI</string>
     <string name="package_name">io.github.dongjushinai.aikiugi</string>
     <string name="custom_url_scheme">io.github.dongjushinai.aikiugi</string>
+    <!-- Play Console › 플레이 게임즈 서비스 › 설정의 '프로젝트 ID' (숫자). 비워 두면 랭킹이 꺼진다 -->
+    <string name="game_services_project_id" translatable="false"></string>
 </resources>

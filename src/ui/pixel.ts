@@ -1370,6 +1370,13 @@ kMmmMkMkMmmMk
 kMmMk.k.kMmMk
 kMMk.....kMMk
 .kk.......kk.`,
+  h_laurel: `
+.Gg........gG.
+GgGg......gGgG
+.GgGg....gGgG.
+..GgGgyygGgG..
+...kGyyyyGk...
+....kkkkkk....`,
   h_visor: `
 .kkkkkkkkkkkkkk.
 kccccccccccccccck
@@ -1480,6 +1487,16 @@ krrrrryrrk..
 .kyrrrrrkk..
 .kykkkkrk...
 ..k....kk...`,
+  p_trophy: `
+kkkkkkkkkk
+kyyyyywyyk
+kkyyyyyykk
+.kyyyyyyk.
+..kyyyyk..
+...kyyk...
+...kook...
+..kooook..
+..kkkkkk..`,
   p_unicorn: `
 y.........
 .y........
@@ -1517,6 +1534,7 @@ function drawPet(p: Px, id: string, xr: number, foot: number, t: number, still =
     // 전설: 가끔 불을 뿜는다
     for (let k = 0; k < 5; k++) p.r(x0 - 2 - k * 2, y0 + 4 + ((k + Math.floor(t * 12)) % 2), 2, 2, k < 2 ? "#ffe600" : k < 4 ? "#ff9a3a" : "#e83b3b");
   }
+  if (id === "p_trophy" && Math.floor(t * 2.5) % 2 === 0) p.sparkle(x0 + 7, y0 + 1, "#ffffff");
   if (id === "p_unicorn") {
     // 전설: 뒤로 무지개 자국
     for (let k = 0; k < 6; k++) p.r(x0 + w + k * 2, y0 + 6 + Math.round(Math.sin(t * 6 + k) * 1), 2, 1, RAINBOW[(k + Math.floor(t * 8)) % 6]);
@@ -1562,6 +1580,10 @@ function drawHat(p: Px, id: string, cx: number, head: number, t: number, accent:
     p.r(cx - len + 1, y0 - 1, len - 1, 1, k > 0 ? "#e83b3b" : "#3b6be8");
     p.r(cx + 1, y0 - 1, len - 1, 1, k > 0 ? "#3b6be8" : "#e83b3b");
     return h + 2;
+  }
+  if (id === "h_laurel" && Math.floor(t * 2) % 2 === 0) {
+    // 전설(랭킹): 월계관 가운데 금장이 반짝
+    p.sparkle(cx, y0 + 2, "#ffffff");
   }
   if (id === "h_visor") {
     // 영웅: 바이저를 훑고 지나가는 빛
@@ -1671,6 +1693,24 @@ function drawFx(p: Px, id: string, cx: number, cy: number, t: number, accent: st
       }
       const shift = Math.floor(t * 8);
       for (let i = 0; i < 6; i++) p.ring(cx, cy, 27 - i, RAINBOW[(i + shift) % 6]);
+      return;
+    }
+    case "f_spotlight": {
+      // 영웅(랭킹): 위에서 내리꽂는 무대 조명 + 떠다니는 먼지
+      if (!front) {
+        const sway = Math.round(Math.sin(t * 0.8) * 3);
+        for (let y = cy - 60; y < cy + 22; y++) {
+          const u = (y - (cy - 60)) / 82;
+          const w = Math.round(6 + u * 40);
+          p.d(cx - Math.floor(w / 2) + Math.round(sway * (1 - u)), y, w, 1, "#fff6c8", null, 3 + Math.round(u * 2));
+        }
+        p.ellipse(cx, cy + 21, 22, 3, "#fff6c8");
+        return;
+      }
+      for (let k = 0; k < 6; k++) {
+        const u = (t * 0.25 + hash(k, 18)) % 1;
+        p.p(Math.round(cx - 14 + hash(k, 19) * 28), Math.round(cy - 30 + u * 50), "#ffffff");
+      }
       return;
     }
     case "f_bubbles": {

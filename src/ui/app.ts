@@ -1,4 +1,4 @@
-import { ERAS, EVENTS, NEWS, QUIZ, UPGRADES, weeklyFor } from "../data";
+import { BOARDS, ERAS, EVENTS, NEWS, QUIZ, UPGRADES, weeklyFor } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtDuration, fmtMult, setNumberFormat } from "../core/format";
 import { Game, newState, type GameNotice } from "../core/game";
@@ -19,6 +19,8 @@ import { Tutorial } from "./tutorial";
 import { playCutscene } from "./cutscene";
 import { setupNative } from "./native";
 import { rarityName, resolveLook, rewardFor } from "../core/looks";
+import { titleName } from "../core/ranking";
+import { checkRanks, submitAll } from "./ranking";
 import { avatarStill } from "./pixel";
 import { L, applyLanguage, detectLang } from "../i18n";
 
@@ -76,10 +78,13 @@ export class App {
     }, 350);
     document.addEventListener("visibilitychange", () => {
       music.pause(document.hidden);
-      if (document.hidden) saveGame(this.game.state);
-      else {
+      if (document.hidden) {
+        saveGame(this.game.state);
+        void submitAll(this.game);
+      } else {
         this.offline();
         this.daily(false);
+        void checkRanks(this.game);
       }
     });
     window.addEventListener("pagehide", () => saveGame(this.game.state));
@@ -289,7 +294,7 @@ export class App {
     const hd = this.header;
     const era = ERAS[s.era];
     setText(hd.name, s.aiName);
-    setText(hd.ver, `v${s.releases + 1}${s.checkpoints ? ` · CP ${fmt(s.checkpoints)}` : ""}`);
+    setText(hd.ver, `${s.ranking.title ? `「${titleName(s.ranking.title)}」 ` : ""}v${s.releases + 1}${s.checkpoints ? ` · CP ${fmt(s.checkpoints)}` : ""}`);
     setText(hd.era, era.years);
     this.ticker.style.display = featureOn(s, "ticker") ? "" : "none";
     setText(hd.moneySub, `${st.net >= 0 ? "+" : ""}${fmt(st.net)}/${L("초", "s")}`);
@@ -366,6 +371,8 @@ export class App {
       case "bossWin": {
         const boss = ERAS[n.era].boss;
         sfx("win");
+        // 랭킹: 기록 보내고 그 시대 타임어택 순위 확인
+        void submitAll(g).then(() => checkRanks(g, BOARDS.filter((b) => b.era === n.era)));
         // 시대가 넘어가는 승리는 바로 뒤 새 시대 창에 합친다 (창이 연달아 뜨지 않게). 마지막 보스만 따로.
         if (n.era < ERAS.length - 1) this.lastWin = n.era;
         else showModal({ icon: boss.emoji, title: L(`${boss.name} 클리어!`, `${boss.name} cleared!`), sub: boss.year, body: [boss.winText], buttons: [{ label: L("다음으로", "Next") }] });

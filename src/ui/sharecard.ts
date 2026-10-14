@@ -10,6 +10,7 @@ import { h } from "./dom";
 import { showModal, toast } from "./modals";
 import { sceneCanvas } from "./pixel";
 import { resolveLook } from "../core/looks";
+import { medalCount, overallScore, titleName } from "../core/ranking";
 
 const CW = 720;
 const CH = 960;
@@ -74,7 +75,10 @@ export async function makeCard(g: Game): Promise<HTMLCanvasElement> {
     y += size + 12;
   };
   text(`${s.aiName} v${s.releases + 1}`, 48, c.ink, true);
-  text(`${era.name} · ${era.years}`, 24, c.sub);
+  // 칭호와 훈장 (랭킹으로만 얻으니 자랑 1순위)
+  const [g1, g2, g3] = medalCount(s);
+  text(`${s.ranking.title ? `「${titleName(s.ranking.title)}」 · ` : ""}${era.name} · ${era.years}`, 24, c.sub);
+  if (g1 + g2 + g3) text(L(`훈장 금 ${g1} · 은 ${g2} · 동 ${g3} · 종합 ${overallScore(s).toLocaleString()}점`, `Medals ${g1} gold · ${g2} silver · ${g3} bronze · ${overallScore(s).toLocaleString()} pts`), 22, c.ink, true);
   y += 8;
   const h = Math.floor(s.stats.playSeconds / 3600), m = Math.floor((s.stats.playSeconds % 3600) / 60);
   const lines = [
