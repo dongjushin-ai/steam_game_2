@@ -118,6 +118,15 @@ button:disabled { cursor: default; }
 @keyframes spark { from { transform: translateX(12px); } to { transform: translateX(44px); opacity: 0; } }
 
 .scene-hud { position: absolute; left: 6px; right: 6px; bottom: 6px; display: grid; gap: 4px; pointer-events: none; justify-items: start; z-index: 2; }
+/* 다음 시대 막대: 보스 준비도. 단계가 오를수록 색이 진해지고, 3단계(왕관)면 반짝 */
+.era-meter { position: relative; width: min(100%, 260px); height: 16px; border: 2px solid #000; background: #f2f2ed; overflow: hidden; pointer-events: none; }
+.era-meter > i { position: absolute; inset: 0 auto 0 0; background: #b4b4b4; transition: width 0.3s steps(6); }
+.era-meter[data-stage="1"] > i { background: #ffd23f; }
+.era-meter[data-stage="2"] > i { background: #ff9f3a; }
+.era-meter[data-stage="3"] > i { background: #3fd16a; animation: meterblink 0.8s steps(2) infinite; }
+.era-meter > span { position: relative; display: block; padding: 0 5px; font-size: 10px; line-height: 12px; color: #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@keyframes meterblink { 50% { filter: brightness(1.2); } }
+@media (prefers-reduced-motion: reduce) { .era-meter[data-stage="3"] > i { animation: none; } }
 .hud-row { display: flex; gap: 4px; max-width: 100%; overflow-x: auto; scrollbar-width: none; pointer-events: auto; }
 .hud-row::-webkit-scrollbar { display: none; }
 .hud-row.more { mask-image: linear-gradient(90deg, #000 85%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); }

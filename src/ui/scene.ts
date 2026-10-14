@@ -2,7 +2,7 @@
 // 몬스터·탄·동전은 도트 캔버스 좌표(높이 120)로 움직이고, 화면 폭에 맞춰 캔버스 폭이 바뀐다.
 import { ERAS, EVENTS, GOLDENS, MISSIONS, THREATS, TIERS } from "../data";
 import { fmt, fmtPct, fmtTokens } from "../core/format";
-import { BENCH_MAP, COMBO_WINDOW, bossDps, comboMult } from "../core/formulas";
+import { BENCH_MAP, BOSS_MIN_OUTLOOK, COMBO_WINDOW, bossDps, bossOutlook, comboMult } from "../core/formulas";
 import type { Game } from "../core/game";
 import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
@@ -53,6 +53,13 @@ export class Scene {
   private thinkBtn = h("button", { class: "chip think-btn" });
   private comboEl = h("div", { class: "combo" });
   private autoChip = h("span", { class: "chip" });
+  /** 다음 시대까지: 보스 준비도 막대 (보기만. 연타하다 눌려도 탭으로 처리되게 클릭은 받지 않는다) */
+  private meter = h("div", { class: "era-meter", "aria-live": "off" });
+  private meterBar = h("i");
+  private meterText = h("span");
+  /** 성장 단계를 잰 시대 (시대가 바뀌면 0부터) */
+  private powerEra = -1;
+  private powerMax = 0;
   private levelEl = h("div", { class: "levelup", "aria-hidden": "true" });
   private goldenEl: HTMLButtonElement | null = null;
   private goldenKey = "";
@@ -80,7 +87,8 @@ export class Scene {
       game.toggleThinking();
     };
     this.root.append(this.canvas, this.say, this.top, this.comboEl, this.levelEl, this.hud);
-    this.hud.append(this.bottleneck, h("div", { class: "hud-row" }, this.tierChip, this.hallChip, this.autoChip, this.thinkBtn));
+    this.meter.append(this.meterBar, this.meterText);
+    this.hud.append(this.meter, this.bottleneck, h("div", { class: "hud-row" }, this.tierChip, this.hallChip, this.autoChip, this.thinkBtn));
     // 장면을 탭하면 답변 한 발 (몬스터를 직접 누르면 바로 처치)
     this.root.addEventListener("pointerdown", (e) => {
       if ((e.target as HTMLElement).closest(".think-btn, .golden, .threat, button.chip")) return;
@@ -193,14 +201,49 @@ export class Scene {
   }
 
   /** 레벨 업 연출: 큰 글씨 + AI 둘레 반짝이 + 살짝 흔들림 */
-  celebrate(text: string): void {
+  celebrate(text: string, title = "LEVEL UP!"): void {
     this.battle.levelUp = 0.9;
     this.shake = Math.max(this.shake, 0.2);
     clear(this.levelEl);
-    this.levelEl.append(h("b", null, "LEVEL UP!"), h("small", null, text));
+    this.levelEl.append(h("b", null, title), h("small", null, text));
     this.levelEl.classList.remove("show");
     void this.levelEl.offsetWidth;
     this.levelEl.classList.add("show");
+  }
+
+  /** 이번 시대에 얼마나 컸나: 보스 예상 달성률로 단계를 정하고, 단계가 오르면 'POWER UP!' */
+  private updatePower(show: boolean): void {
+    const s = this.game.state;
+    const boss = ERAS[s.era].boss;
+    const done = s.ended && s.era === ERAS.length - 1;
+    const look = done ? 1 : bossOutlook(this.game.stats, boss.hp, boss.time);
+    const ready = this.game.stats.intel >= boss.intelReq && this.game.stats.ctx >= boss.ctxReq;
+    const stage = !ready ? 0 : look >= 1 ? 3 : look >= 0.7 ? 2 : look >= BOSS_MIN_OUTLOOK ? 1 : 0;
+    this.battle.power = stage;
+    // 축하는 이번 시대에 처음 도달한 단계에서만 (겨울 같은 약화로 내려갔다 다시 올라와도 반복하지 않게)
+    if (this.powerEra !== s.era) {
+      this.powerEra = s.era;
+      this.powerMax = stage;
+    } else if (stage > this.powerMax && !s.boss) {
+      this.powerMax = stage;
+      const names = ["", L("오라 각성 · 보스 도전 가능", "Aura awakened · boss unlocked"), L("코어 과부하 · 승산 70%", "Core overdrive · 70% odds"), L("왕관 획득 · 이길 준비 완료", "Crowned · ready to win")];
+      this.celebrate(names[stage], "POWER UP!");
+    }
+    // 다음 시대 막대: 처음 몇 분(기능 공개 전)과 보스전·엔딩 뒤에는 숨긴다
+    this.meter.style.display = show && !s.boss && !s.sideFight && !done ? "" : "none";
+    const pct = Math.min(1, look);
+    // 지능·컨텍스트가 모자라면 그쪽 진행도를 채운다 (무엇을 키워야 하는지 숫자로)
+    const st = this.game.stats;
+    const lackIntel = st.intel < boss.intelReq;
+    const gate = lackIntel ? st.intel / boss.intelReq : st.ctx / Math.max(1, boss.ctxReq);
+    this.meterBar.style.width = `${(ready ? pct : Math.min(gate, 0.99) * BOSS_MIN_OUTLOOK) * 100}%`;
+    this.meter.dataset.stage = String(stage);
+    const pctText = `${Math.floor(Math.min(1, look) * 100)}%`;
+    const need = lackIntel ? L(`지능 ${fmt(st.intel)}/${fmt(boss.intelReq)}`, `IQ ${fmt(st.intel)}/${fmt(boss.intelReq)}`)
+      : L(`컨텍스트 ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`, `Context ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`);
+    setText(this.meterText, !ready ? L(`다음 시대 · ${boss.name} · ${need}`, `Next era · ${boss.name} · ${need}`)
+      : stage === 3 ? L(`다음 시대 · ${boss.name} · 준비 완료`, `Next era · ${boss.name} · ready`)
+      : L(`다음 시대 · ${boss.name} · 준비 ${pctText}`, `Next era · ${boss.name} · ${pctText} ready`));
   }
 
   // ── 전투 ──────────────────────────────────────────
@@ -496,6 +539,7 @@ export class Scene {
     this.hallChip.className = `chip ${st.hall > 0.3 ? "bad" : st.hall < 0.08 ? "good" : ""}`;
     // 처음 1~2분은 상태 칩을 숨긴다 (기능을 차례로 보여준다)
     const hudOn = featureOn(g.state, "hud");
+    this.updatePower(hudOn);
     this.tierChip.style.display = hudOn ? "" : "none";
     this.hallChip.style.display = hudOn ? "" : "none";
 

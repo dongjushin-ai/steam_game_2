@@ -928,7 +928,35 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
     }
   }
   if (b) drawBattle(p, era, accent, b, f.t, false);
+  const power = b?.power ?? 0;
+  const cx = avx + 20, cy = AV.y + 20 + bob;
+  // 성장 1단계~: 등 뒤로 은은한 오라 (숨 쉬듯 커졌다 작아진다)
+  if (power >= 1) {
+    const r = 21 + Math.round(Math.sin(f.t * 2.2)) + (power >= 3 ? 2 : 0);
+    p.circ(cx, cy, r, dither(g, accent, null, power >= 3 ? 7 : 4));
+    p.ring(cx, cy, r, accent);
+  }
   drawAvatar(g, era, accent, avx, AV.y + bob - (f.chomp > 0 ? 1 : 0), f.t, { happy: f.chomp > 0 });
+  // 2단계~: 몸 둘레를 도는 작은 칩
+  if (power >= 2) {
+    const n = power >= 3 ? 4 : 3;
+    for (let k = 0; k < n; k++) {
+      const a = f.t * 1.6 + (k / n) * Math.PI * 2;
+      const x = Math.round(cx + Math.cos(a) * 25), y = Math.round(cy + Math.sin(a) * 9 + 4);
+      p.r(x - 2, y - 2, 4, 4, "#000000");
+      p.r(x - 1, y - 1, 2, 2, k % 2 ? "#ffffff" : accent);
+    }
+  }
+  // 3단계: 머리 위 왕관 + 반짝이 (보스를 이길 준비 완료)
+  if (power >= 3) {
+    const gold = era >= 8 ? accent : "#ffd23f";
+    const x0 = cx - 7, y0 = AV.y + bob - 7;
+    p.r(x0, y0 + 3, 15, 4, "#000000");
+    p.r(x0 + 1, y0 + 4, 13, 2, gold);
+    for (const dx of [0, 6, 12]) { p.r(x0 + dx, y0, 3, 4, "#000000"); p.p(x0 + dx + 1, y0 + 1, gold); p.p(x0 + dx + 1, y0 + 2, gold); }
+    p.p(x0 + 7, y0 + 4, era >= 8 ? "#000000" : "#e83b3b");
+    if (Math.floor(f.t * 2) % 2 === 0) p.sparkle(cx + 16, AV.y + bob - 4, "#ffffff");
+  }
   if (b) drawBattle(p, era, accent, b, f.t, true);
   // 레벨 업: 아바타 둘레로 퍼지는 반짝이
   if (b && b.levelUp > 0) {
@@ -977,7 +1005,11 @@ export interface Mob {
 }
 export interface Shot { x: number; y: number; mob: Mob; bad: boolean; v: number; byTap?: boolean }
 export interface Coin { x: number; y: number; vx: number; vy: number; t: number }
-export interface Battle { mobs: Mob[]; shots: Shot[]; coins: Coin[]; levelUp: number }
+export interface Battle {
+  mobs: Mob[]; shots: Shot[]; coins: Coin[]; levelUp: number;
+  /** 이번 시대 성장 단계 0~3 (보스 준비도): 1 오라 → 2 궤도 칩 → 3 왕관 */
+  power?: number;
+}
 
 const MOB_COLORS = ["#9be37a", "#6fd3ff", "#ffd36f", "#ff9f6f", "#ff7eb6", "#b48cff", "#ff5e4d", "#5ee0c0", "#ffe600", "#7f9cff", "#ff6fd8", "#ff9a3a"];
 
