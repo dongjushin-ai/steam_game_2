@@ -115,7 +115,7 @@ export async function openRanking(game: Game, rerender: () => void): Promise<voi
   };
   const paintSegs = () => {
     clear(boardSeg);
-    for (const [key, label] of [["overall", L("종합", "Overall")], ["feats", L("업적", "Feats")], ["combo", L("콤보", "Combo")], ["ta", L("타임어택", "Time attack")]] as const) {
+    for (const [key, label] of [["overall", L("종합", "Overall")], ["feats", L("업적", "Feats")], ["combo", L("콤보", "Combo")], ["endless", L("무한", "Endless")], ["ta", L("타임어택", "Time attack")]] as const) {
       const on = key === "ta" ? board.kind === "time" : board.key === key;
       boardSeg.append(h("button", { class: on ? "on" : "", "aria-pressed": on ? "true" : "false", onclick: () => {
         board = key === "ta" ? BOARDS.find((b) => b.key === `ta${taSel.value}`)! : BOARDS.find((b) => b.key === key)!;

@@ -42,7 +42,7 @@ export function featScore(s: GameState): number {
 /** 종합 점수: 정복한 시대 · 업적 · 번 돈(자릿수) · 사이드 벤치마크 · 수집 */
 export function overallScore(s: GameState): number {
   return Math.floor(
-    s.bossesBeaten.length * 1000 + s.achievements.length * 100 + Math.log10(Math.max(1, s.totalEarned)) * 100
+    s.bossesBeaten.length * 1000 + (s.endless?.level ?? 0) * 300 + s.achievements.length * 100 + Math.log10(Math.max(1, s.totalEarned)) * 100
     + s.benchDone.length * 50 + lookProgress(s)[0] * 20,
   );
 }
@@ -59,6 +59,7 @@ export function boardScore(s: GameState, b: Board): number | null {
   if (b.key === "overall") return overallScore(s);
   if (b.key === "feats") return featScore(s);
   if (b.key === "combo") return s.stats.maxCombo || null;
+  if (b.key === "endless") return s.endless.level || null;
   return null;
 }
 
@@ -91,6 +92,7 @@ export const TITLES: Title[] = [
   { id: "t_speed", name: () => L("스피드러너", "Speedrunner"), when: isTA },
   { id: "t_combo", name: () => L("손가락의 신", "Finger God"), when: (m) => m.board === "combo" },
   { id: "t_hall", name: () => L("명예의 전당", "Hall of Fame"), when: (m) => m.span === "all" && m.board === "overall" },
+  { id: "t_beyond", name: () => L("특이점 너머", "Beyond"), when: (m) => m.board === "endless" },
 ];
 
 /** 랭킹으로만 얻는 꾸미기 (looks.ts의 rank 아이템) */

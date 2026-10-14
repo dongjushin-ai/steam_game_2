@@ -17,6 +17,7 @@ export const BOARDS: Board[] = [
   { key: "overall", id: "", name: "종합 점수", kind: "score" },
   { key: "feats", id: "", name: "업적 점수", kind: "score" },
   { key: "combo", id: "", name: "최고 콤보", kind: "score" },
+  { key: "endless", id: "", name: "무한 단계", kind: "score" },
   ...Array.from({ length: 11 }, (_, e): Board => ({ key: `ta${e}`, id: "", name: `타임어택 ${e + 1}`, kind: "time", era: e })),
 ];
 

@@ -20,7 +20,9 @@ import { playCutscene } from "./cutscene";
 import { setupNative } from "./native";
 import { rarityName, resolveLook, rewardFor } from "../core/looks";
 import { titleName } from "../core/ranking";
+import { ENDLESS_BONUS, ENDLESS_GROWTH, endlessName } from "../core/formulas";
 import { checkRanks, submitAll } from "./ranking";
+import { cancelReminders, scheduleReminders } from "./notify";
 import { avatarStill } from "./pixel";
 import { L, applyLanguage, detectLang } from "../i18n";
 
@@ -81,7 +83,9 @@ export class App {
       if (document.hidden) {
         saveGame(this.game.state);
         void submitAll(this.game);
+        void scheduleReminders(this.game);
       } else {
+        void cancelReminders();
         this.offline();
         this.daily(false);
         void checkRanks(this.game);
@@ -378,8 +382,16 @@ export class App {
         else showModal({ icon: boss.emoji, title: L(`${boss.name} 클리어!`, `${boss.name} cleared!`), sub: boss.year, body: [boss.winText], buttons: [{ label: L("다음으로", "Next") }] });
         break;
       }
+      case "endlessWin": {
+        sfx("win");
+        this.scene.celebrate(L(`처리량·보상 ×${ENDLESS_BONUS} · 시드 +${n.seeds}`, `Throughput & rewards ×${ENDLESS_BONUS} · +${n.seeds} seeds`), endlessName(n.level).toUpperCase());
+        toast(L(`${endlessName(n.level)} 돌파!`, `${endlessName(n.level)} cleared!`), L(`다음 단계는 목표 ${ENDLESS_GROWTH}배`, `Next level: goal ×${ENDLESS_GROWTH}`), "ach rar3");
+        void submitAll(g).then(() => checkRanks(g, BOARDS.filter((b) => b.key === "endless")));
+        saveGame(g.state);
+        break;
+      }
       case "bossLose": {
-        const boss = ERAS[n.era].boss;
+        const boss = n.endless !== undefined ? { name: endlessName(n.endless) } : ERAS[n.era].boss;
         sfx("lose");
         const pct = Math.floor(n.pct * 100);
         toast(L(`${boss.name} ${pct}%에서 멈췄다`, `${boss.name}: stopped at ${pct}%`),

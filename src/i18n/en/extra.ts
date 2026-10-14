@@ -140,5 +140,6 @@ export const BOARDS_EN: Record<string, { name: string }> = {
   overall: { name: "Overall Score" },
   feats: { name: "Feat Score" },
   combo: { name: "Best Combo" },
+  endless: { name: "Endless Level" },
   ...Object.fromEntries(Array.from({ length: 11 }, (_, e) => [`ta${e}`, { name: `Time Attack ${e + 1}` }])),
 };

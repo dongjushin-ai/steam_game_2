@@ -3,7 +3,7 @@ import { BUILDINGS, CODEX, ERAS, QUIZ, TIERS, UPGRADES, WEEKLIES } from "../data
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtMult, fmtPct, fmtTokens, setNumberFormat } from "../core/format";
 import { arenaTable } from "../core/arena";
-import { BOSS_MIN_OUTLOOK, CP_BONUS, autoBlockChance, bossDps, bossOutlook, buildingCost, checkpointsFor, computeStats, maxAffordable, milestoneMult, nextMilestone } from "../core/formulas";
+import { BOSS_MIN_OUTLOOK, CP_BONUS, ENDLESS_BONUS, ENDLESS_GROWTH, ENDLESS_TIME, autoBlockChance, bossDps, bossOutlook, endlessHp, endlessName, buildingCost, checkpointsFor, computeStats, maxAffordable, milestoneMult, nextMilestone } from "../core/formulas";
 import { questProgress, questText } from "../core/quests";
 import type { Game } from "../core/game";
 import { clearSave, exportSave, importSave, saveGame } from "../core/save";
@@ -15,6 +15,8 @@ import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
 import { shareCard } from "./sharecard";
 import { gachaCard } from "./gacha";
+import { enableNotify, maybeAskNotify } from "./notify";
+import { isNative } from "./native";
 import { openRanking } from "./ranking";
 import { featScore, medalCount, overallScore, titleName } from "../core/ranking";
 import { L } from "../i18n/lang";
@@ -22,6 +24,9 @@ import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
 import { AV, PH, PW, drawScene, lookStill, petStill, sceneStill } from "./pixel";
 import { UI_SKINS, rarityName, emptyLook, eraReached, itemUnlocked, itemsOf, lookProgress, resolveLook, rewardFor, uiUnlocked } from "../core/looks";
+
+/** 예상 달성률 표시: 너무 큰 값은 999%+로 */
+const pctCap = (v: number) => (v >= 10 ? "999%+" : fmtPct(v));
 
 /** 스토어 등록에 적는 주소와 같아야 한다 (public/privacy.html → GitHub Pages) */
 const PRIVACY_URL = "https://dongjushin-ai.github.io/steam_game_2/privacy.html";
@@ -112,7 +117,7 @@ export class Panels {
     const s = this.game.state;
     return [this.tab, this.buyMode, this.codexTab, s.era, s.upgrades.length, s.releases, s.boss ? 1 : 0,
       s.achievements.length, s.bossesBeaten.length, s.ended ? 1 : 0, this.game.hasThinking() ? 1 : 0,
-      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly, JSON.stringify(s.settings.look), s.ranking.title, s.ranking.medals.length].join("/");
+      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly, JSON.stringify(s.settings.look), s.ranking.title, s.ranking.medals.length, s.endless.level].join("/");
   }
 
   update(): void {
@@ -377,6 +382,7 @@ export class Panels {
       btn.onclick = () => {
         if (g.startMission(m.id)) {
           sfx("buy");
+          maybeAskNotify(g);
           toast(`${m.name}`, L("출발! 앱을 꺼도 시간은 흐른다", "Off they go. The clock runs even when you're away"));
           this.update();
         } else sfx("error");
@@ -494,7 +500,7 @@ export class Panels {
         const idle = bossDps(st) * boss.time / boss.hp;
         clear(ready);
         ready.append(
-          h("div", { class: "hint" }, L(`예상 달성률 ${fmtPct(look)} (탭하며 싸울 때) · 탭 없이 ${fmtPct(idle)}`, `Expected ${fmtPct(look)} (tapping) · ${fmtPct(idle)} without taps`)),
+          h("div", { class: "hint" }, L(`예상 달성률 ${pctCap(look)} (탭하며 싸울 때) · 탭 없이 ${pctCap(idle)}`, `Expected ${pctCap(look)} (tapping) · ${pctCap(idle)} without taps`)),
           h("div", { class: `bar outlook ${look >= 1 ? "full" : look >= BOSS_MIN_OUTLOOK ? "open" : ""}`, style: { margin: "4px 0 10px" } },
             h("i", { style: { width: `${Math.min(1, look) * 100}%` } }), h("b", { class: "mark", style: { left: `${BOSS_MIN_OUTLOOK * 100}%` } })),
         );
@@ -515,6 +521,30 @@ export class Panels {
         h("p", { class: "desc" }, boss.desc),
         req, ready, btn),
     );
+    // 특이점 너머: 엔딩 뒤 무한 벤치마크
+    if (s.ended) {
+      const lv = s.endless.level + 1;
+      const info = h("div");
+      const go = h("button", { class: "btn", onclick: () => { if (g.startEndless()) { sfx("era"); this.update(); } } });
+      this.rows.push({
+        update: () => {
+          const r = g.endlessReady();
+          clear(info);
+          info.append(
+            h("div", { class: "hint" }, L(`목표 ${fmt(endlessHp(lv))} · ${ENDLESS_TIME}초 · 예상 달성률 ${pctCap(r.look)}`, `Goal ${fmt(endlessHp(lv))} · ${ENDLESS_TIME}s · expected ${pctCap(r.look)}`)),
+            h("div", { class: `bar outlook ${r.look >= 1 ? "full" : r.look >= BOSS_MIN_OUTLOOK ? "open" : ""}`, style: { margin: "4px 0 10px" } },
+              h("i", { style: { width: `${Math.min(1, r.look) * 100}%` } }), h("b", { class: "mark", style: { left: `${BOSS_MIN_OUTLOOK * 100}%` } })));
+          go.toggleAttribute("disabled", !r.ok);
+          setText(go, s.boss ? L("도전 중! 장면을 탭하세요", "Challenge on! Tap the scene") : r.ok ? L(`${lv}단계 도전!`, `Challenge Lv.${lv}!`) : r.reason ?? "");
+        },
+      });
+      this.root.append(this.title(L("특이점 너머", "Beyond the Singularity")), h("div", { class: "card boss-card endless" },
+        h("h3", null, endlessName(lv)),
+        h("p", { class: "desc" }, L(`밀레니엄 난제 다음엔 무엇이 있을까. 단계마다 목표가 ${ENDLESS_GROWTH}배, 깨면 처리량·보상이 영구로 ×${ENDLESS_BONUS} (지금 ×${fmt(ENDLESS_BONUS ** s.endless.level)}). 랭킹 '무한 단계'에 기록돼요.`,
+          `What comes after the Millennium Problems? Each level's goal is ×${ENDLESS_GROWTH}; clearing it permanently boosts throughput and rewards ×${ENDLESS_BONUS} (now ×${fmt(ENDLESS_BONUS ** s.endless.level)}). Counts on the 'Endless' leaderboard.`)),
+        info, go));
+    }
+
     this.root.append(...this.sideBenchList());
 
     // 랭킹 (구글 플레이 게임즈 TOP 10)
@@ -884,7 +914,8 @@ export class Panels {
         toggle(L("효과음", "Sound effects"), s.settings.sound, (v) => { s.settings.sound = v; setSound(v); if (v) sfx("buy"); }),
         toggle(L("진동", "Vibration"), s.settings.vibrate, (v) => { s.settings.vibrate = v; setVibrate(v); }),
         toggle(L("화려한 효과 (끄면 말풍선·숫자 감소)", "Fancy effects (off = fewer bubbles & numbers)"), s.settings.effects, (v) => { s.settings.effects = v; }),
-        toggle(L("다음 할 일 가이드", "Next-step guide"), s.settings.hints, (v) => { s.settings.hints = v; })),
+        toggle(L("다음 할 일 가이드", "Next-step guide"), s.settings.hints, (v) => { s.settings.hints = v; }),
+        ...(isNative() ? [toggle(L("알림 (파견 복귀·보상 가득·출석)", "Notifications (missions, full rewards, check-in)"), s.settings.notify, (v) => { s.settings.notify = v; if (v) void enableNotify(g); })] : [])),
       h("div", { class: "hint", style: { margin: "6px 2px" } },
         L("키보드: ", "Keyboard: "), h("span", { class: "kbd" }, "Space"), L(" 답변 · ", " answer · "), h("span", { class: "kbd" }, "1~5"), L(" 탭 이동 · ", " tabs · "),
         h("span", { class: "kbd" }, "B"), L(" 보스 도전 · ", " boss · "), h("span", { class: "kbd" }, "T"), L(" 생각 모드 · ", " thinking · "), h("span", { class: "kbd" }, "V"), L(" VIP 질문", " VIP question")),

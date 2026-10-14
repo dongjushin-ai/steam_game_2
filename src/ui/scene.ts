@@ -2,7 +2,7 @@
 // 몬스터·탄·동전은 도트 캔버스 좌표(높이 120)로 움직이고, 화면 폭에 맞춰 캔버스 폭이 바뀐다.
 import { ERAS, EVENTS, GOLDENS, MISSIONS, THREATS, TIERS } from "../data";
 import { fmt, fmtPct, fmtTokens } from "../core/format";
-import { BENCH_MAP, BOSS_MIN_OUTLOOK, COMBO_WINDOW, bossDps, bossOutlook, comboMult } from "../core/formulas";
+import { BENCH_MAP, BOSS_MIN_OUTLOOK, COMBO_WINDOW, ENDLESS_TIME, bossDps, bossOutlook, comboMult, endlessHp, endlessName } from "../core/formulas";
 import type { Game } from "../core/game";
 import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
@@ -216,14 +216,18 @@ export class Scene {
   private updatePower(show: boolean): void {
     const s = this.game.state;
     const boss = ERAS[s.era].boss;
+    // 엔딩 뒤에는 '특이점 너머' 다음 단계가 목표
     const done = s.ended && s.era === ERAS.length - 1;
-    const look = done ? 1 : bossOutlook(this.game.stats, boss.hp, boss.time);
-    const ready = this.game.stats.intel >= boss.intelReq && this.game.stats.ctx >= boss.ctxReq;
+    const nextLv = s.endless.level + 1;
+    const look = done ? bossOutlook(this.game.stats, endlessHp(nextLv), ENDLESS_TIME) : bossOutlook(this.game.stats, boss.hp, boss.time);
+    const ready = done || (this.game.stats.intel >= boss.intelReq && this.game.stats.ctx >= boss.ctxReq);
     const stage = !ready ? 0 : look >= 1 ? 3 : look >= 0.7 ? 2 : look >= BOSS_MIN_OUTLOOK ? 1 : 0;
     this.battle.power = stage;
     // 축하는 이번 시대에 처음 도달한 단계에서만 (겨울 같은 약화로 내려갔다 다시 올라와도 반복하지 않게)
-    if (this.powerEra !== s.era) {
-      this.powerEra = s.era;
+    // 시대(엔딩 뒤엔 무한 단계)가 바뀌면 처음부터 다시 키운다
+    const key = s.era * 10_000 + (done ? s.endless.level + 1 : 0);
+    if (this.powerEra !== key) {
+      this.powerEra = key;
       this.powerMax = stage;
     } else if (stage > this.powerMax && !s.boss) {
       this.powerMax = stage;
@@ -231,7 +235,7 @@ export class Scene {
       this.celebrate(names[stage], "POWER UP!");
     }
     // 다음 시대 막대: 처음 몇 분(기능 공개 전)과 보스전·엔딩 뒤에는 숨긴다
-    this.meter.style.display = show && !s.boss && !s.sideFight && !done ? "" : "none";
+    this.meter.style.display = show && !s.boss && !s.sideFight ? "" : "none";
     const pct = Math.min(1, look);
     // 지능·컨텍스트가 모자라면 그쪽 진행도를 채운다 (무엇을 키워야 하는지 숫자로)
     const st = this.game.stats;
@@ -242,9 +246,8 @@ export class Scene {
     const pctText = `${Math.floor(Math.min(1, look) * 100)}%`;
     const need = lackIntel ? L(`지능 ${fmt(st.intel)}/${fmt(boss.intelReq)}`, `IQ ${fmt(st.intel)}/${fmt(boss.intelReq)}`)
       : L(`컨텍스트 ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`, `Context ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`);
-    setText(this.meterText, !ready ? L(`다음 시대 · ${boss.name} · ${need}`, `Next era · ${boss.name} · ${need}`)
-      : stage === 3 ? L(`다음 시대 · ${boss.name} · 준비 완료`, `Next era · ${boss.name} · ready`)
-      : L(`다음 시대 · ${boss.name} · 준비 ${pctText}`, `Next era · ${boss.name} · ${pctText} ready`));
+    const goal = done ? endlessName(nextLv) : L(`다음 시대 · ${boss.name}`, `Next era · ${boss.name}`);
+    setText(this.meterText, !ready ? `${goal} · ${need}` : stage === 3 ? L(`${goal} · 준비 완료`, `${goal} · ready`) : L(`${goal} · 준비 ${pctText}`, `${goal} · ${pctText} ready`));
   }
 
   // ── 전투 ──────────────────────────────────────────
@@ -597,7 +600,9 @@ export class Scene {
     const sideDef = side ? BENCH_MAP[side.id] : null;
     const fight = g.state.boss ?? (side && sideDef ? { era: sideDef.era, dealt: side.dealt, remaining: side.remaining } : null);
     if (fight) {
-      const boss = sideDef && !g.state.boss ? { emoji: sideDef.emoji, name: sideDef.name, hp: g.benchHp(sideDef) } : ERAS[fight.era].boss;
+      const endless = g.state.boss?.endless;
+      const boss = sideDef && !g.state.boss ? { emoji: sideDef.emoji, name: sideDef.name, hp: g.benchHp(sideDef) }
+        : endless !== undefined ? { name: endlessName(endless), hp: endlessHp(endless) } : ERAS[fight.era].boss;
       clear(this.top);
       const pct = Math.min(1, fight.dealt / boss.hp);
       clear(this.bossBar);

@@ -1,4 +1,5 @@
-import { BUILDINGS, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES } from "../data";
+import { BUILDINGS, ERAS, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES } from "../data";
+import { L } from "../i18n/lang";
 import type { Building, GameState, MultStat, SideBench, Tier, Upgrade } from "./types";
 
 /** 티어 보상(tiers.ts)에 곱하는 전역 배율. */
@@ -79,7 +80,28 @@ export function multipliers(state: GameState): Record<MultStat, number> {
   const week = state.weekly ? WEEKLY_MAP[state.weekly] : undefined;
   if (week) for (const e of week.effects) m[e.stat] *= e.mul;
   for (const a of state.active) for (const e of a.effects) m[e.stat] *= e.mul;
+  // 특이점 너머: 무한 벤치마크 한 단계마다 처리량·보상이 영구로 오른다
+  const lv = state.endless?.level ?? 0;
+  if (lv) {
+    m.tps *= ENDLESS_BONUS ** lv;
+    m.reward *= ENDLESS_BONUS ** lv;
+  }
   return m;
+}
+
+// ── 특이점 너머 (엔딩 뒤 무한 벤치마크) ──
+/** 단계마다 보스 체력 배수 */
+export const ENDLESS_GROWTH = 2;
+/** 단계를 깰 때마다 처리량·보상 배수 (영구) */
+export const ENDLESS_BONUS = 1.25;
+export const ENDLESS_TIME = 30;
+export function endlessName(level: number): string {
+  return L(`특이점 너머 ${level}단계`, `Beyond the Singularity Lv.${level}`);
+}
+
+/** level 단계 보스의 체력 (1단계부터) */
+export function endlessHp(level: number): number {
+  return ERAS[ERAS.length - 1].boss.hp * ENDLESS_GROWTH ** level;
 }
 
 /** 누적 수익에 따른 체크포인트 총량. 로그 곡선이라 인플레이션이 폭주하지 않는다. */

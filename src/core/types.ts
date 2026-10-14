@@ -176,6 +176,8 @@ export interface BossFight {
   era: number;
   dealt: number;
   remaining: number;
+  /** 특이점 너머: 이 단계에 도전 중 (없으면 시대 보스) */
+  endless?: number;
 }
 
 export type NumberFormat = "short" | "korean" | "sci";
@@ -278,6 +280,8 @@ export interface GameState {
   version: number;
   /** 시드 뽑기 (출시해도 남는다) */
   gacha: import("./gacha").GachaState;
+  /** 특이점 너머: 엔딩 뒤 무한 벤치마크에서 깬 단계 (출시해도 남는다) */
+  endless: { level: number };
   /** 랭킹 훈장·칭호·랭커 스킨 (출시해도 남는다) */
   ranking: import("./ranking").RankingState;
   aiName: string;
@@ -354,6 +358,9 @@ export interface GameState {
     music: boolean;
     /** 첫 30초 안내를 마쳤는지 */
     tutorialDone: boolean;
+    /** 알림 (앱에서만) / 알림을 물어본 적 있는지 */
+    notify: boolean;
+    notifyAsked: boolean;
     /** 꾸미기 (null = 지금 시대를 따름 / 없음) */
     look: Look;
   };

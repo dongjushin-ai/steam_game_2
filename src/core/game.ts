@@ -4,7 +4,7 @@ import { ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSl
 import type { GoldenDef } from "../data/golden";
 import { ACHIEVEMENTS } from "./achievements";
 import {
-  BENCH_MAP, BUILDING_MAP, COMBO_WINDOW, autoBlockChance, extraMissionSlots, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, autoTapValue, bossDps, bossOutlook, BOSS_MIN_OUTLOOK, buildingCost,
+  BENCH_MAP, BUILDING_MAP, COMBO_WINDOW, autoBlockChance, extraMissionSlots, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, autoTapValue, bossDps, bossOutlook, BOSS_MIN_OUTLOOK, ENDLESS_TIME, endlessHp, buildingCost,
   checkpointsFor, comboMult, computeStats, maxAffordable, tapValue, type Stats,
 } from "./formulas";
 import { QUEST_SLOTS, makeQuest, questProgress } from "./quests";
@@ -35,7 +35,8 @@ export type GameNotice =
   | { kind: "quest"; quest: Quest; credits: number; rp: number }
   | { kind: "era"; era: number }
   | { kind: "bossWin"; era: number }
-  | { kind: "bossLose"; era: number; pct: number }
+  | { kind: "bossLose"; era: number; pct: number; endless?: number }
+  | { kind: "endlessWin"; level: number; seeds: number }
   | { kind: "achievement"; id: string }
   | { kind: "benchWin"; bench: SideBench }
   | { kind: "benchLose"; bench: SideBench }
@@ -58,6 +59,7 @@ export function newState(aiName = "나의 AI"): GameState {
     releases: 0,
     gacha: newGacha(),
     ranking: newRanking(),
+    endless: { level: 0 },
     buildings: { ...START_KIT },
     upgrades: [],
     thinking: false,
@@ -91,7 +93,7 @@ export function newState(aiName = "나의 AI"): GameState {
       blocked: 0, breaches: 0, missionsDone: 0, benchWins: 0,
     },
     ended: false,
-    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
+    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, notify: true, notifyAsked: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
     lastSaved: Date.now(),
   };
 }
@@ -384,6 +386,22 @@ export class Game {
     return { ok: true };
   }
 
+  /** 특이점 너머: 다음 단계 도전 (엔딩 뒤에만). 예상 달성률이 낮으면 막는다 */
+  endlessReady(): { ok: boolean; reason?: string; look: number } {
+    const s = this.state;
+    const look = bossOutlook(this.stats, endlessHp(s.endless.level + 1), ENDLESS_TIME);
+    if (!s.ended) return { ok: false, reason: L("엔딩 뒤에 열려요", "Opens after the ending"), look };
+    if (s.boss || s.sideFight) return { ok: false, reason: L("도전 중", "In progress"), look };
+    if (look < BOSS_MIN_OUTLOOK) return { ok: false, reason: L(`아직 일러요 · 예상 ${Math.floor(look * 100)}%`, `Too early · ${Math.floor(look * 100)}% expected`), look };
+    return { ok: true, look };
+  }
+
+  startEndless(): boolean {
+    if (!this.endlessReady().ok) return false;
+    this.state.boss = { era: ERAS.length - 1, dealt: 0, remaining: ENDLESS_TIME, endless: this.state.endless.level + 1 };
+    return true;
+  }
+
   startBoss(): boolean {
     if (!this.bossReady().ok || this.state.sideFight) return false;
     this.state.boss = { era: this.state.era, dealt: 0, remaining: ERAS[this.state.era].boss.time };
@@ -394,6 +412,21 @@ export class Game {
     const s = this.state;
     const fight = s.boss;
     if (!fight) return;
+    if (fight.endless !== undefined) {
+      const hp = endlessHp(fight.endless);
+      if (fight.dealt >= hp) {
+        s.boss = null;
+        s.endless.level = Math.max(s.endless.level, fight.endless);
+        const seeds = SEEDS.boss + Math.floor(fight.endless / 5) * 5;
+        s.gacha.seeds += seeds;
+        this.refresh();
+        this.emit({ kind: "endlessWin", level: fight.endless, seeds });
+      } else if (fight.remaining <= 0) {
+        s.boss = null;
+        this.emit({ kind: "bossLose", era: fight.era, pct: fight.dealt / hp, endless: fight.endless });
+      }
+      return;
+    }
     const boss = ERAS[fight.era].boss;
     if (fight.dealt >= boss.hp) {
       s.boss = null;

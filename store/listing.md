@@ -47,8 +47,11 @@ AI 키우기: 방치형 AI 역사 게임
 ■ TOP 10 랭킹과 훈장
 종합 점수, 업적 점수, 최고 콤보, 시대별 타임어택을 오늘·이번 주·전체 기간으로 겨룹니다. 순위에 들면 금·은·동 훈장, 이름 옆에 다는 칭호, 랭커만 입을 수 있는 월계관·트로피 펫을 받아요.
 
+■ 엔딩 뒤에도 끝이 없다
+밀레니엄 난제를 풀면 '특이점 너머' 무한 벤치마크가 열립니다. 단계를 깰 때마다 AI가 영구로 강해지고, 몇 단계까지 갔는지 랭킹에서 겨뤄요.
+
 ■ 방치해도 자란다
-게임을 꺼 둬도 AI는 계속 일합니다. 돌아오면 그동안 번 것을 받으세요. 매주 바뀌는 이벤트와 출석 보상도 있습니다.
+게임을 꺼 둬도 AI는 계속 일합니다. 돌아오면 그동안 번 것을 받으세요. 파견이 끝나면 알림으로 알려 드려요(원할 때만). 매주 바뀌는 이벤트와 출석 보상도 있습니다.
 
 ■ 마음 편한 게임
 · 광고 없음, 결제 없음, 가입 없음 (뽑기도 플레이로만)
@@ -97,8 +100,11 @@ Open capsules with seeds you earn by playing: rubber ducks, a keyboard cat, a ba
 ■ Top 10 rankings and medals
 Compete on overall score, feat score, best combo and per-era time attacks, by day, week and all time. Place in the Top 10 to earn gold, silver or bronze medals, titles for your name, and ranker-only cosmetics like the laurel and the trophy pet.
 
+■ No end after the ending
+Solve the Millennium Problems and the endless 'Beyond the Singularity' benchmark opens. Every level you clear makes your AI permanently stronger, and the leaderboard shows how far you got.
+
 ■ Grows while you're away
-Your AI keeps working when the game is closed. Come back and collect. Weekly events and daily check-in rewards keep things fresh.
+Your AI keeps working when the game is closed. Come back and collect. Optional notifications tell you when a mission is back. Weekly events and daily check-in rewards keep things fresh.
 
 ■ Easy on you
 · No ads, no purchases, no account (gacha is play-only)

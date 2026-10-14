@@ -1,7 +1,7 @@
 // 탐욕적인 자동 플레이 봇. 밸런스 시뮬레이션(sim.ts)과 보정(calibrate.ts)에서 같이 쓴다.
 import { BUILDINGS, ERAS, UPGRADES } from "../src/data";
 import { Game, newState } from "../src/core/game";
-import { bossDps, buildingCost, computeStats } from "../src/core/formulas";
+import { ENDLESS_TIME, bossDps, buildingCost, computeStats, endlessHp } from "../src/core/formulas";
 import type { GameState } from "../src/core/types";
 
 export interface SimResult {
@@ -24,6 +24,8 @@ export interface SimOptions {
   tapsPerSec?: number;
   logEvery?: number;
   seed?: number;
+  /** 엔딩 뒤에도 이만큼(초) 더 플레이한다 (특이점 너머 측정용) */
+  afterEnding?: number;
   /** false면 새 모델 출시(프레스티지)를 하지 않는다 */
   release?: boolean;
   /**
@@ -54,6 +56,7 @@ export function runSim(opts: SimOptions = {}): SimResult {
     if (n.kind === "threat") catchThreat = !human || rng() < 0.7;
   });
   let catchGolden = false;
+  let endedAt: number | undefined;
   let catchThreat = false;
   const res: SimResult = { game, eraReached: [0], entryNet: [0], entryRp: [0], dps: [], net: [], rpRate: [], dpsEra: [], log: [] };
   const param = BUILDINGS.find((b) => b.kind === "param")!;
@@ -113,6 +116,8 @@ export function runSim(opts: SimOptions = {}): SimResult {
     }
 
     if (!s.boss && game.bossReady().ok && bossDps(game.stats) * boss.time * 1.05 >= boss.hp) game.startBoss();
+    // 특이점 너머: 이길 만큼 컸으면 다음 단계 (사람은 탭으로 보탬)
+    if (s.ended && !s.boss && game.endlessReady().ok && bossDps(game.stats) * ENDLESS_TIME * (human ? 2.5 : 1.05) >= endlessHp(s.endless.level + 1)) game.startEndless();
 
     // 사이드 벤치마크: 확실히 이길 때만
     if (!s.boss && !s.sideFight) {
@@ -164,7 +169,10 @@ export function runSim(opts: SimOptions = {}): SimResult {
         (s.boss ? " [BOSS]" : ""),
       );
     }
-    if (s.ended) break;
+    if (s.ended) {
+      endedAt ??= t;
+      if (!opts.afterEnding || t >= endedAt + opts.afterEnding) break;
+    }
     const stop = opts.stopAfter;
     if (stop && res.eraReached[stop.era] !== undefined && t >= res.eraReached[stop.era] + stop.seconds) break;
     if (stop && s.era > stop.era) break;

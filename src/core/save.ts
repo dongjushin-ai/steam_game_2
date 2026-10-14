@@ -79,6 +79,7 @@ export function migrate(raw: unknown): GameState | null {
     daily,
     gacha: sanitizeGacha(r.gacha),
     ranking: sanitizeRanking(r.ranking),
+    endless: { level: Number.isInteger(r.endless?.level) && r.endless!.level > 0 ? Math.min(r.endless!.level, 10_000) : 0 },
     weekly: typeof r.weekly === "string" && WEEKLY_MAP[r.weekly] ? r.weekly : null,
     nextEventIn: num(r.nextEventIn, base.nextEventIn),
     nextGoldenIn: num(r.nextGoldenIn, base.nextGoldenIn),

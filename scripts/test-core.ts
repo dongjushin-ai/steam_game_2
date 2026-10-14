@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { ERAS, EVENTS, WEEKLIES, weeklyFor } from "../src/data";
 import { Game, newState } from "../src/core/game";
-import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
+import { ENDLESS_BONUS, ENDLESS_GROWTH, endlessHp, BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
 import { resolveLook, rewardFor, sanitizeLook } from "../src/core/looks";
 import { clearTime, grantRank, overallScore, sanitizeRanking, tierFor } from "../src/core/ranking";
@@ -679,6 +679,49 @@ test("랭킹: 타임어택 시각·종합 점수·세이브 정리", () => {
   assert.equal(clean.title, null);
   assert.deepEqual(clean.looks, ["h_laurel"]);
   assert.equal(clean.endAt, null);
+});
+
+test("특이점 너머: 엔딩 뒤에만, 깨면 단계·영구 보너스·시드, 지면 그대로", () => {
+  const g = new Game(newState());
+  assert.equal(g.startEndless(), false, "엔딩 전엔 잠김");
+  g.state.ended = true;
+  g.state.era = ERAS.length - 1;
+  g.state.buildings.c_diff = 5000;
+  g.state.buildings.p_dorm = 5000;
+  g.refresh();
+  const tps0 = g.stats.tps;
+  const hp = endlessHp(1);
+  ERAS[ERAS.length - 1].boss.hp = hp / ENDLESS_GROWTH;
+  assert.equal(endlessHp(1), ERAS[ERAS.length - 1].boss.hp * ENDLESS_GROWTH);
+  // 이기는 경우
+  g.state.boss = { era: ERAS.length - 1, dealt: endlessHp(1), remaining: 10, endless: 1 };
+  const seeds = g.state.gacha.seeds;
+  const notes: string[] = [];
+  g.onNotice((n) => notes.push(n.kind));
+  g.tick(0.1);
+  assert.equal(g.state.endless.level, 1);
+  assert.ok(notes.includes("endlessWin"));
+  assert.ok(g.state.gacha.seeds > seeds);
+  assert.ok(Math.abs(g.stats.tps / tps0 - ENDLESS_BONUS) < 0.01, "처리량 ×보너스");
+  // 지는 경우
+  g.state.boss = { era: ERAS.length - 1, dealt: 0, remaining: 0.05, endless: 2 };
+  g.tick(0.1);
+  assert.equal(g.state.endless.level, 1);
+  assert.equal(g.state.boss, null);
+  // 출시해도 남고, 세이브에서 이상한 값은 버린다
+  g.state.totalEarned = 1e30;
+  assert.ok(g.release());
+  assert.equal(g.state.endless.level, 1);
+  const raw = JSON.parse(JSON.stringify(g.state));
+  raw.endless = { level: -4 };
+  assert.equal(migrate(raw)!.endless.level, 0);
+  const old = JSON.parse(JSON.stringify(newState()));
+  delete old.endless;
+  delete old.settings.notify;
+  const m = migrate(old)!;
+  assert.equal(m.endless.level, 0);
+  assert.equal(m.settings.notify, true);
+  assert.equal(m.settings.notifyAsked, false);
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);
