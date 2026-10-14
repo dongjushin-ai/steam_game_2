@@ -18,6 +18,10 @@ npm run dev        # http://localhost:5173
 (최초 1회: 저장소 **Settings → Pages → Source: GitHub Actions**)
 홈 화면에 추가하면 PWA로 설치되어 오프라인에서도 돌아간다.
 
+### 안드로이드 앱 (구글 플레이)
+Capacitor로 감싼 앱이 `android/`에 있다 (targetSdk 36). 빌드·서명·스토어 양식은 [docs/RELEASE.md](docs/RELEASE.md), 스토어 문구와 그림은 [store/](store/listing.md).
+GitHub Actions → **Android build**를 실행하면 친구 테스트용 APK(서명 키를 등록했으면 업로드용 AAB도)가 나온다.
+
 ## 게임 시스템
 
 | 시스템 | 내용 |
@@ -61,6 +65,8 @@ npm run calibrate   # 시대별 비용·보스 체력 자동 보정 → src/data
 npm run playtest    # 사람처럼 플레이하는 봇 5회 → 시대별 체류 시간·정체 구간
 npm run build
 npm run build:single  # 파일 하나짜리 dist/ai-kiugi.html (친구에게 보내기용, 더블클릭으로 실행)
+npm run android:sync  # 웹 빌드를 android/에 복사 (그다음 cd android && ./gradlew assembleDebug)
+npm run android:assets  # public/icon.svg → 런처 아이콘·스플래시·스토어 아이콘
 ```
 
 ```
@@ -69,6 +75,9 @@ src/
   data/      콘텐츠: 시대·건물·업그레이드·티어·이벤트·도감 + 밸런스 배수
   ui/        화면 (바닐라 TS + DOM, 프레임워크 없음)
   i18n/      언어 전환: L("한국어", "English") + 영어 번역표(en/*.ts, id 키)
+android/     Capacitor 안드로이드 프로젝트
+store/       스토어 등록 문구·아이콘·대표 이미지·스크린샷
+public/privacy.html  개인정보처리방침 (GitHub Pages로 게시)
 scripts/     시뮬레이션 봇, 보정, 테스트
 research/    Obscura로 수집한 AI 역사 자료 195건과 정리 문서
 docs/GDD.md  수식과 시스템 설계
@@ -87,6 +96,6 @@ docs/GDD.md  수식과 시스템 설계
 사람형 봇은 4초마다 판단하고, 40%는 최적이 아닌 것을 사며, 처음 15분 뒤엔 탭을 덜 하고, VIP 질문 60%·퀴즈 60%·탈옥 70%만 잡고, 파견은 가끔 잊는다. 실제 사람은 쉬엄쉬엄 하므로 3~4시간 정도를 예상한다. 새 모델 출시는 막힐 때 쓰는 가속 수단이고, 쓰지 않아도 엔딩을 볼 수 있다.
 
 ## 고지
-비상업 팬메이드 게임이다. 실존 기업·제품·인물의 이름은 도감의 역사 설명에만 쓰고, 게임 속 수치와 이벤트 효과는 재미를 위해 단순화·과장했다. 민감한 실제 사건(사망·총기·딥페이크·혐오 발언·군사 분쟁 등)은 의도적으로 넣지 않았다 ([목록](research/03_events.md)).
+무료 비상업 팬메이드 게임이며, 등장하는 어떤 회사와도 제휴·후원·보증 관계가 없다. 실존 기업·제품·인물의 이름은 역사 설명(도감·퀴즈·뉴스)에만 쓰고, 사고파는 게임 속 항목은 일반 명칭으로 부르며, 게임 속 수치와 이벤트 효과는 재미를 위해 단순화·과장했다. 민감한 실제 사건(사망·총기·딥페이크·혐오 발언·군사 분쟁 등)은 의도적으로 넣지 않았다 ([목록](research/03_events.md)).
 역사 자료 출처: Wikipedia (CC BY-SA 4.0), [Obscura](https://github.com/h4ckf0r0day/obscura)로 수집.
 도트 글꼴: [갈무리(Galmuri)](https://github.com/quiple/galmuri) — SIL Open Font License 1.1. 게임에 쓰는 글자만 남긴 부분 글꼴을 `src/assets/fonts/`에 넣었다 (`python3 scripts/subset-font.py`, 라이선스 `src/assets/fonts/OFL.md`).

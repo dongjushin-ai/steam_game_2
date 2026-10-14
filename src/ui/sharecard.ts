@@ -4,6 +4,7 @@ import { ERAS } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtPct } from "../core/format";
 import type { Game } from "../core/game";
+import { isNative, shareImage } from "./native";
 import { L } from "../i18n/lang";
 import { h } from "./dom";
 import { showModal, toast } from "./modals";
@@ -110,6 +111,18 @@ export async function shareCard(g: Game): Promise<void> {
     toast(L("이미지를 저장했어요", "Image saved"), L("저장이 안 되면 그림을 길게 눌러 저장하세요", "If nothing saved, long-press the picture"));
     return false;
   };
+  if (isNative()) {
+    showModal({
+      title: L("기록 카드", "Your run card"),
+      body: [h("img", { class: "share-img", src: url, alt: L("기록 카드", "Run card") })],
+      buttons: [
+        { label: L("공유·저장", "Share / Save"), onClick: () => { void shareImage(url, "ai-kiugi.png", L("#AI키우기", "#GrowYourAI")).catch(() => {}); return false; } },
+        { label: L("닫기", "Close"), kind: "ghost" },
+      ],
+      dismissable: true,
+    });
+    return;
+  }
   showModal({
     title: L("기록 카드", "Your run card"),
     body: [h("img", { class: "share-img", src: url, alt: L("기록 카드", "Run card") }), h("p", { class: "hint" }, L("그림을 길게 눌러도 저장할 수 있어요", "You can also long-press the picture to save it"))],

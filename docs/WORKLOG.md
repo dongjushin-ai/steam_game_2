@@ -506,3 +506,33 @@ SVG 안 요소의 애니메이션은 GPU가 아니라 메인 스레드에서 돌
 - 브라우저: 주간 띠, 기록 카드(PNG 파일로 꺼내 확인), 엔딩 전체 흐름(보스 승리 → 컷신 8줄 → 선택 → Q.E.D.) 에러 0.
 - axe 시대 0·5·8·10 위반 0건, 성능 p50·p95 16.7ms, 테스트 38개(주간 이벤트 1개 추가).
 
+
+---
+
+# 11차 진행: P3 — 구글 플레이 무료 출시 준비 (2026-10-14)
+
+## 47. 정책 점검: 실존 이름
+- 사고파는 항목에서 상표 이름을 뺐다. GPU 건물 5개: V100 → 텐서코어 GPU, A100 → 데이터센터 GPU, H100 → HBM3 가속기, B200 NVL72 랙 → 72-GPU 랙, 루빈 슈퍼칩 → HBM4 슈퍼칩. 커넥터 5개: GitHub/Slack/Drive/Notion/Figma → 코드 저장소/팀 메신저/클라우드 드라이브/팀 위키/디자인 툴. 영어도 같이.
+- 실명은 역사 설명(도감·퀴즈·뉴스·항목 설명 속 사실 서술)에만 남긴다. 라이벌은 원래 가상 연구소.
+- 환각 밈 '피자에 풀'(실제 사고 인용, 위험한 조언처럼 보임) → "에펠탑은 1998년 부산에 세워졌습니다". '맥북 던짐' → '노트북 던짐'.
+- 게임 '정보'에 비제휴 고지 + 개인정보 한 줄 + 개인정보처리방침 링크.
+- 등급 민감어(도박·확률형·술·약물 등) 검색: 해당 없음.
+
+## 48. 안드로이드 앱 (Capacitor 8)
+- `android/` 생성. appId `io.github.dongjushinai.aikiugi`(첫 업로드 후 변경 불가 → RELEASE.md 0번), targetSdk/compileSdk 36, minSdk 24, 세로 고정, versionName 1.0.0, versionCode는 `-PversionCode`로.
+- 앱 이름: 기본 "Grow Your AI", 한국어 기기 "AI 키우기".
+- `src/ui/native.ts`(앱에서만 동작): 뒤로 가기 = 닫을 수 있는 창 닫기 → 첫 탭 → 저장 후 홈으로 내리기, 컷신 중엔 무시, 일시정지 때 저장. 서비스 워커는 앱에서 끔. 기록 카드는 캐시에 PNG를 쓰고 안드로이드 공유 창(@capacitor/filesystem + share, 추가 권한 없음).
+- Android 15+ 전면 표시: Capacitor가 넣는 `--safe-area-inset-*`를 CSS `--safe-t/--safe-b`로 받아 머리·알림·컷신 버튼을 상태 표시줄 아래로.
+- 아이콘: `scripts/android-assets.py`가 `public/icon.svg`(20×20 도트)를 정수배로 키워 런처 아이콘(일반·둥근·적응형 전경 + 배경색), 스플래시(검정 + 아이콘), 스토어 512 아이콘을 만든다.
+- 서명: 업로드 키는 환경 변수로만 (`*.jks` gitignore). `.github/workflows/android.yml`: 수동 실행 → 테스트 → 디버그 APK, 비밀값이 있으면 서명 AAB.
+- 검증: 이 컨테이너에 Android SDK(platform 36, build-tools 36)를 받아 `assembleDebug`·`bundleRelease` 성공. aapt로 확인: target 36, 권한 INTERNET만, 세로.
+
+## 49. 개인정보처리방침·스토어 자산
+- `public/privacy.html`(한/영): 수집 없음, 기기 내 저장, 광고·분석·SDK·결제 없음, 권한 없음, 13세 이상. GitHub Pages 주소를 게임과 스토어에 같이 쓴다.
+- `store/listing.md`: 제목·짧은 설명·긴 설명 한/영 (글자 수 확인, 실명·순위 문구 없음, "챗봇 아님" 고지).
+- `store/feature-{ko,en}.png` 1024×500: 게임 엔진이 그린 시대 장면 4장(`store/scenes/`) + 갈무리 제목. `store/screenshots/{ko,en}/` 1080×1920 7장씩(시대 0·3·6·9·10, 보스전, 도감).
+
+## 50. 출시 체크리스트 (`docs/RELEASE.md`)
+- 개인 계정은 테스터 12명 × 14일 비공개 테스트 필수, targetSdk 36 필수(2026-08-31부터).
+- Console 양식 답안: 데이터 보안 '수집 없음', 광고 없음, 앱 액세스 제한 없음, IARC(만화·판타지 폭력만), 대상 13세 이상(가족 정책 회피), 기타 선언.
+- 심사 위험 표, 출시 순서 8단계, 기기 점검 목록.

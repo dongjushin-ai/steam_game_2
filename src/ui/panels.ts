@@ -17,6 +17,9 @@ import { L } from "../i18n/lang";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
 
+/** 스토어 등록에 적는 주소와 같아야 한다 (public/privacy.html → GitHub Pages) */
+const PRIVACY_URL = "https://dongjushin-ai.github.io/steam_game_2/privacy.html";
+
 export type TabId = "service" | "infra" | "research" | "bench" | "codex";
 
 /** 하단 탭. 라벨은 언어 설정을 따라야 해서 getter로 둔다. */
@@ -789,10 +792,13 @@ export class Panels {
       ),
       this.title(L("ℹ️ 정보", "ℹ️ About")),
       h("div", { class: "card hint" },
-        L("AI 키우기 — Attention Is All You Idle. 비상업 팬메이드 게임입니다. 실제 기업·제품·인물 이름은 역사 설명(도감)에서만 사용하며, 게임 속 수치와 사건 효과는 재미를 위해 단순화·과장했습니다. ",
-          "Grow Your AI — Attention Is All You Idle. A non-commercial fan-made game. Real company, product and people names appear only in the history notes (Codex); in-game numbers and event effects are simplified and exaggerated for fun. "),
+        L("AI 키우기 — Attention Is All You Idle. 무료 비상업 팬메이드 게임입니다. 등장하는 어떤 회사와도 제휴·후원·보증 관계가 없습니다. 실제 기업·제품·인물 이름은 역사를 설명하기 위해서만 쓰며, 게임 속 수치와 사건 효과는 재미를 위해 단순화·과장했습니다. ",
+          "Grow Your AI — Attention Is All You Idle. A free, non-commercial fan-made game, not affiliated with, sponsored or endorsed by any company mentioned. Real company, product and people names are used only to describe history; in-game numbers and event effects are simplified and exaggerated for fun. "),
         L("역사 자료 출처: Wikipedia (CC BY-SA 4.0), Obscura 헤드리스 브라우저로 수집. 도트 글꼴: 갈무리(Galmuri, SIL OFL 1.1, quiple). 소스 코드와 자료는 GitHub 저장소에 있습니다.",
-          "History sources: Wikipedia (CC BY-SA 4.0), collected with the Obscura headless browser. Pixel font: Galmuri (SIL OFL 1.1, quiple). Source code and data are in the GitHub repository.")),
+          "History sources: Wikipedia (CC BY-SA 4.0), collected with the Obscura headless browser. Pixel font: Galmuri (SIL OFL 1.1, quiple). Source code and data are in the GitHub repository."),
+        h("p", null, L("개인정보: 이 게임은 개인정보를 모으지 않습니다. 광고·분석 도구·계정이 없고, 진행 상황은 이 기기 안에만 저장됩니다.",
+          "Privacy: this game collects no personal data. No ads, no analytics, no accounts; progress is stored only on this device."), " ",
+          h("a", { href: PRIVACY_URL, target: "_blank", rel: "noopener" }, L("개인정보처리방침", "Privacy policy")))),
     );
   }
 }

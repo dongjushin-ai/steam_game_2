@@ -37,15 +37,26 @@ export function modalOpen(): boolean {
   return open;
 }
 
+let current: ModalSpec | null = null;
+
+/** 안드로이드 뒤로 가기: 창이 떠 있으면 true. 닫을 수 있는 창이면 닫는다. */
+export function backModal(): boolean {
+  if (!open) return false;
+  if (current?.dismissable) next();
+  return true;
+}
+
 function next(): void {
   const root = $("#modal-root");
   clear(root);
   const spec = queue.shift();
   if (!spec) {
     open = false;
+    current = null;
     return;
   }
   open = true;
+  current = spec;
   const close = () => next();
   const buttons = (spec.buttons ?? [{ label: L("확인", "OK") }]).map((b) =>
     h(

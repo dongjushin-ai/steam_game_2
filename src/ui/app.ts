@@ -17,6 +17,7 @@ import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
 import { Tutorial } from "./tutorial";
 import { playCutscene } from "./cutscene";
+import { setupNative } from "./native";
 import { avatarStill } from "./pixel";
 import { L, applyLanguage, detectLang } from "../i18n";
 
@@ -79,6 +80,14 @@ export class App {
       }
     });
     window.addEventListener("pagehide", () => saveGame(this.game.state));
+    setupNative({
+      save: () => saveGame(this.game.state),
+      backTab: () => {
+        if (this.panels.tab === "service") return false;
+        this.selectTab("service");
+        return true;
+      },
+    });
     // 브라우저는 사용자가 한 번 누르기 전엔 소리를 막는다 → 첫 입력에 음악 시작
     const unlock = () => {
       if (this.game.state.settings.music) music.start();

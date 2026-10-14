@@ -12,13 +12,23 @@
     "calibrate": "tsx scripts/calibrate.ts",
     "playtest": "tsx scripts/playtest.ts",
     "test": "tsx scripts/check-data.ts && tsx scripts/check-i18n.ts && tsx scripts/test-core.ts && tsx scripts/sim.ts --quiet",
-    "build:single": "vite build && node scripts/single-file.mjs"
+    "build:single": "vite build && node scripts/single-file.mjs",
+    "android:sync": "vite build && cap sync android",
+    "android:assets": "python3 scripts/android-assets.py"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
     "@types/node": "^22.9.0",
     "galmuri": "^2.40.3",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/share": "^8.0.3"
   }
 }

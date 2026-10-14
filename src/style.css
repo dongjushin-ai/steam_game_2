@@ -36,7 +36,9 @@
   --font-head: var(--font);
   --font-small: "Galmuri9", var(--font);
   --fs: 12px;
-  --safe-b: env(safe-area-inset-bottom, 0px);
+  /* 안드로이드 앱(전면 표시)은 Capacitor가 --safe-area-inset-*를 넣어 준다. 웹은 env() */
+  --safe-t: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-b: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   color-scheme: dark;
 }
 
@@ -59,7 +61,7 @@ button:disabled { cursor: default; }
 }
 
 /* 상단 */
-#top { padding: 8px 12px 6px; position: relative; z-index: 2; background: var(--panel2); border-bottom: var(--bw) solid var(--line); }
+#top { padding: calc(8px + var(--safe-t)) 12px 6px; position: relative; z-index: 2; background: var(--panel2); border-bottom: var(--bw) solid var(--line); }
 .top-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .ai-name { font-family: var(--font-head); font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ai-ver { color: var(--muted); font-size: 11px; margin-left: 4px; }
@@ -252,7 +254,7 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 #nav .dot { position: absolute; top: 4px; right: calc(50% - 16px); width: 6px; height: 6px; background: var(--bad); border: 1px solid #000; }
 
 /* 토스트 · 창 */
-#toasts { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 16px)); display: grid; gap: 6px; z-index: 30; pointer-events: none; }
+#toasts { position: fixed; top: calc(8px + var(--safe-t)); left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 16px)); display: grid; gap: 6px; z-index: 30; pointer-events: none; }
 .toast { background: var(--panel); color: var(--ink); border: var(--bw) solid var(--line); border-radius: var(--radius); padding: 5px 9px; font-size: 11px; line-height: 1.4; box-shadow: 3px 3px 0 #000; pointer-events: auto; }
 .toast b { display: block; font-size: 12px; }
 .toast.ach { border-color: var(--money); }
@@ -575,7 +577,7 @@ details.stats[open] > summary { margin-bottom: 6px; }
 .cut-lines p { margin: 0 0 12px; font-size: 15px; line-height: 1.5; min-height: 1.5em; }
 .cut-lines p.big { font-size: 26px; font-weight: 700; color: #ffe600; margin-top: 18px; }
 .cut-hint { font-size: 14px; animation: coach 0.8s steps(2) infinite; }
-.cut-skip { position: absolute; top: 12px; right: 12px; background: #000; color: #fff; border: 2px solid #fff; padding: 3px 10px; font: inherit; font-size: 12px; }
+.cut-skip { position: absolute; top: calc(12px + var(--safe-t)); right: 12px; background: #000; color: #fff; border: 2px solid #fff; padding: 3px 10px; font: inherit; font-size: 12px; }
 .say.wrong { background: #ff2d2d; color: #fff; border-color: #000; }
 .say.wrong::before { content: "?! "; font-weight: 700; }
 
