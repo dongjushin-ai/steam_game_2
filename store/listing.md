@@ -38,6 +38,9 @@ AI 키우기: 방치형 AI 역사 게임
 ■ 벤치마크 보스전
 시대마다 커다란 벤치마크 보스가 기다립니다. 정해진 시간 안에 정답을 쌓아 이기면 다음 시대가 열립니다.
 
+■ 업적으로 모으는 꾸미기
+업적을 깨면 모자·색·효과가 열립니다. 일반부터 희귀, 영웅, 그리고 황금 날개·무지개 오라·은하 같은 전설 등급까지. 지나온 시대의 AI 모습과 방, 화면 테마도 마음대로 섞어 입힐 수 있어요.
+
 ■ 방치해도 자란다
 게임을 꺼 둬도 AI는 계속 일합니다. 돌아오면 그동안 번 것을 받으세요. 매주 바뀌는 이벤트와 출석 보상도 있습니다.
 
@@ -78,6 +81,9 @@ It starts as a pixel game, turns into a 90s desktop, picks up Y2K shine and ends
 
 ■ Benchmark boss fights
 Every era ends with a giant benchmark boss. Stack enough correct answers before time runs out to unlock the next era.
+
+■ Collect cosmetics through feats
+Feats unlock hats, colors and effects, from Common to Rare, Epic and Legendary: golden wings, a rainbow aura, a whole galaxy. Mix and match AI looks, rooms and UI themes from every era you've reached.
 
 ■ Grows while you're away
 Your AI keeps working when the game is closed. Come back and collect. Weekly events and daily check-in rewards keep things fresh.

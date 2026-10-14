@@ -7,7 +7,8 @@ import { BOSS_MIN_OUTLOOK, CP_BONUS, autoBlockChance, bossDps, bossOutlook, buil
 import { questProgress, questText } from "../core/quests";
 import type { Game } from "../core/game";
 import { clearSave, exportSave, importSave, saveGame } from "../core/save";
-import type { Building, BuildingKind, Effect, GameState, MultStat, NumberFormat, Upgrade } from "../core/types";
+import type { Building, BuildingKind, Effect, GameState, Look, MultStat, NumberFormat, UiSkin, Upgrade } from "../core/types";
+import type { LookItem, Rarity } from "../data";
 import { append, clear, h, setText } from "./dom";
 import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
@@ -16,6 +17,8 @@ import { shareCard } from "./sharecard";
 import { L } from "../i18n/lang";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
+import { AV, PH, PW, drawScene, lookStill, sceneStill } from "./pixel";
+import { UI_SKINS, rarityName, emptyLook, eraReached, itemUnlocked, itemsOf, lookProgress, resolveLook, rewardFor, uiUnlocked } from "../core/looks";
 
 /** 스토어 등록에 적는 주소와 같아야 한다 (public/privacy.html → GitHub Pages) */
 const PRIVACY_URL = "https://dongjushin-ai.github.io/steam_game_2/privacy.html";
@@ -57,7 +60,7 @@ interface Updatable {
 export class Panels {
   tab: TabId = "service";
   private buyMode: BuyMode = 1;
-  private codexTab: "history" | "tech" | "models" | "ach" | "settings" = "history";
+  private codexTab: "history" | "tech" | "models" | "ach" | "style" | "settings" = "history";
   private rows: Updatable[] = [];
   private key = "";
 
@@ -106,7 +109,7 @@ export class Panels {
     const s = this.game.state;
     return [this.tab, this.buyMode, this.codexTab, s.era, s.upgrades.length, s.releases, s.boss ? 1 : 0,
       s.achievements.length, s.bossesBeaten.length, s.ended ? 1 : 0, this.game.hasThinking() ? 1 : 0,
-      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly].join("/");
+      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly, JSON.stringify(s.settings.look)].join("/");
   }
 
   update(): void {
@@ -639,7 +642,7 @@ export class Panels {
 
   private buildCodex(): void {
     const seg = h("div", { class: "seg", style: { marginBottom: "8px" } });
-    const tabs: [typeof this.codexTab, string][] = [["history", L("역사", "History")], ["tech", L("기술", "Tech")], ["models", L("모델", "Models")], ["ach", L("업적", "Feats")], ["settings", L("설정", "Settings")]];
+    const tabs: [typeof this.codexTab, string][] = [["history", L("역사", "History")], ["tech", L("기술", "Tech")], ["models", L("모델", "Models")], ["ach", L("업적", "Feats")], ["style", L("꾸미기", "Style")], ["settings", L("설정", "Settings")]];
     for (const [id, label] of tabs) {
       seg.append(h("button", { class: this.codexTab === id ? "on" : "", onclick: () => { this.codexTab = id; this.update(); } }, label));
     }
@@ -648,6 +651,7 @@ export class Panels {
     else if (this.codexTab === "tech") this.buildTech();
     else if (this.codexTab === "models") this.buildModels();
     else if (this.codexTab === "ach") this.buildAchievements();
+    else if (this.codexTab === "style") this.buildStyle();
     else this.buildSettings();
   }
 
@@ -713,7 +717,9 @@ export class Panels {
     const grid = h("div", { class: "ach-grid" });
     for (const a of ACHIEVEMENTS) {
       const got = s.achievements.includes(a.id);
-      grid.append(h("div", { class: `ach ${got ? "" : "off"}` }, h("b", null, pxi(a.emoji), a.name), a.desc));
+      const gift = rewardFor(a.id);
+      grid.append(h("div", { class: `ach ${got ? "" : "off"}` }, h("b", null, pxi(a.emoji), a.name), a.desc,
+        gift ? h("span", { class: `gift rar${gift.rarity}` }, L(`보상 · ${rarityName(gift.rarity)} ${gift.name}`, `Reward · ${rarityName(gift.rarity)} ${gift.name}`)) : null));
     }
     const st = s.stats;
     this.root.append(
@@ -746,6 +752,87 @@ export class Panels {
         h("span", null, L("생각 모드", "Thinking Mode")), h("b", null, fmtClock(st.thinkSeconds)),
         h("span", null, L("플레이 시간", "Play time")), h("b", null, fmtClock(st.playSeconds))),
     );
+  }
+
+  /** 꾸미기: 위에 움직이는 미리보기, 아래에 칸별 선택지 */
+  private buildStyle(): void {
+    const g = this.game;
+    const s = g.state;
+    const look = s.settings.look;
+    const lk = resolveLook(s);
+    const accent = lk.color ?? ERAS[lk.room].color;
+    const set = (patch: Partial<Look>) => {
+      Object.assign(s.settings.look, patch);
+      sfx("buy");
+      window.dispatchEvent(new CustomEvent("ai-look"));
+      this.update();
+    };
+    const lockedToast = (how: string) => { sfx("error"); toast(L("아직 잠겨 있어요", "Still locked"), how); };
+
+    // 미리보기: 지금 고른 방·모습·모자·효과가 움직이는 그대로
+    const cv = h("canvas", { class: "look-preview px-img", width: String(PW), height: String(PH), "aria-hidden": "true" }) as HTMLCanvasElement;
+    const ctx = cv.getContext("2d")!;
+    const draw = (now: number) => {
+      if (!cv.isConnected) return;
+      const cur = resolveLook(s);
+      drawScene(ctx, s.era, cur.color ?? ERAS[cur.room].color, { t: now / 1000, thinking: false, chomp: 0, fight: false, breach: false }, AV.x, undefined, cur);
+      requestAnimationFrame(draw);
+    };
+    requestAnimationFrame(draw);
+    const [got, total] = lookProgress(s);
+    this.root.append(cv, h("div", { class: "look-head" },
+      h("span", { class: "hint" }, L(`꾸미기 ${got} / ${total} · 업적을 깨면 모자·색·효과가, 새 시대에 가면 모습·방·화면 옷이 열려요`, `Style ${got} / ${total} · Feats unlock hats, colors and effects; new eras unlock looks, rooms and themes`)),
+      h("button", { class: "btn ghost", onclick: () => set(emptyLook()) }, L("기본으로", "Reset"))));
+
+    const tile = (o: { on: boolean; locked: boolean; img?: string; swatch?: string; name: string; rarity?: Rarity; onPick: () => void; how?: string; head?: boolean }) =>
+      h("button", {
+        class: `look-tile ${o.on ? "on" : ""} ${o.locked ? "locked" : ""} ${o.rarity !== undefined ? `rar${o.rarity}` : ""}`,
+        "aria-pressed": o.on ? "true" : "false",
+        "aria-label": o.locked ? `${o.name} (${L("잠김", "locked")})` : o.name,
+        onclick: () => (o.locked ? lockedToast(o.how ?? "") : o.onPick()),
+      },
+      o.locked ? h("span", { class: `lt-img ${o.head ? "head" : ""}` }, ic("lock")) : o.swatch ? h("span", { class: "lt-img swatch", style: { background: o.swatch } }) : h("img", { class: `lt-img px-img ${o.head ? "head" : ""}`, src: o.img ?? "", alt: "" }),
+      h("span", { class: "lt-name" }, o.locked ? "???" : o.name),
+      o.rarity !== undefined ? h("span", { class: "lt-rar" }, rarityName(o.rarity)) : null);
+    const section = (title: string, ...tiles: HTMLElement[]) => this.root.append(this.title(title), h("div", { class: "look-grid" }, ...tiles));
+    const achHow = (item: LookItem) => {
+      const a = ACHIEVEMENTS.find((x) => x.id === item.ach);
+      return a ? L(`업적 '${a.name}' 달성: ${a.desc}`, `Earn '${a.name}': ${a.desc}`) : "";
+    };
+    const eraHow = (e: number) => L(`'${ERAS[e].name}' 시대에 도달하면 열려요`, `Reach the '${ERAS[e].name}' era`);
+
+    section(L("AI 모습", "AI look"), ...ERAS.map((era, e) => tile({
+      on: lk.avatar === e && look.avatar !== null, locked: !eraReached(s, e), name: era.years, how: eraHow(e),
+      img: lookStill(e, accent, null, null), onPick: () => set({ avatar: look.avatar === e ? null : e }),
+    })));
+    const itemTiles = (slot: "hat" | "fx") => [
+      tile({ on: !look[slot], locked: false, name: L("없음", "None"), head: slot === "hat", img: lookStill(lk.avatar, accent, null, null, slot === "hat"), onPick: () => set({ [slot]: null }) }),
+      ...itemsOf(slot).map((x) => tile({
+        on: lk[slot] === x.id, locked: !itemUnlocked(s, x), name: x.name, rarity: x.rarity, how: achHow(x), head: slot === "hat",
+        img: lookStill(lk.avatar, accent, slot === "hat" ? x.id : null, slot === "fx" ? x.id : null, slot === "hat"),
+        onPick: () => set({ [slot]: look[slot] === x.id ? null : x.id }),
+      })),
+    ];
+    section(L("모자", "Hat"), ...itemTiles("hat"));
+    section(L("효과", "Effect"), ...itemTiles("fx"));
+    section(L("색", "Color"),
+      tile({ on: !look.color, locked: false, name: L("시대 색", "Era color"), swatch: ERAS[lk.room].color, onPick: () => set({ color: null }) }),
+      ...itemsOf("color").map((x) => tile({
+        on: look.color === x.id && !!lk.color, locked: !itemUnlocked(s, x), name: x.name, rarity: x.rarity, how: achHow(x), swatch: x.hex,
+        onPick: () => set({ color: look.color === x.id ? null : x.id }),
+      })));
+    section(L("배경 방", "Room"), ...ERAS.map((era, e) => tile({
+      on: lk.room === e && look.room !== null, locked: !eraReached(s, e), name: era.years, how: eraHow(e),
+      img: sceneStill(e, era.color, false), onPick: () => set({ room: look.room === e ? null : e }),
+    })));
+    const uiName: Record<UiSkin, string> = { pixel: L("도트", "Pixel"), retro: L("90년대 OS", "90s OS"), y2k: "Y2K", brutal: L("브루탈", "Brutal") };
+    const uiFrom: Record<UiSkin, number> = { pixel: 0, retro: 3, y2k: 5, brutal: 8 };
+    section(L("화면 옷", "UI theme"),
+      tile({ on: !look.ui, locked: false, name: L("시대 따라", "Follow era"), swatch: "linear-gradient(90deg,#14142a,#c0c0c0,#dfe5f3,#fff)", onPick: () => set({ ui: null }) }),
+      ...UI_SKINS.map((u) => tile({
+        on: look.ui === u, locked: !uiUnlocked(s, u), name: uiName[u], how: eraHow(uiFrom[u]),
+        img: sceneStill(uiFrom[u], ERAS[uiFrom[u]].color, false), onPick: () => set({ ui: look.ui === u ? null : u }),
+      })));
   }
 
   private buildSettings(): void {

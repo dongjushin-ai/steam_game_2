@@ -912,12 +912,16 @@ export function drawAvatar(g: G, era: number, accent: string, ox: number, oy: nu
 
 /** 장면 한 프레임 */
 /** 장면 한 프레임. avx = AI가 서는 x (화면 폭에 따라 달라진다), b = 전투 장면(몬스터·탄·동전) */
-export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx: number = AV.x, b?: Battle): void {
+export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx: number = AV.x, b?: Battle, look?: SceneLook): void {
   g.imageSmoothingEnabled = false;
   const W = g.canvas.width;
-  g.drawImage(background(era, accent), 0, 0);
+  // 꾸미기: 방과 AI 모습은 다른 시대 것을 골라 쓸 수 있다 (몬스터 색은 방을 따른다)
+  const room = look?.room ?? era;
+  const avEra = look?.avatar ?? era;
+  era = room;
+  g.drawImage(background(room, accent), 0, 0);
   const p = new Px(g);
-  (ROOMS[era] ?? ROOMS[ROOMS.length - 1]).fg(p, f.t, accent);
+  (ROOMS[room] ?? ROOMS[ROOMS.length - 1]).fg(p, f.t, accent);
   // AI: 바닥 그림자 + 계단식으로 둥실
   const bob = Math.round(Math.sin(f.t * 1.8) * 1.5);
   p.d(avx + 8, HZ - 3, 24, 3, "#000000", null, era === 8 ? 10 : 8);
@@ -930,13 +934,20 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
   if (b) drawBattle(p, era, accent, b, f.t, false);
   const power = b?.power ?? 0;
   const cx = avx + 20, cy = AV.y + 20 + bob;
+  const fx = look?.fx ?? null;
   // 성장 1단계~: 등 뒤로 은은한 오라 (숨 쉬듯 커졌다 작아진다)
   if (power >= 1) {
     const r = 21 + Math.round(Math.sin(f.t * 2.2)) + (power >= 3 ? 2 : 0);
     p.circ(cx, cy, r, dither(g, accent, null, power >= 3 ? 7 : 4));
     p.ring(cx, cy, r, accent);
   }
-  drawAvatar(g, era, accent, avx, AV.y + bob - (f.chomp > 0 ? 1 : 0), f.t, { happy: f.chomp > 0 });
+  // 꾸미기 효과는 오라 위에 (날개·은하가 가려지지 않게)
+  if (fx) drawFx(p, fx, cx, cy, f.t, accent, false);
+  const ay = AV.y + bob - (f.chomp > 0 ? 1 : 0);
+  drawAvatar(g, avEra, accent, avx, ay, f.t, { happy: f.chomp > 0 });
+  // 모자는 머리 꼭대기에 얹는다 (스프라이트마다 머리 높이가 달라서 그려 보고 잰다)
+  const head = ay + headTop(avEra);
+  const hatH = look?.hat ? drawHat(p, look.hat, cx, head, f.t, accent) : 0;
   // 2단계~: 몸 둘레를 도는 작은 칩
   if (power >= 2) {
     const n = power >= 3 ? 4 : 3;
@@ -947,16 +958,17 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
       p.r(x - 1, y - 1, 2, 2, k % 2 ? "#ffffff" : accent);
     }
   }
-  // 3단계: 머리 위 왕관 + 반짝이 (보스를 이길 준비 완료)
+  // 3단계: 머리(모자가 있으면 모자) 위 왕관 + 반짝이 (보스를 이길 준비 완료)
   if (power >= 3) {
     const gold = era >= 8 ? accent : "#ffd23f";
-    const x0 = cx - 7, y0 = AV.y + bob - 7;
+    const x0 = cx - 7, y0 = head - hatH - 7;
     p.r(x0, y0 + 3, 15, 4, "#000000");
     p.r(x0 + 1, y0 + 4, 13, 2, gold);
     for (const dx of [0, 6, 12]) { p.r(x0 + dx, y0, 3, 4, "#000000"); p.p(x0 + dx + 1, y0 + 1, gold); p.p(x0 + dx + 1, y0 + 2, gold); }
     p.p(x0 + 7, y0 + 4, era >= 8 ? "#000000" : "#e83b3b");
-    if (Math.floor(f.t * 2) % 2 === 0) p.sparkle(cx + 16, AV.y + bob - 4, "#ffffff");
+    if (Math.floor(f.t * 2) % 2 === 0) p.sparkle(cx + 16, y0 + 3, "#ffffff");
   }
+  if (fx) drawFx(p, fx, cx, cy, f.t, accent, true);
   if (b) drawBattle(p, era, accent, b, f.t, true);
   // 레벨 업: 아바타 둘레로 퍼지는 반짝이
   if (b && b.levelUp > 0) {
@@ -1137,12 +1149,34 @@ export function sceneStill(era: number, accent: string, withAvatar = true): stri
 }
 
 /** 공유 카드용: 장면 한 장을 캔버스로 */
-export function sceneCanvas(era: number, accent: string): HTMLCanvasElement {
+export function sceneCanvas(era: number, accent: string, look?: SceneLook, t = 0.5): HTMLCanvasElement {
   const cv = document.createElement("canvas");
   cv.width = PW;
   cv.height = PH;
-  drawScene(cv.getContext("2d")!, era, accent, { t: 0.5, thinking: false, chomp: 0, fight: false, breach: false });
+  drawScene(cv.getContext("2d")!, era, accent, { t, thinking: false, chomp: 0, fight: false, breach: false }, AV.x, undefined, look);
   return cv;
+}
+
+/** 꾸미기 칸 미리보기: AI + 모자 + 효과만 (투명 배경 56×60) */
+export function lookStill(avatar: number, accent: string, hat: string | null, fx: string | null, head = false): string {
+  const key = `look|${avatar}|${accent}|${hat}|${fx}|${head}`;
+  let url = stillCache.get(key);
+  if (!url) {
+    const cv = document.createElement("canvas");
+    // head = 모자 칸: 머리 위쪽만 크게 (44×30)
+    cv.width = head ? 44 : 56;
+    cv.height = head ? 30 : 60;
+    const g = cv.getContext("2d")!;
+    const p = new Px(g);
+    const ox = head ? 2 : 8, oy = head ? 16 - headTop(avatar) : 16;
+    if (fx) drawFx(p, fx, ox + 20, oy + 20, 0.7, accent, false);
+    drawAvatar(g, avatar, accent, ox, oy, 0.5, { blinkOk: false });
+    if (hat) drawHat(p, hat, ox + 20, oy + headTop(avatar), 0.3, accent);
+    if (fx) drawFx(p, fx, ox + 20, oy + 20, 0.7, accent, true);
+    url = cv.toDataURL();
+    stillCache.set(key, url);
+  }
+  return url;
 }
 
 /** AI 얼굴만 (연표 썸네일) */
@@ -1181,4 +1215,287 @@ export function pixelEmoji(emoji: string, res = 16): string {
     emojiCache.set(key, url);
   }
   return url;
+}
+
+// ── 꾸미기: 모자와 효과 ───────────────────────────────
+
+export interface SceneLook {
+  room: number;
+  avatar: number;
+  hat: string | null;
+  fx: string | null;
+}
+
+/** 스프라이트의 머리 꼭대기 y (가운데 칸에서 처음 색이 나오는 줄) */
+const headCache = new Map<number, number>();
+function headTop(era: number): number {
+  let y = headCache.get(era);
+  if (y === undefined) {
+    const cv = document.createElement("canvas");
+    cv.width = 40;
+    cv.height = 40;
+    const g = cv.getContext("2d")!;
+    drawAvatar(g, era, "#ff0000", 0, 0, 0.5, { blinkOk: false });
+    const d = g.getImageData(12, 0, 16, 40).data;
+    y = 0;
+    for (let row = 0; row < 40; row++) {
+      let hit = false;
+      for (let col = 0; col < 16; col++) if (d[(row * 16 + col) * 4 + 3] > 0) { hit = true; break; }
+      if (hit) { y = row; break; }
+    }
+    headCache.set(era, y);
+  }
+  return y;
+}
+
+/** 글자 하나 = 도트 하나. a = 지금 강조색 */
+const HAT_PAL: Record<string, string> = {
+  k: "#000000", w: "#ffffff", y: "#ffd23f", o: "#b8860b", r: "#e83b3b", g: "#3fd16a", G: "#1f8a3d",
+  b: "#3b6be8", s: "#c0c0c0", d: "#3a3a4a", m: "#ff9ccf", p: "#6a2fc0", P: "#a46bff", n: "#8a5a2a",
+};
+const HAT_ART: Record<string, string> = {
+  h_sprout: `
+.kk...kk.
+kggk.kggk
+kgGgkgGgk
+.kkGGGkk.
+...kGk...
+...kGk...`,
+  h_beanie: `
+.....kwwk.....
+....kkwwkk....
+...krrrrrrk...
+..krrrrrrrrk..
+.krrwrrwrrwrk.
+kwwwwwwwwwwwwk
+kkkkkkkkkkkkkk`,
+  h_party: `
+....y....
+...kyk...
+...krk...
+..kryrk..
+..kyryk..
+.kryryrk.
+.kyryryk.
+kryryryrk
+kkkkkkkkk`,
+  h_cat: `
+k..................k
+kk................kk
+kwk..............kwk
+kmwk............kwmk
+kmmwk..........kwmmk
+kkkkk..........kkkkk`,
+  h_grad: `
+.......kk.......
+....kkkddkkk....
+.kkkddddddddkkk.
+kddddddddddddddk
+.kkkddddddddkkky
+....kddddddk..yy
+....kkkkkkkk..y.`,
+  h_chef: `
+..kkk..kkk..
+.kwwwkkwwwk.
+kwwwwwwwwwwk
+kwwwwwwwwwwk
+.kwwwwwwwwk.
+..kwwwwwwk..
+..kwwwwwwk..
+..kssssssk..
+..kkkkkkkk..`,
+  h_propeller: `
+......kk......
+......kk......
+....kkyykk....
+...kbbyrrrk...
+..kbbbyrrrrk..
+..kkkkkkkkkk..`,
+  h_horns: `
+k..................k
+kk................kk
+krk..............krk
+.krk............krk.
+.krrk..........krrk.
+..kkk..........kkk..`,
+  h_wizard: `
+..........kk....
+.........kPPk...
+........kPpPk...
+.......kPppk....
+......kPpypk....
+.....kPpppPk....
+....kPppppypk...
+....kPpyppppk...
+...kPpppppppPk..
+...kPpppypppPk..
+.kkkkkkkkkkkkkkk
+kooyoooyoooyoook
+.kkkkkkkkkkkkkk.`,
+};
+const hatRows = new Map<string, string[]>();
+function rows(id: string): string[] {
+  let r = hatRows.get(id);
+  if (!r) {
+    r = (HAT_ART[id] ?? "").replace(/^\n/, "").split("\n");
+    hatRows.set(id, r);
+  }
+  return r;
+}
+
+/** 모자를 머리 꼭대기(head)에 얹고, 차지한 높이를 돌려준다 (왕관을 그 위에 올리려고) */
+function drawHat(p: Px, id: string, cx: number, head: number, t: number, accent: string): number {
+  if (id === "h_halo") {
+    // 영웅: 머리 위에 떠서 오르내리는 빛나는 링
+    const y = head - 7 + Math.round(Math.sin(t * 3) * 1);
+    p.d(cx - 9, y - 2, 18, 7, "#fff6a0", null, 5);
+    p.ellipse(cx, y + 1, 8, 2, "#000000");
+    p.ellipse(cx, y + 1, 7, 1, "#ffe66b");
+    p.r(cx - 5, y + 1, 10, 1, "#000000");
+    if (Math.floor(t * 4) % 2 === 0) p.sparkle(cx + 9, y - 1, "#ffffff");
+    return 9;
+  }
+  const r = rows(id);
+  if (!r.length) return 0;
+  const w = r[0].length, h = r.length;
+  const x0 = Math.round(cx - w / 2), y0 = head - h + 1;
+  r.forEach((row, y) => [...row].forEach((ch, x) => {
+    const c = ch === "a" ? accent : HAT_PAL[ch];
+    if (c) p.p(x0 + x, y0 + y, c);
+  }));
+  if (id === "h_propeller") {
+    // 영웅: 프로펠러가 돈다 (날개 길이가 늘었다 줄었다)
+    const k = Math.cos(t * 22);
+    const len = Math.round(Math.abs(k) * 7) + 1;
+    p.r(cx - len, y0 - 1, len * 2, 2, "#000000");
+    p.r(cx - len + 1, y0 - 1, len - 1, 1, k > 0 ? "#e83b3b" : "#3b6be8");
+    p.r(cx + 1, y0 - 1, len - 1, 1, k > 0 ? "#3b6be8" : "#e83b3b");
+    return h + 2;
+  }
+  if (id === "h_horns") {
+    // 영웅: 뿔 끝에서 불씨가 깜박
+    const on = Math.floor(t * 6) % 2 === 0;
+    p.p(x0, y0 - 1, on ? "#ffb13b" : "#e83b3b");
+    p.p(x0 + w - 1, y0 - 1, on ? "#e83b3b" : "#ffb13b");
+  }
+  if (id === "h_wizard") {
+    // 전설: 모자 둘레로 별이 돌고 끝이 반짝
+    for (let k = 0; k < 3; k++) {
+      const a = t * 2 + (k / 3) * Math.PI * 2;
+      p.sparkle(Math.round(cx + Math.cos(a) * 13), Math.round(y0 + 6 + Math.sin(a) * 4), k === 0 ? "#ffd23f" : "#ffffff", k === 0);
+    }
+    if (Math.floor(t * 3) % 2 === 0) p.sparkle(x0 + 11, y0 - 1, "#ffffff");
+  }
+  return h;
+}
+
+const RAINBOW = ["#ff3b3b", "#ff9a3a", "#ffe600", "#3fd16a", "#3bb8ff", "#8a4fe0"];
+
+/** 효과: back=true면 AI 뒤, false면 앞 */
+function drawFx(p: Px, id: string, cx: number, cy: number, t: number, accent: string, front: boolean): void {
+  switch (id) {
+    case "f_dust": {
+      // 영웅: 반짝이 가루가 몸 둘레에서 피어오른다
+      if (!front) return;
+      for (let k = 0; k < 9; k++) {
+        const u = (t * 0.5 + hash(k, 1)) % 1;
+        const x = Math.round(cx - 22 + hash(k, 2) * 44 + Math.sin(t * 2 + k) * 2);
+        const y = Math.round(cy + 18 - u * 44);
+        if (u < 0.9) p.p(x, y, k % 3 === 0 ? accent : "#ffffff");
+        if (k % 4 === 0 && u > 0.3 && u < 0.6) p.sparkle(x, y, "#ffffff");
+      }
+      return;
+    }
+    case "f_matrix": {
+      // 영웅: 등 뒤로 초록 코드가 비처럼 내린다
+      if (front) return;
+      for (let col = 0; col < 9; col++) {
+        const x = cx - 22 + col * 5 + (col % 2);
+        const speed = 18 + hash(col, 3) * 22;
+        const head = ((t * speed + hash(col, 4) * 60) % 60) + cy - 34;
+        for (let k = 0; k < 6; k++) {
+          const y = Math.round(head - k * 3);
+          if (y < cy - 34 || y > cy + 20) continue;
+          p.r(x, y, 1, 2, k === 0 ? "#d6ffd6" : k < 3 ? "#3fd16a" : "#1f8a3d");
+        }
+      }
+      return;
+    }
+    case "f_flame": {
+      // 영웅: 양옆과 발밑에서 끝이 뾰족한 불꽃이 일렁인다 (바깥 빨강 · 안 주황 · 심지 노랑)
+      if (front) return;
+      const base = cy + 21;
+      for (let k = 0; k < 10; k++) {
+        const side = k % 2 ? 1 : -1;
+        const i = k >> 1;
+        const x = Math.round(cx + side * (13 + i * 3.2));
+        const h = 7 + Math.round((Math.sin(t * 10 + k * 1.9) + 1) * 3) + (4 - Math.abs(i - 2)) * 2;
+        const sway = Math.round(Math.sin(t * 7 + k) * 1);
+        for (let y = 0; y < h; y++) {
+          const u = y / h;
+          const w = Math.max(1, Math.round((1 - u) * 5));
+          const xx = x - Math.floor(w / 2) + (u > 0.5 ? sway : 0);
+          p.r(xx, base - y, w, 1, u > 0.75 ? "#ff6a2a" : "#e83b3b");
+          if (w >= 3) p.r(xx + 1, base - y, w - 2, 1, u < 0.35 ? "#ffe600" : "#ff9a3a");
+        }
+      }
+      return;
+    }
+    case "f_wings": {
+      // 전설: 황금 날개가 퍼덕이고 금가루가 떨어진다
+      if (!front) {
+        const up = Math.sin(t * 5) > 0;
+        for (const side of [-1, 1]) {
+          for (let f = 0; f < 4; f++) {
+            const len = 16 - f * 3;
+            const y = cy - 6 + f * 5 + (up ? -f : f) - (up ? 4 : 0);
+            const x0 = side < 0 ? cx - 16 - len : cx + 16;
+            p.r(x0 - 1, y - 1, len + 2, 5, "#000000");
+            p.r(x0, y, len, 3, f % 2 ? "#ffd23f" : "#fff2a8");
+            p.p(side < 0 ? x0 : x0 + len - 1, y + 1, "#b8860b");
+          }
+        }
+        return;
+      }
+      for (let k = 0; k < 6; k++) {
+        const u = (t * 0.6 + hash(k, 7)) % 1;
+        p.p(Math.round(cx - 30 + hash(k, 8) * 60), Math.round(cy - 10 + u * 34), k % 2 ? "#ffd23f" : "#fff2a8");
+      }
+      return;
+    }
+    case "f_rainbow": {
+      // 전설: 무지개 고리가 돌며 색이 흐른다
+      if (front) {
+        for (let k = 0; k < 4; k++) {
+          const a = t * 2.6 + (k / 4) * Math.PI * 2;
+          p.sparkle(Math.round(cx + Math.cos(a) * 26), Math.round(cy + Math.sin(a) * 22), RAINBOW[(k + Math.floor(t * 6)) % 6], k % 2 === 0);
+        }
+        return;
+      }
+      const shift = Math.floor(t * 8);
+      for (let i = 0; i < 6; i++) p.ring(cx, cy, 27 - i, RAINBOW[(i + shift) % 6]);
+      return;
+    }
+    case "f_galaxy": {
+      // 전설: 등 뒤로 성운, 둘레로 행성과 별이 돈다
+      if (!front) {
+        p.circ(cx, cy, 28, dither(p.g, "#2a0b5c", null, 9));
+        p.circ(cx, cy, 22, dither(p.g, "#5b2bb5", null, 5));
+        for (let k = 0; k < 14; k++) {
+          const tw = Math.floor(t * 3 + k) % 4 === 0;
+          p.p(Math.round(cx - 27 + hash(k, 5) * 54), Math.round(cy - 27 + hash(k, 6) * 54), tw ? "#ffffff" : "#b4b4ff");
+        }
+        return;
+      }
+      for (let k = 0; k < 3; k++) {
+        const a = t * (1.2 + k * 0.5) + k * 2.1;
+        const r = 20 + k * 4;
+        const x = Math.round(cx + Math.cos(a) * r), y = Math.round(cy + Math.sin(a) * r * 0.45 + 6);
+        for (let tr = 1; tr < 4; tr++) p.p(Math.round(cx + Math.cos(a - tr * 0.12) * r), Math.round(cy + Math.sin(a - tr * 0.12) * r * 0.45 + 6), "#8a8aff");
+        p.r(x - 2, y - 2, 4, 4, "#000000");
+        p.r(x - 1, y - 1, 2, 2, ["#ffd23f", "#3bb8ff", accent][k]);
+      }
+      return;
+    }
+  }
 }

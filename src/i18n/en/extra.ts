@@ -80,3 +80,30 @@ export const WEEKLIES_EN: Record<string, { name: string; desc: string }> = {
   w_freeze: { name: "Deploy Freeze", desc: "No Friday deploys. You earn more while you rest." },
 };
 
+
+export const LOOKS_EN: Record<string, { name: string }> = {
+  c_mint: { name: "Mint" },
+  c_pink: { name: "Cherry Blossom" },
+  c_ice: { name: "Ice" },
+  c_sunset: { name: "Sunset" },
+  c_gold: { name: "Gold" },
+  c_violet: { name: "Violet" },
+  c_alert: { name: "Red Alert" },
+  c_lime: { name: "Neon Lime" },
+  h_sprout: { name: "Sprout" },
+  h_beanie: { name: "Beanie" },
+  h_party: { name: "Party Hat" },
+  h_cat: { name: "Cat Ears" },
+  h_grad: { name: "Grad Cap" },
+  h_chef: { name: "Chef Hat" },
+  h_propeller: { name: "Propeller Cap" },
+  h_halo: { name: "Halo" },
+  h_horns: { name: "Devil Horns" },
+  h_wizard: { name: "Wizard Hat" },
+  f_dust: { name: "Sparkle Dust" },
+  f_matrix: { name: "Code Rain" },
+  f_flame: { name: "Flame Aura" },
+  f_wings: { name: "Golden Wings" },
+  f_rainbow: { name: "Rainbow Aura" },
+  f_galaxy: { name: "Galaxy" },
+};

@@ -9,6 +9,7 @@ import { L } from "../i18n/lang";
 import { h } from "./dom";
 import { showModal, toast } from "./modals";
 import { sceneCanvas } from "./pixel";
+import { resolveLook } from "../core/looks";
 
 const CW = 720;
 const CH = 960;
@@ -56,7 +57,9 @@ export async function makeCard(g: Game): Promise<HTMLCanvasElement> {
   x.fillStyle = c.panel;
   x.fillRect(24, 24, CW - 48, CH - 48);
   // 장면
-  const scene = sceneCanvas(s.era, era.color);
+  // 꾸민 모습 그대로 (자랑 카드라서)
+  const lk = resolveLook(s);
+  const scene = sceneCanvas(s.era, lk.color ?? ERAS[lk.room].color, lk);
   x.drawImage(scene, 0, 0, 192, 120, 36, 36, CW - 72, Math.round(((CW - 72) * 120) / 192));
   let y = 36 + Math.round(((CW - 72) * 120) / 192) + 16;
   x.fillStyle = c.ink;

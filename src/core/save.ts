@@ -1,3 +1,4 @@
+import { sanitizeLook } from "./looks";
 import { ERAS, MISSIONS, QUIZ, THREATS } from "../data";
 import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP, WEEKLY_MAP } from "./formulas";
 import { SAVE_VERSION, newState } from "./game";
@@ -82,6 +83,7 @@ export function migrate(raw: unknown): GameState | null {
       ...base.settings, ...(r.settings ?? {}),
       // 첫 안내가 생기기 전 세이브: 이미 1분 넘게 했으면 안내를 건너뛴다
       tutorialDone: r.settings?.tutorialDone ?? num(r.stats?.playSeconds) > 60,
+      look: sanitizeLook(r.settings?.look),
     },
     lastSaved: num(r.lastSaved, Date.now()),
   };

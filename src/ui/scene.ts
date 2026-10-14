@@ -6,6 +6,7 @@ import { BENCH_MAP, BOSS_MIN_OUTLOOK, COMBO_WINDOW, bossDps, bossOutlook, comboM
 import type { Game } from "../core/game";
 import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
+import { resolveLook } from "../core/looks";
 import { $, clear, h, setText } from "./dom";
 import { L } from "../i18n/lang";
 import { AV, HZ, PH, PW, drawScene, type Battle, type Mob } from "./pixel";
@@ -449,10 +450,11 @@ export class Scene {
       this.drawAcc = 0;
       const s = this.game.state;
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      drawScene(this.ctx, s.era, ERAS[s.era].color, {
+      const lk = resolveLook(s);
+      drawScene(this.ctx, s.era, lk.color ?? ERAS[lk.room].color, {
         t: reduce ? 0.5 : this.t, thinking: s.thinking, chomp: this.chompLeft,
         fight: !!(s.boss || s.sideFight), breach: !reduce && s.active.some((a) => a.id === "breach"),
-      }, this.avx, this.battle);
+      }, this.avx, this.battle, lk);
       this.placeLabels();
       // 화면 흔들림: 도트 한 칸 단위로
       const { k } = this.scale();

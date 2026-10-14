@@ -4,6 +4,8 @@ import { ERAS, EVENTS, WEEKLIES, weeklyFor } from "../src/data";
 import { Game, newState } from "../src/core/game";
 import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
+import { resolveLook, rewardFor, sanitizeLook } from "../src/core/looks";
+import { LOOKS } from "../src/data";
 import { questProgress } from "../src/core/quests";
 import { QUIZ } from "../src/data";
 import { fmt, fmtTokens } from "../src/core/format";
@@ -525,6 +527,41 @@ test("주간 이벤트: 날짜로 정해지고, 효과가 배수에 들어간다
   s.weekly = WEEKLIES.find((w) => w.id === "w_hackathon")!.id;
   assert.equal(computeStats(s).mult.tap, base * 1.5);
   assert.equal(migrate({ era: 0, credits: 1, weekly: "w_nope" })!.weekly, null);
+});
+
+test("꾸미기: 잠긴 것은 기본값, 업적을 깨면 입을 수 있다", () => {
+  const s = newState();
+  s.settings.look = { avatar: 5, room: 3, hat: "h_cat", color: "c_gold", fx: "f_wings", ui: "brutal" };
+  let lk = resolveLook(s);
+  assert.equal(lk.avatar, 0);
+  assert.equal(lk.room, 0);
+  assert.equal(lk.hat, null);
+  assert.equal(lk.color, null);
+  assert.equal(lk.fx, null);
+  assert.equal(lk.ui, "pixel");
+  s.achievements.push("halluc_100", "golden_1", "golden_25");
+  s.era = 5;
+  lk = resolveLook(s);
+  assert.equal(lk.avatar, 5);
+  assert.equal(lk.room, 3);
+  assert.equal(lk.hat, "h_cat");
+  assert.equal(lk.color, "#ffd23f");
+  assert.equal(lk.fx, "f_wings");
+  assert.equal(lk.ui, "y2k", "브루탈은 시대 8 전엔 잠김");
+});
+
+test("꾸미기: 업적마다 보상은 하나, 등급은 4단계 모두 있다", () => {
+  assert.equal(rewardFor("golden_25")?.id, "f_wings");
+  assert.equal(rewardFor("answers_1m"), undefined);
+  for (const r of [0, 1, 2, 3]) assert.ok(LOOKS.some((x) => x.rarity === r));
+});
+
+test("꾸미기: 세이브의 이상한 값은 버리고, 옛 세이브는 기본값", () => {
+  assert.deepEqual(sanitizeLook({ avatar: 99, room: 2, hat: "h_nope", color: "h_cat", fx: "f_galaxy", ui: "comic" }),
+    { avatar: null, room: 2, hat: null, color: null, fx: "f_galaxy", ui: null });
+  const old = JSON.parse(JSON.stringify(newState()));
+  delete old.settings.look;
+  assert.deepEqual(migrate(old)!.settings.look, { avatar: null, room: null, hat: null, color: null, fx: null, ui: null });
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

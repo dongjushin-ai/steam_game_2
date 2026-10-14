@@ -18,6 +18,7 @@ import { music } from "./music";
 import { Tutorial } from "./tutorial";
 import { playCutscene } from "./cutscene";
 import { setupNative } from "./native";
+import { rarityName, resolveLook, rewardFor } from "../core/looks";
 import { avatarStill } from "./pixel";
 import { L, applyLanguage, detectLang } from "../i18n";
 
@@ -104,6 +105,11 @@ export class App {
       el?.classList.add("bump");
     });
     window.addEventListener("keydown", (e) => this.key(e));
+    // 꾸미기를 바꾸면 화면 색·옷을 바로 다시 입힌다
+    window.addEventListener("ai-look", () => {
+      this.applyEraColor();
+      saveGame(this.game.state);
+    });
   }
 
   private key(e: KeyboardEvent): void {
@@ -220,11 +226,15 @@ export class App {
   private applyEraColor(): void {
     const era = this.game.state.era;
     const root = document.documentElement;
-    root.style.setProperty("--era", ERAS[era].color);
+    // 꾸미기: 강조색과 화면 옷은 고른 것이 있으면 그것을 쓴다 (음악은 화면 옷을 따른다)
+    const lk = resolveLook(this.game.state);
+    root.style.setProperty("--era", lk.color ?? ERAS[era].color);
+    // 고른 색이 글자로 쓰일 때: 화면 옷 바탕과 대비 4.5:1이 될 때까지 어둡게/밝게
+    if (lk.color) root.style.setProperty("--accent-text", readableOn(lk.color, lk.ui === "pixel" || (lk.ui === "brutal" && era === 10) ? "#10102e" : lk.ui === "retro" ? "#c0c0c0" : "#ffffff"));
+    else root.style.removeProperty("--accent-text");
     root.dataset.era = String(era);
-    const skin = era <= 2 ? "pixel" : era <= 4 ? "retro" : era <= 7 ? "y2k" : "brutal";
-    root.dataset.skin = skin;
-    music.setStyle(skin, era);
+    root.dataset.skin = lk.ui;
+    music.setStyle(lk.ui, era);
   }
 
   private frame(t: number): void {
@@ -380,7 +390,7 @@ export class App {
           icon: era.avatar, hero: heroHtml(n.era, era.color), title: era.name, sub: era.years,
           body: [
             ...(won ? [h("p", { class: "won" }, h("b", null, L(`${won.name} 클리어!`, `${won.name} cleared!`)), " ", won.winText)] : []),
-            era.intro, L("새 유닛·연구·질문이 열렸어요!", "New units, research and questions unlocked!")],
+            era.intro, L("새 유닛·연구·질문이 열렸어요! 이 시대의 AI 모습과 방은 꾸미기에서 언제든 다시 고를 수 있어요.", "New units, research and questions unlocked! This era's AI look and room are now in Style.")],
           buttons: [{ label: L("시작하기", "Let's go"), onClick: () => { this.panels.update(); } }],
         });
         saveGame(g.state);
@@ -390,7 +400,10 @@ export class App {
         const a = ACHIEVEMENTS.find((x) => x.id === n.id);
         if (a) {
           sfx("quest");
-          toast(`${L("업적", "Achievement")}: ${a.name}`, a.desc, "ach");
+          const gift = rewardFor(a.id);
+          toast(`${L("업적", "Achievement")}: ${a.name}`, gift
+            ? `${a.desc} · ${L(`${rarityName(gift.rarity)} 꾸미기 획득: ${gift.name} (도감 › 꾸미기)`, `${rarityName(gift.rarity)} cosmetic: ${gift.name} (Codex › Style)`)}`
+            : a.desc, gift ? `ach rar${gift.rarity}` : "ach");
         }
         break;
       }
@@ -570,3 +583,18 @@ function effectsLine(effects: Effect[], duration: number): string {
 
 
 const RESEARCH_IDS = UPGRADES.filter((u) => u.currency === "rp").map((u) => u.id);
+
+/** fg를 bg 위에서 읽히게 (WCAG 대비 4.5:1) 검정/흰색 쪽으로 조금씩 섞는다 */
+function readableOn(fg: string, bg: string): string {
+  const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const lum = (c: number[]) => {
+    const [r, g, b] = c.map((v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a: number[], b: number[]) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const b = rgb(bg);
+  const toward = lum(b) > 0.4 ? 0 : 255;
+  let c = rgb(fg);
+  for (let i = 0; i < 20 && ratio(c, b) < 4.5; i++) c = c.map((v) => Math.round(v + (toward - v) * 0.15));
+  return `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}

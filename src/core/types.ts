@@ -350,6 +350,20 @@ export interface GameState {
     music: boolean;
     /** 첫 30초 안내를 마쳤는지 */
     tutorialDone: boolean;
+    /** 꾸미기 (null = 지금 시대를 따름 / 없음) */
+    look: Look;
   };
   lastSaved: number;
+}
+
+export type UiSkin = "pixel" | "retro" | "y2k" | "brutal";
+
+/** 꾸미기 선택. 시대 그림(모습·방)과 화면 옷은 도달한 시대에서, 모자·색·효과는 업적에서 열린다. */
+export interface Look {
+  avatar: number | null;
+  room: number | null;
+  hat: string | null;
+  color: string | null;
+  fx: string | null;
+  ui: UiSkin | null;
 }

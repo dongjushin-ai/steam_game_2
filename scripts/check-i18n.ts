@@ -2,14 +2,14 @@
 // 1) 모든 데이터 id에 영어가 있는지  2) 영어로 바꾼 뒤 데이터에 한글이 남았는지
 // 3) UI·core 코드에 L(…) 밖의 한글 문자열이 있는지  4) 다시 한국어로 돌리면 원문이 복원되는지
 import { readFileSync, readdirSync } from "node:fs";
-import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES, WEEKLIES } from "../src/data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES, WEEKLIES, LOOKS } from "../src/data";
 import { ACHIEVEMENTS } from "../src/core/achievements";
 import { applyLanguage, missing } from "../src/i18n";
 
 const errors: string[] = [];
 const HANGUL = /[가-힣]/;
 
-const snapshot = () => JSON.stringify([ERAS, TIERS, BUILDINGS, UPGRADES, EVENTS, CODEX, QUIZ, NEWS, GOLDENS, RIVALS, ACHIEVEMENTS.map((a) => [a.name, a.desc]), SIDE_BENCHES, MISSIONS, THREATS, WEEKLIES]);
+const snapshot = () => JSON.stringify([ERAS, TIERS, BUILDINGS, UPGRADES, EVENTS, CODEX, QUIZ, NEWS, GOLDENS, RIVALS, ACHIEVEMENTS.map((a) => [a.name, a.desc]), SIDE_BENCHES, MISSIONS, THREATS, WEEKLIES, LOOKS]);
 const before = snapshot();
 
 applyLanguage("en");
@@ -23,7 +23,7 @@ const walk = (v: unknown, path: string) => {
   } else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${path}[${i}]`));
   else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) if (typeof x !== "function") walk(x, `${path}.${k}`);
 };
-walk({ ERAS, TIERS, BUILDINGS, UPGRADES, EVENTS, CODEX, QUIZ, NEWS, GOLDENS, RIVALS, ACHIEVEMENTS, SIDE_BENCHES, MISSIONS, THREATS, WEEKLIES }, "data");
+walk({ ERAS, TIERS, BUILDINGS, UPGRADES, EVENTS, CODEX, QUIZ, NEWS, GOLDENS, RIVALS, ACHIEVEMENTS, SIDE_BENCHES, MISSIONS, THREATS, WEEKLIES, LOOKS }, "data");
 if (leftovers.length) errors.push(`영어 모드에 남은 한글 ${leftovers.length}건:\n  ${leftovers.slice(0, 20).join("\n  ")}`);
 
 // 퀴즈 보기 수가 같아야 정답 번호가 맞는다

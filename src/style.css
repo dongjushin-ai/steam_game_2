@@ -76,7 +76,7 @@ button:disabled { cursor: default; }
 .ticker { margin-top: 5px; overflow: hidden; white-space: nowrap; font-size: 11px; font-family: var(--font-small); color: var(--muted); }
 .ticker span { display: inline-block; padding-left: 100%; animation: ticker var(--tdur, 14s) linear forwards; }
 .ticker span.static { padding-left: 0; animation: none; }
-.ticker b { color: var(--accent); margin-right: 6px; }
+.ticker b { color: var(--accent-text, var(--accent)); margin-right: 6px; }
 @keyframes ticker { to { transform: translateX(-100%); } }
 
 /* 장면 */
@@ -229,12 +229,12 @@ button.chip { cursor: pointer; font: inherit; font-size: 11px; }
 .boss-card .big img { width: 48px; height: 48px; }
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px dashed var(--muted); font-size: 12px; }
-.timeline li.now { color: var(--accent); font-weight: 700; }
+.timeline li.now { color: var(--accent-text, var(--accent)); font-weight: 700; }
 .timeline li.future { color: var(--muted); }
 .timeline.arena li { grid-template-columns: 26px 26px 1fr auto; }
-.timeline.arena li.me { color: var(--accent); font-weight: 700; }
+.timeline.arena li.me { color: var(--accent-text, var(--accent)); font-weight: 700; }
 .av-thumb { width: 28px; height: 28px; display: block; }
-.codex-era { margin: 14px 0 6px; font-weight: 700; color: var(--accent); }
+.codex-era { margin: 14px 0 6px; font-weight: 700; color: var(--accent-text, var(--accent)); }
 .codex-item { display: grid; grid-template-columns: 34px 1fr; gap: 8px; padding: 7px 9px; background: var(--panel); border: var(--bw) solid var(--line); border-radius: var(--radius); margin-bottom: 6px; }
 .codex-item .e { font-size: 20px; }
 .codex-item .e img { width: 32px; height: 32px; }
@@ -353,7 +353,7 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 [data-skin="retro"] .res.rp b { color: #5a1aa0; }
 [data-skin="retro"] .era-tag { background: var(--title); }
 [data-skin="retro"] .ticker { color: #000; }
-[data-skin="retro"] .ticker b { color: var(--title); }
+[data-skin="retro"] .ticker b { color: var(--accent-text, var(--title)); }
 [data-skin="retro"] .chip.hint { color: #000; background: #ffffe1; }
 [data-skin="retro"] .chip.good { color: #004b00; }
 [data-skin="retro"] .chip.bad { color: #a00000; }
@@ -608,3 +608,35 @@ details.stats[open] > summary { margin-bottom: 6px; }
 .say.wrong { background: #ff2d2d; color: #fff; border-color: #000; }
 .say.wrong::before { content: "?! "; font-weight: 700; }
 
+
+/* ── 꾸미기 ─────────────────────────────────────── */
+/* 등급 색: 일반 회색 · 희귀 파랑 · 영웅 보라 · 전설 주황(반짝이는 테두리) */
+:root { --rar0: #9a9a9a; --rar1: #3b8bff; --rar2: #b25cff; --rar3: #ff9a1f; }
+.look-preview { display: block; width: 100%; aspect-ratio: 192 / 120; image-rendering: pixelated; border: var(--bw) solid var(--line); background: #000; }
+.look-head { padding: 6px 8px; background: var(--panel); border: var(--bw) solid var(--line); display: flex; align-items: center; gap: 8px; justify-content: space-between; margin: 6px 0 2px; }
+.look-head .btn { width: auto; flex: none; padding: 4px 10px; }
+.look-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+.look-tile { position: relative; display: grid; justify-items: center; gap: 2px; padding: 4px 2px 3px; font: inherit; font-size: 10px; color: var(--ink); background: var(--panel); border: 2px solid var(--line); cursor: pointer; min-width: 0; }
+.look-tile .lt-img { width: 48px; height: 48px; display: grid; place-items: center; image-rendering: pixelated; object-fit: contain; }
+.look-tile .lt-img.head { width: min(100%, 88px); height: auto; aspect-ratio: 44 / 30; }
+.look-tile .lt-img { width: 56px; height: 60px; }
+.look-tile .lt-img.swatch { width: 40px; height: 40px; margin: 4px; border: 2px solid #000; }
+.look-tile .lt-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.look-tile .lt-rar { font-size: 9px; padding: 0 3px; color: #000; background: var(--rarc, #9a9a9a); }
+.look-tile.rar0 { --rarc: var(--rar0); }
+.look-tile.rar1 { --rarc: var(--rar1); border-color: var(--rar1); }
+.look-tile.rar1 .lt-rar, .look-tile.rar2 .lt-rar { color: #fff; }
+.look-tile.rar2 { --rarc: var(--rar2); border-color: var(--rar2); box-shadow: inset 0 0 0 1px var(--rar2); }
+.look-tile.rar3 { --rarc: var(--rar3); border-color: var(--rar3); animation: legend 1.2s steps(4) infinite; }
+@keyframes legend { 0% { border-color: #ff9a1f; } 25% { border-color: #ffe600; } 50% { border-color: #ff5ea8; } 75% { border-color: #ffe600; } }
+.look-tile.on { outline: 3px solid var(--accent); outline-offset: -1px; background: var(--panel2); }
+.look-tile.on::after { content: "✓"; position: absolute; top: 1px; right: 4px; font-size: 11px; color: var(--good); }
+.look-tile.locked { opacity: 0.55; animation: none; }
+.look-tile.locked .lt-img img { width: 20px; height: 20px; }
+.ach .gift { display: block; margin-top: 3px; font-size: 10px; padding: 1px 4px; width: fit-content; color: #000; background: var(--rar0); }
+.ach .gift.rar1 { background: var(--rar1); color: #fff; }
+.ach .gift.rar2 { background: var(--rar2); color: #fff; }
+.ach .gift.rar3 { background: var(--rar3); }
+.toast.rar2 { box-shadow: 0 0 0 2px var(--rar2); }
+.toast.rar3 { box-shadow: 0 0 0 2px var(--rar3); animation: legend 1.2s steps(4) infinite; }
+@media (prefers-reduced-motion: reduce) { .look-tile.rar3, .toast.rar3 { animation: none; } }
