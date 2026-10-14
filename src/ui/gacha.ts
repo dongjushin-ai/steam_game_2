@@ -1,6 +1,6 @@
 // 시드 뽑기 화면: 서비스 탭 카드, 캡슐 여는 연출, 확률표, 조각 교환소.
 import type { Game } from "../core/game";
-import { PICKUP_SHARE, PITY, effectiveLegendary, POOL, PULL_COST, RATES, SHARD_PRICE, exchange, pickupFor, type PullResult } from "../core/gacha";
+import { PICKUP_SHARE, PITY, effectiveLegendary, POOL, poolFor, PULL_COST, RATES, SHARD_PRICE, exchange, pickupFor, type PullResult } from "../core/gacha";
 import { rarityName, resolveLook } from "../core/looks";
 import { ERAS, type LookItem } from "../data";
 import { L } from "../i18n/lang";
@@ -33,7 +33,7 @@ export function gachaCard(g: Game, rerender: () => void): { el: HTMLElement; upd
   const el = h("div", { class: "card gacha" },
     h("div", { class: "g-top" },
       h("div", null, h("div", { class: "name" }, h("b", null, L("시드 뽑기", "Seed Gacha")), " ", h("span", { class: "hint" }, "seed=42")), seeds),
-      h("div", { class: `g-pick rar${pick.rarity}` }, itemImg(g, pick), h("small", null, L("이번 주 픽업", "This week's pickup")), h("span", null, pick.name))),
+      h("div", { class: `g-pick rar${pick.rarity}` }, itemImg(g, pick), h("small", null, pick.limited ? L("이번 주 한정 · 픽업", "This week only · pickup") : L("이번 주 픽업", "This week's pickup")), h("span", null, pick.name))),
     h("div", { class: "g-btns" }, one, ten),
     h("div", { class: "g-foot" }, pity,
       h("button", { class: "linkish", onclick: () => showRates(g) }, L("확률 보기", "Odds")),
@@ -104,7 +104,7 @@ function reveal(g: Game, res: PullResult[]): void {
 function showRates(g: Game): void {
   const pick = pickupFor(new Date());
   const rows = [3, 2, 1, 0].flatMap((r) => {
-    const items = POOL.filter((x) => x.rarity === r);
+    const items = poolFor(new Date()).filter((x) => x.rarity === r);
     const each = (x: LookItem) => {
       const base = RATES[r];
       const p = pick.rarity === r ? (x.id === pick.id ? base * PICKUP_SHARE : (base * (1 - PICKUP_SHARE)) / (items.length - 1)) : base / items.length;
@@ -112,7 +112,7 @@ function showRates(g: Game): void {
     };
     return [
       h("div", { class: `rate-head rar${r}` }, h("b", null, rarityName(r)), h("span", null, `${(RATES[r] * 100).toFixed(0)}%`)),
-      ...items.map((x) => h("div", { class: "rate-row" }, h("span", null, `${x.name}${x.id === pick.id ? L(" (픽업)", " (pickup)") : ""}`), h("small", null, slotName(x)), h("b", null, each(x)))),
+      ...items.map((x) => h("div", { class: "rate-row" }, h("span", null, `${x.name}${x.id === pick.id ? (x.limited ? L(" (이번 주 한정·픽업)", " (this week only · pickup)") : L(" (픽업)", " (pickup)")) : ""}`), h("small", null, slotName(x)), h("b", null, each(x)))),
     ];
   });
   showModal({
@@ -131,7 +131,7 @@ function showRates(g: Game): void {
 /** 조각 교환소: 아직 없는 뽑기 아이템을 조각으로 바로 */
 function showExchange(g: Game, rerender: () => void): void {
   const s = g.state.gacha;
-  const left = POOL.filter((x) => !s.owned.includes(x.id)).sort((a, b) => b.rarity - a.rarity);
+  const left = poolFor(new Date()).filter((x) => !s.owned.includes(x.id)).sort((a, b) => b.rarity - a.rarity);
   showModal({
     title: L("조각 교환소", "Shard shop"),
     sub: L(`가진 조각 ${s.shards}`, `You have ${s.shards} shards`),

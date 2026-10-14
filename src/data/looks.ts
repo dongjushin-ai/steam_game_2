@@ -15,6 +15,8 @@ export interface LookItem {
   ach?: string;
   /** 시드 뽑기에서만 나온다 */
   gacha?: boolean;
+  /** 주간 한정: 이 주간 이벤트(weekly id)인 주에만 뽑기에 나오고 이번 주 픽업이 된다 */
+  limited?: string;
   /** 랭킹 순위로만 얻는다 (core/ranking.ts RANK_LOOKS) */
   rank?: boolean;
   /** 색 아이템: 강조색 */
@@ -75,6 +77,16 @@ export const LOOKS: LookItem[] = [
   { id: "p_unicorn", slot: "pet", name: "유니콘", rarity: 3, gacha: true },
   { id: "f_aurora", slot: "fx", name: "오로라", rarity: 3, gacha: true },
   { id: "f_meteor", slot: "fx", name: "별똥별 비", rarity: 3, gacha: true },
+
+  // ── 주간 한정 (그 주간 이벤트인 주에만 뽑기에, 그 주의 픽업) ──
+  { id: "p_energy", slot: "pet", name: "에너지 드링크", rarity: 2, gacha: true, limited: "w_hackathon" },
+  { id: "p_gpu", slot: "pet", name: "중고 GPU", rarity: 2, gacha: true, limited: "w_gpu_sale" },
+  { id: "p_redpen", slot: "pet", name: "리뷰어 2의 빨간 펜", rarity: 2, gacha: true, limited: "w_reviewer2" },
+  { id: "p_ghost", slot: "pet", name: "환각 유령", rarity: 2, gacha: true, limited: "w_meme" },
+  { id: "h_rosette", slot: "hat", name: "1등 리본", rarity: 2, gacha: true, limited: "w_leaderboard" },
+  { id: "p_box", slot: "pet", name: "가중치 상자", rarity: 2, gacha: true, limited: "w_open_weights" },
+  { id: "p_magnifier", slot: "pet", name: "돋보기", rarity: 2, gacha: true, limited: "w_bug_bounty" },
+  { id: "p_snowman", slot: "pet", name: "눈사람", rarity: 2, gacha: true, limited: "w_freeze" },
 
   // ── 랭킹 전용 (구글 플레이 게임즈 순위로만) ──
   { id: "f_spotlight", slot: "fx", name: "스포트라이트", rarity: 2, rank: true },

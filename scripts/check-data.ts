@@ -31,7 +31,9 @@ for (const x of LOOKS) {
   if (x.ach && !ACHIEVEMENTS.some((a) => a.id === x.ach)) fail(`${x.id}: 없는 업적 ${x.ach}`);
   if (x.slot === "color" && !/^#[0-9a-f]{6}$/.test(x.hex ?? "")) fail(`${x.id}: 색 없음`);
 }
-for (const r of [0, 1, 2, 3]) if (!LOOKS.some((x) => x.gacha && x.rarity === r)) fail(`뽑기 등급 ${r} 비어 있음`);
+for (const r of [0, 1, 2, 3]) if (!LOOKS.some((x) => x.gacha && !x.limited && x.rarity === r)) fail(`뽑기 등급 ${r} 비어 있음`);
+for (const w of WEEKLIES) if (LOOKS.filter((x) => x.limited === w.id).length !== 1) fail(`${w.id}: 주간 한정 아이템은 정확히 하나`);
+for (const x of LOOKS) if (x.limited && (!x.gacha || !WEEKLIES.some((w) => w.id === x.limited))) fail(`${x.id}: 주간 한정은 뽑기 아이템이고 있는 주간 이벤트여야 함`);
 
 const maxEra = ERAS.length - 1;
 for (const b of SIDE_BENCHES) {

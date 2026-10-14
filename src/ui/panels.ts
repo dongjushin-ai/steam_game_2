@@ -16,7 +16,7 @@ import { music } from "./music";
 import { shareCard } from "./sharecard";
 import { gachaCard } from "./gacha";
 import { enableNotify, maybeAskNotify } from "./notify";
-import { isNative } from "./native";
+import { isNative, shareTextFile } from "./native";
 import { openRanking } from "./ranking";
 import { featScore, medalCount, overallScore, titleName } from "../core/ranking";
 import { L } from "../i18n/lang";
@@ -847,6 +847,10 @@ export class Panels {
       o.rarity !== undefined ? h("span", { class: "lt-rar" }, rarityName(o.rarity)) : null);
     const section = (title: string, ...tiles: HTMLElement[]) => this.root.append(this.title(title), h("div", { class: "look-grid" }, ...tiles));
     const achHow = (item: LookItem) => {
+      if (item.limited) {
+        const w = WEEKLIES.find((x) => x.id === item.limited);
+        return L(`주간 한정: '${w?.name}' 주에만 시드 뽑기에서 나와요`, `Weekly limited: only in the Seed Gacha during '${w?.name}' week`);
+      }
       if (item.gacha) return L("시드 뽑기에서 나와요 (서비스 탭)", "Comes from the Seed Gacha (Service tab)");
       const a = ACHIEVEMENTS.find((x) => x.id === item.ach);
       return a ? L(`업적 '${a.name}' 달성: ${a.desc}`, `Earn '${a.name}': ${a.desc}`) : "";
@@ -888,6 +892,39 @@ export class Panels {
       })));
   }
 
+  /** 세이브를 덮어쓰기 전에 한 번 묻는다 (지금 진행이 사라지니까) */
+  private confirmImport(st: GameState | null): void {
+    if (!st) {
+      sfx("error");
+      toast(L("세이브가 올바르지 않아요", "That save isn't valid"), L("코드나 파일이 잘렸는지 확인해 주세요", "Check the code or file isn't cut off"));
+      return;
+    }
+    showModal({
+      title: L("이 세이브로 바꿀까요?", "Load this save?"),
+      body: [L(`${st.aiName} v${st.releases + 1} · ${ERAS[st.era].name} · 플레이 ${Math.floor(st.stats.playSeconds / 60)}분. 지금 진행은 이 세이브로 덮어써져요.`,
+        `${st.aiName} v${st.releases + 1} · ${ERAS[st.era].name} · ${Math.floor(st.stats.playSeconds / 60)} min played. Your current progress will be replaced.`)],
+      buttons: [{ label: L("불러오기", "Load"), kind: "danger", onClick: () => this.onReset(st) }, { label: L("취소", "Cancel"), kind: "ghost" }],
+      dismissable: true,
+    });
+  }
+
+  /** 세이브 파일: 앱은 공유 창(드라이브·메신저), 웹은 내려받기 */
+  private async saveToFile(): Promise<void> {
+    const s = this.game.state;
+    saveGame(s);
+    const name = `ai-kiugi-save-${new Date().toISOString().slice(0, 10)}.txt`;
+    const text = exportSave(s);
+    if (isNative()) {
+      await shareTextFile(name, text, L("AI 키우기 세이브", "Grow Your AI save")).catch(() => toast(L("공유를 취소했어요", "Share cancelled")));
+      return;
+    }
+    const a = h("a", { href: URL.createObjectURL(new Blob([text], { type: "text/plain" })), download: name }) as HTMLAnchorElement;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    toast(L("세이브 파일을 저장했어요", "Save file downloaded"), L("새 기기에서 '세이브 파일 불러오기'로 이어 하세요", "Use 'Load a save file' on a new device"));
+  }
+
   private buildSettings(): void {
     const g = this.game;
     const s = g.state;
@@ -904,6 +941,13 @@ export class Panels {
       setNumberFormat(s.settings.format);
     };
     const io = h("textarea", { placeholder: L("여기에 세이브 코드를 붙여넣으세요", "Paste a save code here"), "aria-label": L("세이브 코드", "Save code") }) as HTMLTextAreaElement;
+    const fileIn = h("input", { type: "file", accept: ".txt,.json,text/plain,application/json", hidden: "", "aria-label": L("세이브 파일", "Save file") }) as HTMLInputElement;
+    fileIn.onchange = async () => {
+      const f = fileIn.files?.[0];
+      fileIn.value = "";
+      if (!f) return;
+      this.confirmImport(importSave((await f.text()).trim()));
+    };
     this.root.append(
       this.title(L("AI 이름", "AI name")), name,
       this.title(L("언어", "Language")), langSelect(s),
@@ -923,11 +967,11 @@ export class Panels {
       h("div", { class: "stack" },
         io,
         h("button", { class: "btn ghost", onclick: () => { io.value = exportSave(s); io.select(); toast(L("세이브 코드를 만들었어요", "Save code created"), L("복사해서 보관하세요", "Copy it somewhere safe")); } }, L("내보내기", "Export")),
-        h("button", { class: "btn ghost", onclick: () => {
-          const st = importSave(io.value);
-          if (!st) return toast(L("세이브 코드가 올바르지 않아요", "That save code isn't valid"));
-          this.onReset(st);
-        } }, L("불러오기", "Import")),
+        h("button", { class: "btn ghost", onclick: () => this.confirmImport(importSave(io.value)) }, L("불러오기", "Import")),
+        // 파일로: 폰을 바꾸거나 앱을 지워도 이어 할 수 있게
+        h("button", { class: "btn", onclick: () => void this.saveToFile() }, L("세이브 파일로 저장", "Save to a file")),
+        h("button", { class: "btn ghost", onclick: () => fileIn.click() }, L("세이브 파일 불러오기", "Load a save file")),
+        fileIn,
         h("button", { class: "btn danger", onclick: () => showModal({
           icon: "", title: L("정말 처음부터?", "Really start over?"), body: [L("모든 진행 상황이 사라집니다. 되돌릴 수 없어요.", "All progress will be lost. This can't be undone.")], dismissable: true,
           buttons: [{ label: L("초기화", "Reset"), kind: "danger", onClick: () => { clearSave(); this.onReset(null); } }, { label: L("취소", "Cancel"), kind: "ghost" }],

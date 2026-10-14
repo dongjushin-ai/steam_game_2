@@ -6,7 +6,7 @@ import { ENDLESS_BONUS, ENDLESS_GROWTH, endlessHp, BUILDING_MAP, COMBO_MAX, OFFL
 import { arenaTable } from "../src/core/arena";
 import { resolveLook, rewardFor, sanitizeLook } from "../src/core/looks";
 import { clearTime, grantRank, overallScore, sanitizeRanking, tierFor } from "../src/core/ranking";
-import { PITY, POOL, effectiveLegendary, PULL_COST, SHARD_PRICE, exchange, newGacha, pull, sanitizeGacha } from "../src/core/gacha";
+import { PITY, POOL, effectiveLegendary, pickupFor, poolFor, PULL_COST, SHARD_PRICE, exchange, newGacha, pull, sanitizeGacha } from "../src/core/gacha";
 import { LOOKS } from "../src/data";
 import { questProgress } from "../src/core/quests";
 import { QUIZ } from "../src/data";
@@ -612,7 +612,7 @@ test("뽑기: 겹치면 조각, 조각으로 원하는 걸 고른다, 꾸미기�
   for (let i = 0; i < 400; i++) game.pullSeeds(1);
   assert.ok(s.gacha.shards > 0, "400번이면 겹친다");
   assert.equal(new Set(s.gacha.owned).size, s.gacha.owned.length);
-  const missing = POOL.find((x) => !s.gacha.owned.includes(x.id));
+  const missing = poolFor(new Date()).find((x) => !s.gacha.owned.includes(x.id));
   if (missing) {
     s.gacha.shards = SHARD_PRICE[missing.rarity];
     assert.ok(exchange(s.gacha, missing.id));
@@ -722,6 +722,26 @@ test("특이점 너머: 엔딩 뒤에만, 깨면 단계·영구 보너스·시�
   assert.equal(m.endless.level, 0);
   assert.equal(m.settings.notify, true);
   assert.equal(m.settings.notifyAsked, false);
+});
+
+test("주간 한정: 그 주에만 뽑기·교환에 나오고 그 주의 픽업이다", () => {
+  const weeks = new Map<string, Date>();
+  for (let d = 0; d < 7 * 20 && weeks.size < WEEKLIES.length; d += 7) {
+    const date = new Date(2026, 0, 5 + d);
+    weeks.set(weeklyFor(date).id, date);
+  }
+  assert.equal(weeks.size, WEEKLIES.length, "20주 안에 8종이 다 돈다");
+  for (const [wid, date] of weeks) {
+    const pick = pickupFor(date);
+    assert.equal(pick.limited, wid, "픽업 = 그 주 한정");
+    const pool = poolFor(date);
+    assert.ok(pool.every((x) => !x.limited || x.limited === wid));
+    const other = POOL.find((x) => x.limited && x.limited !== wid)!;
+    const g = newGacha();
+    g.shards = 999;
+    assert.equal(exchange(g, other.id, date), false, "다른 주 한정은 교환 불가");
+    assert.ok(exchange(g, pick.id, date));
+  }
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

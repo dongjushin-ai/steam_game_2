@@ -1,7 +1,7 @@
 // 안드로이드 앱(Capacitor)에서만 켜지는 것들. 웹에서는 아무것도 하지 않는다.
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
-import { Directory, Filesystem } from "@capacitor/filesystem";
+import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { backModal } from "./modals";
 
@@ -33,6 +33,12 @@ export function setupNative(hooks: NativeHooks): void {
 export async function shareImage(dataUrl: string, name: string, text: string): Promise<void> {
   const res = await Filesystem.writeFile({ path: name, data: dataUrl.split(",")[1], directory: Directory.Cache });
   await Share.share({ files: [res.uri], text });
+}
+
+/** 글 파일 하나를 캐시에 쓰고 공유 창으로 (드라이브·메신저 '나에게'로 보관) */
+export async function shareTextFile(name: string, text: string, title: string): Promise<void> {
+  const res = await Filesystem.writeFile({ path: name, data: text, directory: Directory.Cache, encoding: Encoding.UTF8 });
+  await Share.share({ title, files: [res.uri] });
 }
 
 // ── 구글 플레이 게임즈 (android/.../PlayGamesPlugin.java) ──

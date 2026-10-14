@@ -1,7 +1,7 @@
 // 시드 뽑기: 플레이로만 버는 '시드'로 뽑기 전용 꾸미기를 뽑는다. 현금 결제는 없다.
 // 확률은 화면에 그대로 공개한다. 40번 안에 전설 확정(천장), 10연차는 영웅 이상 1개 확정.
 // 겹치면 조각이 되고, 조각으로 원하는 것을 바로 고를 수 있다 (운이 나빠도 언젠가는 다 모인다).
-import { LOOKS, weekIndex, type LookItem, type Rarity } from "../data";
+import { LOOKS, weekIndex, weeklyFor, type LookItem, type Rarity } from "../data";
 
 export const PULL_COST = 5;
 /** 등급별 확률: 일반 · 희귀 · 영웅 · 전설 */
@@ -36,11 +36,21 @@ export function newGacha(): GachaState {
   return { seeds: 0, shards: 0, pity: 0, pulls: 0, owned: [] };
 }
 
+/** 뽑기에서 나올 수 있는 모든 것 (주간 한정 포함, 수집·세이브 확인용) */
 export const POOL: LookItem[] = LOOKS.filter((x) => x.gacha);
 
-/** 이번 주 픽업: 영웅·전설 중 하나가 주마다 돌아간다 */
+/** 이번 주 뽑기 목록: 상시 아이템 + 이번 주 한정 하나 */
+export function poolFor(date: Date): LookItem[] {
+  const week = weeklyFor(date).id;
+  return POOL.filter((x) => !x.limited || x.limited === week);
+}
+
+/** 이번 주 픽업 = 이번 주간 이벤트의 한정 아이템 (없으면 영웅·전설 중 하나가 주마다) */
 export function pickupFor(date: Date): LookItem {
-  const top = POOL.filter((x) => x.rarity >= 2);
+  const week = weeklyFor(date).id;
+  const lim = POOL.find((x) => x.limited === week);
+  if (lim) return lim;
+  const top = POOL.filter((x) => x.rarity >= 2 && !x.limited);
   return top[weekIndex(date) % top.length];
 }
 
@@ -62,12 +72,12 @@ function rollRarity(rng: () => number, minRarity: Rarity = 0): Rarity {
   return (w.length - 1) as Rarity;
 }
 
-function rollOne(g: GachaState, rng: () => number, pickup: LookItem, minRarity: Rarity = 0): PullResult {
+function rollOne(g: GachaState, rng: () => number, pickup: LookItem, pool: LookItem[], minRarity: Rarity = 0): PullResult {
   g.pity += 1;
   g.pulls += 1;
   const rarity: Rarity = g.pity >= PITY ? 3 : rollRarity(rng, minRarity);
   if (rarity === 3) g.pity = 0;
-  const same = POOL.filter((x) => x.rarity === rarity);
+  const same = pool.filter((x) => x.rarity === rarity);
   let item: LookItem;
   let isPickup = false;
   if (pickup.rarity === rarity && rng() < PICKUP_SHARE) {
@@ -90,17 +100,18 @@ export function pull(g: GachaState, n: 1 | 10, rng: () => number, date: Date): P
   if (g.seeds < cost) return [];
   g.seeds -= cost;
   const pickup = pickupFor(date);
+  const pool = poolFor(date);
   const out: PullResult[] = [];
   for (let i = 0; i < n; i++) {
     const last = n === 10 && i === 9 && !out.some((r) => r.item.rarity >= 2);
-    out.push(rollOne(g, rng, pickup, last ? 2 : 0));
+    out.push(rollOne(g, rng, pickup, pool, last ? 2 : 0));
   }
   return out;
 }
 
-/** 조각으로 원하는 뽑기 아이템을 바로 갖는다 */
-export function exchange(g: GachaState, id: string): boolean {
-  const item = POOL.find((x) => x.id === id);
+/** 조각으로 원하는 뽑기 아이템을 바로 갖는다 (주간 한정은 그 주에만) */
+export function exchange(g: GachaState, id: string, date = new Date()): boolean {
+  const item = poolFor(date).find((x) => x.id === id);
   if (!item || g.owned.includes(id) || g.shards < SHARD_PRICE[item.rarity]) return false;
   g.shards -= SHARD_PRICE[item.rarity];
   g.owned.push(id);

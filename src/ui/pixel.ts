@@ -1271,7 +1271,7 @@ function headTop(era: number): number {
 const HAT_PAL: Record<string, string> = {
   k: "#000000", w: "#ffffff", y: "#ffd23f", o: "#b8860b", r: "#e83b3b", g: "#3fd16a", G: "#1f8a3d",
   b: "#3b6be8", s: "#c0c0c0", d: "#3a3a4a", m: "#ff9ccf", p: "#6a2fc0", P: "#a46bff", n: "#8a5a2a",
-  O: "#ff9a3a", c: "#5ee0ff", M: "#ff4fa0",
+  O: "#ff9a3a", c: "#5ee0ff", M: "#ff4fa0", K: "#000000",
 };
 const HAT_ART: Record<string, string> = {
   h_sprout: `
@@ -1377,6 +1377,16 @@ GgGg......gGgG
 ..GgGgyygGgG..
 ...kGyyyyGk...
 ....kkkkkk....`,
+  h_rosette: `
+...kkkkk...
+..kyyyyyk..
+.kyyrrryyk.
+.kyrrwrryk.
+.kyyrrryyk.
+..kyyyyyk..
+...krkrk...
+...krkrk...
+...kk.kk...`,
   h_visor: `
 .kkkkkkkkkkkkkk.
 kccccccccccccccck
@@ -1497,6 +1507,78 @@ kkyyyyyykk
 ...kook...
 ..kooook..
 ..kkkkkk..`,
+  p_energy: `
+...kkk....
+..kssk....
+.kkkkkk...
+.kbbbbk...
+.kbyybk...
+.kbbybk...
+.kbybbk...
+.kbbbbk...
+.kssssk...
+.kkkkkk...`,
+  p_gpu: `
+kkkkkkkkkkk
+kddddddddgk
+kdkkkdkkkdk
+kdkskdksk.k
+kdkkkdkkkdk
+kddddddddgk
+kkkkkkkkkkk
+.y.y.y.y...`,
+  p_redpen: `
+.......kk.
+......krk.
+.....krk..
+....krk...
+...krk....
+..krk.....
+.kwk......
+.kk.......
+k.........`,
+  p_ghost: `
+..kkkkk...
+.kwwwwwk..
+kwwkwkwwk.
+kwwwwwwwk.
+kwwwmwwwk.
+kwwwwwwwk.
+kwwwwwwwk.
+kwkwkwkwk.
+.k.k.k.k..`,
+  p_box: `
+kkkkkkkkkk
+knnnnnnnnk
+kkkkkkkkkk
+knnnyynnnk
+knnnyynnnk
+knnnnnnnnk
+knnnnnnnnk
+kkkkkkkkkk`,
+  p_magnifier: `
+..kkkk....
+.kccccK...
+kcwccccK..
+kcccccck..
+kcccccck..
+.kccccck..
+..kkkkkk..
+......kok.
+.......kok
+........kk`,
+  p_snowman: `
+...kkk....
+..kdddk...
+.kkkkkkk..
+..kwwwk...
+.kwkwkwk..
+.kwwOwwk..
+..kwwwk...
+.kwwwwwk..
+kwwwkwwwk.
+kwwwwwwwk.
+.kkkkkkk..`,
   p_unicorn: `
 y.........
 .y........
@@ -1518,7 +1600,7 @@ function drawPet(p: Px, id: string, xr: number, foot: number, t: number, still =
   }
   if (!r.length) return;
   const w = Math.max(...r.map((row) => row.length)), h = r.length;
-  const flying = id === "p_drone" || id === "p_whale";
+  const flying = id === "p_drone" || id === "p_whale" || id === "p_ghost";
   const hop = still ? 0 : flying ? Math.round(Math.sin(t * 3) * 2) + 8 : Math.round(Math.abs(Math.sin(t * 4)) * 3);
   const x0 = xr - w, y0 = foot - h - hop;
   if (!flying) p.d(x0 + 1, foot - 1, w - 2, 2, "#000000", null, 8);
@@ -1535,6 +1617,18 @@ function drawPet(p: Px, id: string, xr: number, foot: number, t: number, still =
     for (let k = 0; k < 5; k++) p.r(x0 - 2 - k * 2, y0 + 4 + ((k + Math.floor(t * 12)) % 2), 2, 2, k < 2 ? "#ffe600" : k < 4 ? "#ff9a3a" : "#e83b3b");
   }
   if (id === "p_trophy" && Math.floor(t * 2.5) % 2 === 0) p.sparkle(x0 + 7, y0 + 1, "#ffffff");
+  if (id === "p_ghost") {
+    // 영웅(한정): 반투명하게 깜박이며 둥둥
+    if (Math.floor(t * 3) % 3 === 0) p.d(x0, y0, w, h, "#000000", null, 4);
+  }
+  if (id === "p_gpu") {
+    // 팬이 돈다
+    const on = Math.floor(t * 12) % 2 === 0;
+    p.p(x0 + 3, y0 + 3, on ? "#ffffff" : "#c0c0c0");
+    p.p(x0 + 7, y0 + 3, on ? "#c0c0c0" : "#ffffff");
+  }
+  if (id === "p_snowman" && Math.floor(t * 2) % 2 === 0) p.p(x0 + 10, y0 + 2, "#ffffff");
+  if (id === "p_energy" && Math.floor(t * 8) % 4 === 0) p.sparkle(x0 + 8, y0 + 3, "#ffe600");
   if (id === "p_unicorn") {
     // 전설: 뒤로 무지개 자국
     for (let k = 0; k < 6; k++) p.r(x0 + w + k * 2, y0 + 6 + Math.round(Math.sin(t * 6 + k) * 1), 2, 1, RAINBOW[(k + Math.floor(t * 8)) % 6]);
