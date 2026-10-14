@@ -15,6 +15,7 @@ import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
 import { shareCard } from "./sharecard";
 import { gachaCard } from "./gacha";
+import { holdToRepeat } from "./hold";
 import { enableNotify, maybeAskNotify } from "./notify";
 import { isNative, shareTextFile } from "./native";
 import { openRanking } from "./ranking";
@@ -160,18 +161,26 @@ export class Panels {
     const name = h("div", { class: "name" });
     const fx = h("div", { class: "fx" });
     const btn = h("button", { class: "buy" });
-    btn.onclick = () => {
+    /** 한 번 사기 (×1·×10·MAX). 꾹 누르기도 이걸 반복한다 */
+    const buy = (quiet = false): { n: number; milestone: boolean } => {
       const n = g.buyBuilding(b.id, this.buyMode === "max" ? "max" : this.buyMode);
-      if (n > 0) {
-        sfx("buy");
-        const owned = g.state.buildings[b.id];
-        if (b.kind !== "param" && milestoneMult(owned) > milestoneMult(owned - n)) {
-          celebrate(L(`${b.name} ${owned}개 · 생산 ×2`, `${b.name} ×${owned} · output ×2`));
-          sfx("quest");
-        }
-        this.update();
-      } else sfx("error");
+      if (!n) {
+        if (!quiet) sfx("error");
+        return { n: 0, milestone: false };
+      }
+      sfx(quiet ? "tap" : "buy");
+      const owned = g.state.buildings[b.id];
+      const milestone = b.kind !== "param" && milestoneMult(owned) > milestoneMult(owned - n);
+      if (milestone) {
+        celebrate(L(`${b.name} ${owned}개 · 생산 ×2`, `${b.name} ×${owned} · output ×2`));
+        sfx("quest");
+      }
+      this.update();
+      return { n, milestone };
     };
+    btn.onclick = () => void buy();
+    // 꾹 누르면 연속 구매 (MAX는 이미 한 번에 다 사니까 제외)
+    holdToRepeat(btn, () => (this.buyMode === "max" ? { n: 0 } : buy(true)));
     const row = h("div", { class: "row" }, h("div", { class: "ico" }, pxi(b.emoji)), foldable(h("div", { class: "body" }, name, fx, h("div", { class: "desc" }, b.desc))), btn);
     this.rows.push({
       update: () => {
