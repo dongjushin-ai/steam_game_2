@@ -139,9 +139,8 @@ export class Scene {
       this.tapKills++;
     }
     else this.fireAt(this.target() ?? this.battle.mobs.filter((m) => m.dying === 0 && !m.targeted).sort((a, b) => b.x - a.x)[0], false);
-    // 연타해도 숫자가 한 점에 쌓이지 않게 조금씩 흩뿌린다
-    const jx = (Math.random() - 0.5) * 36, jy = (Math.random() - 0.5) * 16;
-    if (this.game.state.settings.effects || Math.random() < 0.3) this.pop(x - r.left + jx, y - r.top + jy, `+${fmt(v)}`, "big");
+    // 연타하면 숫자를 새로 띄우지 않고 하나의 합계가 커진다 (같은 숫자가 화면을 덮지 않게)
+    this.tapSum(x - r.left, y - r.top, v);
     if (this.game.state.settings.effects) this.ripple(x - r.left, y - r.top);
     this.chomp();
     this.onTap();
@@ -156,6 +155,35 @@ export class Scene {
 
   private chomp(): void {
     this.chompLeft = 0.25;
+  }
+
+  private tapPop: { el: HTMLElement; sum: number; at: number; n: number } | null = null;
+
+  private tapSum(x: number, y: number, v: number): void {
+    const now = performance.now();
+    const p = this.tapPop;
+    if (p && p.el.isConnected && now - p.at < 450) {
+      p.sum += v;
+      p.n++;
+      p.at = now;
+      p.el.textContent = `+${fmt(p.sum)}`;
+      p.el.style.left = `${x}px`;
+      p.el.style.top = `${y - 10}px`;
+      // 연타가 길어질수록 숫자가 조금씩 커진다
+      p.el.style.setProperty("--grow", String(Math.min(1.6, 1 + p.n * 0.04)));
+      // 같은 이름의 애니메이션은 클래스만 바꿔서는 다시 시작하지 않는다 → 한 번 끊었다가 다시 건다
+      p.el.style.animation = "none";
+      void p.el.offsetWidth;
+      p.el.style.animation = "";
+      p.el.classList.add("again");
+      clearTimeout(Number(p.el.dataset.t));
+      p.el.dataset.t = String(setTimeout(() => p.el.remove(), 900));
+      return;
+    }
+    const el = h("div", { class: "pop big tapsum", style: { left: `${x}px`, top: `${y - 10}px` } }, `+${fmt(v)}`);
+    el.dataset.t = String(setTimeout(() => el.remove(), 900));
+    this.root.append(el);
+    this.tapPop = { el, sum: v, at: now, n: 1 };
   }
 
   private pop(x: number, y: number, text: string, cls = ""): void {

@@ -28,6 +28,8 @@ export class App {
   private game!: Game;
   private scene!: Scene;
   private panels!: Panels;
+  /** 방금 이긴 보스의 시대 (새 시대 창에 함께 보여 준다) */
+  private lastWin: number | null = null;
   private header = {
     name: h("span", { class: "ai-name" }),
     ver: h("span", { class: "ai-ver" }),
@@ -354,21 +356,31 @@ export class App {
       case "bossWin": {
         const boss = ERAS[n.era].boss;
         sfx("win");
-        showModal({ icon: boss.emoji, title: L(`${boss.name} 클리어!`, `${boss.name} cleared!`), sub: boss.year, body: [boss.winText], buttons: [{ label: L("다음으로", "Next") }] });
+        // 시대가 넘어가는 승리는 바로 뒤 새 시대 창에 합친다 (창이 연달아 뜨지 않게). 마지막 보스만 따로.
+        if (n.era < ERAS.length - 1) this.lastWin = n.era;
+        else showModal({ icon: boss.emoji, title: L(`${boss.name} 클리어!`, `${boss.name} cleared!`), sub: boss.year, body: [boss.winText], buttons: [{ label: L("다음으로", "Next") }] });
         break;
       }
       case "bossLose": {
         const boss = ERAS[n.era].boss;
         sfx("lose");
-        toast(L(`${boss.name} 실패`, `${boss.name} failed`), L("처리량을 늘리고 다시. 도전 중엔 탭!", "Add throughput and retry. Tap during the fight!"));
+        const pct = Math.floor(n.pct * 100);
+        toast(L(`${boss.name} ${pct}%에서 멈췄다`, `${boss.name}: stopped at ${pct}%`),
+          pct >= 80 ? L("거의 다 왔어요! 한 번 더, 더 빠르게 탭!", "So close! Once more, tap faster!")
+            : L("인프라에서 처리량을 키우고 다시 도전", "Grow throughput in Infra, then retry"));
         break;
       }
       case "era": {
         this.applyEraColor();
         setTimeout(() => sfx("era"), 600);
         const era = ERAS[n.era];
+        const won = this.lastWin !== null ? ERAS[this.lastWin].boss : null;
+        this.lastWin = null;
         showModal({
-          icon: era.avatar, hero: heroHtml(n.era, era.color), title: era.name, sub: era.years, body: [era.intro, L("새 유닛·연구·질문이 열렸어요!", "New units, research and questions unlocked!")],
+          icon: era.avatar, hero: heroHtml(n.era, era.color), title: era.name, sub: era.years,
+          body: [
+            ...(won ? [h("p", { class: "won" }, h("b", null, L(`${won.name} 클리어!`, `${won.name} cleared!`)), " ", won.winText)] : []),
+            era.intro, L("새 유닛·연구·질문이 열렸어요!", "New units, research and questions unlocked!")],
           buttons: [{ label: L("시작하기", "Let's go"), onClick: () => { this.panels.update(); } }],
         });
         saveGame(g.state);

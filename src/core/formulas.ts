@@ -215,6 +215,16 @@ export function bossDps(stats: Stats): number {
   return stats.tps * (1 - stats.hall);
 }
 
+/** 보스전 중 사람이 보통 누르는 횟수(초당). 탭 한 번 = 0.5초치, 자동 답변 한 번 = 0.25초치 점수 */
+export const BOSS_TAP_RATE = 4;
+/** 예상 달성률이 이보다 낮으면 도전을 막는다 (질 게 뻔한 도전을 반복하지 않게) */
+export const BOSS_MIN_OUTLOOK = 0.35;
+
+/** 보통 속도로 탭하며 싸웠을 때 목표 점수 대비 예상 달성률 (1 이상이면 이긴다) */
+export function bossOutlook(stats: Stats, hp: number, time: number): number {
+  return (bossDps(stats) * time * (1 + 0.5 * BOSS_TAP_RATE + 0.25 * stats.autoTap)) / hp;
+}
+
 export function tapValue(stats: Stats): number {
   return Math.max(stats.rewardPerQ, stats.net * 0.15) * stats.mult.tap;
 }

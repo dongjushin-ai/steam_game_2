@@ -104,6 +104,10 @@ button:disabled { cursor: default; }
 .pop.bad { color: var(--bad); }
 .pop.big { font-size: 16px; }
 .pop.gold { color: #ffe680; }
+/* 연타 합계: 다시 누를 때마다 처음부터 떠오르고, 길게 이어질수록 커진다 */
+.pop.tapsum { font-size: calc(16px * var(--grow, 1)); transform-origin: left bottom; }
+.pop.tapsum.again { animation: rise 0.9s steps(9) forwards, tapbump 0.12s steps(2); }
+@keyframes tapbump { from { scale: 1.25; } to { scale: 1; } }
 @keyframes rise { to { transform: translateY(-36px); opacity: 0; } }
 .ripple { position: absolute; z-index: 3; width: 8px; height: 8px; margin: -4px 0 0 -4px; pointer-events: none; border: 2px solid #fff; animation: ripple 0.4s steps(4) forwards; }
 @keyframes ripple { to { transform: scale(4); opacity: 0; } }
@@ -202,6 +206,12 @@ button.chip { cursor: pointer; font: inherit; font-size: 11px; }
 .bar { height: 10px; background: var(--panel2); border: var(--bw) solid var(--line); overflow: hidden; border-radius: var(--radius); }
 .bar > i { display: block; height: 100%; background: var(--accent); transition: width 0.2s steps(4); }
 .bar.red > i { background: var(--bad); }
+/* 보스 예상 달성률: 50% 눈금을 넘으면 도전 가능, 꽉 차면 초록 */
+.bar.outlook { position: relative; overflow: visible; }
+.bar.outlook > i { background: var(--muted); }
+.bar.outlook.open > i { background: var(--accent); }
+.bar.outlook.full > i { background: var(--good); }
+.bar.outlook > .mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink, currentColor); }
 .req { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
 .boss-card { text-align: center; overflow: hidden; padding-top: 0; }
 .boss-card h3 { margin: 4px 0 2px; font-family: var(--font-head); }
@@ -268,6 +278,8 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 .modal h2 { margin: 6px 0 2px; text-align: center; font-size: 18px; font-family: var(--font-head); }
 .modal .m-sub { text-align: center; color: var(--muted); font-size: 11px; margin-bottom: 6px; font-family: var(--font-small); }
 .modal p { margin: 6px 0; font-size: 12px; text-wrap: pretty; }
+.modal p.won { padding: 6px 8px; border: var(--bw) solid var(--good); color: var(--ink); }
+.modal p.won b { color: var(--good); }
 .modal .m-btns { display: grid; gap: 6px; margin-top: 12px; }
 .choice { text-align: left; }
 .choice small { display: block; font-weight: 400; opacity: 0.85; font-family: var(--font-small); }
@@ -428,6 +440,12 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 [data-skin="brutal"] .row .ico img, [data-skin="brutal"] .codex-item .e img, [data-skin="brutal"] #nav button .i img, [data-skin="brutal"] .modal .m-ico img, [data-skin="brutal"] .boss-card .big img { filter: grayscale(1) contrast(4); }
 [data-skin="brutal"] .bar > i { background: #000; }
 [data-skin="brutal"] .bar.red > i { background: var(--bad); }
+/* 보스 예상 달성률: 50% 눈금을 넘으면 도전 가능, 꽉 차면 초록 */
+.bar.outlook { position: relative; overflow: visible; }
+.bar.outlook > i { background: var(--muted); }
+.bar.outlook.open > i { background: var(--accent); }
+.bar.outlook.full > i { background: var(--good); }
+.bar.outlook > .mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink, currentColor); }
 [data-skin="brutal"] .chip { background: #fff; }
 [data-skin="brutal"] .chip.hint { background: var(--accent); color: var(--accent-ink); }
 [data-skin="brutal"] .era-tag { border: 2px solid #000; }

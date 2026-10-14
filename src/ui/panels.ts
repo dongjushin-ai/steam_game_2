@@ -3,7 +3,7 @@ import { BUILDINGS, CODEX, ERAS, QUIZ, TIERS, UPGRADES, WEEKLIES } from "../data
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtMult, fmtPct, fmtTokens, setNumberFormat } from "../core/format";
 import { arenaTable } from "../core/arena";
-import { CP_BONUS, autoBlockChance, bossDps, buildingCost, checkpointsFor, computeStats, maxAffordable, milestoneMult, nextMilestone } from "../core/formulas";
+import { BOSS_MIN_OUTLOOK, CP_BONUS, autoBlockChance, bossDps, bossOutlook, buildingCost, checkpointsFor, computeStats, maxAffordable, milestoneMult, nextMilestone } from "../core/formulas";
 import { questProgress, questText } from "../core/quests";
 import type { Game } from "../core/game";
 import { clearSave, exportSave, importSave, saveGame } from "../core/save";
@@ -477,16 +477,19 @@ export class Panels {
         const ok = (b: boolean) => (b ? "chip good" : "chip bad");
         req.append(h("span", { class: ok(st.intel >= boss.intelReq) }, `${L("지능", "Intelligence")} ${fmt(st.intel)} / ${fmt(boss.intelReq)}`));
         if (boss.ctxReq) req.append(h("span", { class: ok(st.ctx >= boss.ctxReq) }, `${L("컨텍스트", "Context")} ${fmtTokens(st.ctx)} / ${fmtTokens(boss.ctxReq)}`));
-        const expect = bossDps(st) * boss.time;
-        const pct = Math.min(1, expect / boss.hp);
+        // 예상 달성률: 보통 속도로 탭하며 싸웠을 때. 35%면 도전이 열리고, 100%면 거의 확실히 이긴다.
+        const look = bossOutlook(st, boss.hp, boss.time);
+        const idle = bossDps(st) * boss.time / boss.hp;
         clear(ready);
         ready.append(
-          h("div", { class: "hint" }, L(`예상 점수 ${fmt(expect)} / 목표 ${fmt(boss.hp)} (${boss.time}초, 탭 미포함)`, `Expected score ${fmt(expect)} / goal ${fmt(boss.hp)} (${boss.time}s, without taps)`)),
-          h("div", { class: "bar", style: { margin: "4px 0 10px" } }, h("i", { style: { width: `${pct * 100}%` } })),
+          h("div", { class: "hint" }, L(`예상 달성률 ${fmtPct(look)} (탭하며 싸울 때) · 탭 없이 ${fmtPct(idle)}`, `Expected ${fmtPct(look)} (tapping) · ${fmtPct(idle)} without taps`)),
+          h("div", { class: `bar outlook ${look >= 1 ? "full" : look >= BOSS_MIN_OUTLOOK ? "open" : ""}`, style: { margin: "4px 0 10px" } },
+            h("i", { style: { width: `${Math.min(1, look) * 100}%` } }), h("b", { class: "mark", style: { left: `${BOSS_MIN_OUTLOOK * 100}%` } })),
         );
         const r = g.bossReady();
         btn.disabled = !r.ok;
-        setText(btn, s.boss ? L("도전 중! 장면을 탭하세요", "Challenge on! Tap the scene") : done ? L("모든 벤치마크 정복", "Every benchmark conquered") : r.ok ? (pct >= 1 ? L("도전!", "Challenge!") : L(`도전 (승률 ${fmtPct(pct)})`, `Challenge (${fmtPct(pct)})`)) : r.reason ?? "");
+        setText(btn, s.boss ? L("도전 중! 장면을 탭하세요", "Challenge on! Tap the scene") : done ? L("모든 벤치마크 정복", "Every benchmark conquered")
+          : r.ok ? (look >= 1 ? L("도전!", "Challenge!") : L("도전! 쉬지 말고 탭하세요", "Challenge! Keep tapping")) : r.reason ?? "");
       },
     });
 

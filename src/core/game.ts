@@ -2,7 +2,7 @@ import { ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSl
 import type { GoldenDef } from "../data/golden";
 import { ACHIEVEMENTS } from "./achievements";
 import {
-  BENCH_MAP, BUILDING_MAP, COMBO_WINDOW, autoBlockChance, extraMissionSlots, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, autoTapValue, bossDps, buildingCost,
+  BENCH_MAP, BUILDING_MAP, COMBO_WINDOW, autoBlockChance, extraMissionSlots, OFFLINE_BASE, OFFLINE_CAP_SEC, UPGRADE_MAP, autoTapValue, bossDps, bossOutlook, BOSS_MIN_OUTLOOK, buildingCost,
   checkpointsFor, comboMult, computeStats, maxAffordable, tapValue, type Stats,
 } from "./formulas";
 import { QUEST_SLOTS, makeQuest, questProgress } from "./quests";
@@ -33,7 +33,7 @@ export type GameNotice =
   | { kind: "quest"; quest: Quest; credits: number; rp: number }
   | { kind: "era"; era: number }
   | { kind: "bossWin"; era: number }
-  | { kind: "bossLose"; era: number }
+  | { kind: "bossLose"; era: number; pct: number }
   | { kind: "achievement"; id: string }
   | { kind: "benchWin"; bench: SideBench }
   | { kind: "benchLose"; bench: SideBench }
@@ -373,6 +373,8 @@ export class Game {
     if (s.boss || s.sideFight) return { ok: false, reason: L("도전 중", "In progress") };
     if (this.stats.intel < boss.intelReq) return { ok: false, reason: L(`지능 ${boss.intelReq} 필요`, `Needs intelligence ${boss.intelReq}`) };
     if (this.stats.ctx < boss.ctxReq) return { ok: false, reason: L(`컨텍스트 ${boss.ctxReq} 필요`, `Needs context ${boss.ctxReq}`) };
+    const look = bossOutlook(this.stats, boss.hp, boss.time);
+    if (look < BOSS_MIN_OUTLOOK) return { ok: false, reason: L(`아직 일러요 · 예상 ${Math.floor(look * 100)}%`, `Too early · ${Math.floor(look * 100)}% expected`) };
     return { ok: true };
   }
 
@@ -399,7 +401,7 @@ export class Game {
       }
     } else if (fight.remaining <= 0) {
       s.boss = null;
-      this.emit({ kind: "bossLose", era: fight.era });
+      this.emit({ kind: "bossLose", era: fight.era, pct: fight.dealt / boss.hp });
     }
   }
 

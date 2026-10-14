@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { ERAS, EVENTS, WEEKLIES, weeklyFor } from "../src/data";
 import { Game, newState } from "../src/core/game";
-import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
+import { BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
 import { questProgress } from "../src/core/quests";
 import { QUIZ } from "../src/data";
@@ -80,12 +80,18 @@ test("보스: 조건 미달이면 시작 불가, 이기면 다음 시대", () =>
   assert.ok(notices.includes("bossWin") && notices.includes("era"));
 });
 
-test("보스: 시간 안에 못 깨면 실패", () => {
+test("보스: 예상 달성률이 낮으면 막고, 탭 없이 버티면 실패", () => {
   const g = new Game(newState());
   g.state.buildings.x_params = 10;
   g.refresh();
+  assert.equal(g.startBoss(), false);
+  assert.match(g.bossReady().reason ?? "", /%/);
+  // 탭하면 이길 만큼(예상 60%)은 되지만 탭을 안 하면 진다
+  const hp = ERAS[0].boss.hp;
+  ERAS[0].boss.hp = bossOutlook(g.stats, 1, ERAS[0].boss.time) / 0.6;
   assert.ok(g.startBoss());
   for (let i = 0; i < ERAS[0].boss.time + 2; i++) g.tick(1);
+  ERAS[0].boss.hp = hp;
   assert.equal(g.state.boss, null);
   assert.equal(g.state.era, 0);
 });
@@ -304,9 +310,7 @@ test("아레나: 플레이어가 표에 포함되고 Elo 순으로 정렬", () =
 
 test("보스전 중에는 이벤트·퀴즈가 뜨지 않는다", () => {
   const g = new Game(newState());
-  g.state.buildings.x_params = 10;
-  g.refresh();
-  assert.ok(g.startBoss());
+  g.state.boss = { era: 0, dealt: 0, remaining: ERAS[0].boss.time };
   g.state.nextEventIn = 0.5;
   g.tick(1);
   assert.equal(g.state.pendingChoice, null);
