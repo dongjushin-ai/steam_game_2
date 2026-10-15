@@ -223,6 +223,11 @@ export class App {
         hd.powerBox),
       this.ticker,
     );
+    // 알림(토스트)은 머리말 바로 아래에: 돈·연구 점수 숫자를 가리지 않게
+    const top = $("#top");
+    const setTopH = () => document.documentElement.style.setProperty("--top-h", `${top.getBoundingClientRect().height}px`);
+    new ResizeObserver(setTopH).observe(top);
+    setTopH();
     // 장면과 아래 창 사이 손잡이: 끌어서 아래 창 크기 조절
     this.sheet = new Sheet(() => this.panels?.update());
     $("#panel").before(this.sheet.handle);

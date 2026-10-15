@@ -53,7 +53,7 @@ export function nextHint(g: Game): Hint | null {
   const hasResearcher = BUILDINGS.some((b) => b.kind === "rp" && (s.buildings[b.id] ?? 0) > 0);
   if (!hasResearcher) {
     const r = BUILDINGS.find((b) => b.kind === "rp" && g.isBuildingUnlocked(b.id))!;
-    return { text: L(`연구 시작: ${r.name} 뽑기`, `Start research: hire ${r.name}`), tab: "research", target: r.id };
+    return { text: L(`연구 시작: ${r.name} 뽑기`, `Start research: hire a ${r.name}`), tab: "research", target: r.id };
   }
 
   if (st.intel < boss.intelReq) {

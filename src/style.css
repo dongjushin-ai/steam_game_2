@@ -282,7 +282,7 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 #nav .dot { position: absolute; top: 4px; right: calc(50% - 16px); width: 6px; height: 6px; background: var(--bad); border: 1px solid #000; }
 
 /* 토스트 · 창 */
-#toasts { position: fixed; top: calc(8px + var(--safe-t)); left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 16px)); display: grid; gap: 6px; z-index: 30; pointer-events: none; }
+#toasts { position: fixed; top: calc(var(--top-h, 0px) + 6px); left: 50%; transform: translateX(-50%); width: min(460px, calc(100% - 16px)); display: grid; gap: 6px; z-index: 30; pointer-events: none; }
 .toast { background: var(--panel); color: var(--ink); border: var(--bw) solid var(--line); border-radius: var(--radius); padding: 5px 9px; font-size: 11px; line-height: 1.4; box-shadow: 3px 3px 0 #000; pointer-events: auto; }
 .toast b { display: block; font-size: 12px; }
 .toast.ach { border-color: var(--money); }
