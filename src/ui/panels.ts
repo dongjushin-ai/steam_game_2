@@ -78,6 +78,7 @@ export class Panels {
 
   private recoId = "";
   private hintTarget = "";
+  private hintUpgrade = "";
   private recoKey = "";
 
   constructor(
@@ -127,7 +128,9 @@ export class Panels {
 
   update(): void {
     // '다음 할 일'이 가리키는 줄도 추천으로 표시 (안내와 화면이 같은 곳을 가리키게)
-    this.hintTarget = this.game.state.settings.hints ? nextHint(this.game)?.target ?? "" : "";
+    const hint = this.game.state.settings.hints ? nextHint(this.game) : null;
+    this.hintTarget = hint?.target ?? "";
+    this.hintUpgrade = hint?.upgrade ?? "";
     const key = this.layoutKey();
     if (key !== this.key) {
       this.key = key;
@@ -281,7 +284,10 @@ export class Panels {
         h("span", { class: "t-ico" }, pxi(u.emoji)), has ? h("span", { class: "price" }, ic("check")) : price);
       if (!has) {
         price.append(ic(currency === "rp" ? "rp" : "coin"), fmt(u.cost));
-        this.rows.push({ update: () => t.classList.toggle("can", g.canBuyUpgrade(u.id)) });
+        this.rows.push({ update: () => {
+          t.classList.toggle("can", g.canBuyUpgrade(u.id));
+          t.classList.toggle("reco", this.hintUpgrade === u.id);
+        } });
       }
       return t;
     };
