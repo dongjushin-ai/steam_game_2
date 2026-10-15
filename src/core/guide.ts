@@ -53,5 +53,12 @@ export function nextHint(g: Game): Hint | null {
   if (st.ctx < boss.ctxReq) return { text: L("기억력을 늘려라", "Need more memory"), tab: "research" };
 
   if (st.bottleneck === "demand") return { text: bossPct + L("질문 부족 → 유저", "Need questions → Users"), tab: "service" };
+  // 전력이 꽉 차서 컴퓨트를 더 놓을 수 없으면: 컴퓨트가 아니라 전력을 가리킨다
+  const unlocked = (kind: string) => BUILDINGS.filter((b) => b.kind === kind && g.isBuildingUnlocked(b.id));
+  const compute = unlocked("compute").sort((a, b) => buildingCost(s, a) - buildingCost(s, b))[0];
+  if (compute && st.powerUse + (compute.powerUse ?? 0) * st.mult.powerUse > st.powerCap) {
+    const power = unlocked("power").sort((a, b) => buildingCost(s, a) / (a.power ?? 1) - buildingCost(s, b) / (b.power ?? 1))[0];
+    if (power) return { text: bossPct + L(`전력이 꽉 찼다 → ${power.name}`, `Power is full → ${power.name}`), tab: "infra", target: power.id };
+  }
   return { text: bossPct + L("컴퓨트를 늘려라", "Need more compute"), tab: "infra" };
 }
