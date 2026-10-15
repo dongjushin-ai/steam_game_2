@@ -33,7 +33,11 @@ export class Sheet {
   set(s: SheetState): void {
     if (s === this.state) return;
     this.state = s;
-    try { localStorage.setItem(KEY, s); } catch { /* 무시 */ }
+    try {
+      localStorage.setItem(KEY, s);
+    } catch {
+      // 저장 실패(사생활 보호 모드 등)는 무시: 이번 실행 동안만 유지
+    }
     this.apply();
     this.onChange();
   }
@@ -48,9 +52,8 @@ export class Sheet {
     this.app.style.removeProperty("--scene-drag");
     const tip = this.handle.querySelector(".sheet-tip")!;
     tip.textContent = this.state === "peek" ? L("▲ 메뉴 열기", "▲ Open menu") : this.state === "full" ? L("▼ 장면 크게", "▼ Bigger scene") : L("끌어서 크기 조절", "Drag to resize");
-    this.handle.setAttribute("aria-label", L(
-      `아래 창 크기: ${this.state === "peek" ? "접힘" : this.state === "full" ? "크게" : "보통"}. 위아래 화살표로 바꾸기`,
-      `Panel size: ${this.state === "peek" ? "hidden" : this.state === "full" ? "large" : "normal"}. Use up/down arrows to change`));
+    const size = this.state === "peek" ? L("접힘", "hidden") : this.state === "full" ? L("크게", "large") : L("보통", "normal");
+    this.handle.setAttribute("aria-label", `${L("아래 창 크기", "Panel size")}: ${size}. ${L("위아래 화살표로 바꾸기", "Use up/down arrows to change")}`);
   }
 
   private bindDrag(): void {
