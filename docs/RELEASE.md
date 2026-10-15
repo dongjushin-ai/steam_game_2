@@ -1,6 +1,27 @@
 # 구글 플레이 출시 체크리스트 (무료판)
 
-기준일 2026-10-14. 정책은 자주 바뀌니 제출 직전에 Play Console 안내를 다시 확인한다.
+기준일 2026-10-15. 정책은 자주 바뀌니 제출 직전에 Play Console 안내를 다시 확인한다.
+
+## 지금 어디까지 왔나 (2026-10-15)
+
+**준비 끝 (저장소 안)**
+- [x] 앱: Capacitor 안드로이드, targetSdk 36, 네이티브 라이브러리 없음(16KB 페이지 요건 해당 없음), 릴리스 AAB 빌드 확인(서명 전 3.7MB)
+- [x] 스토어 문구 `store/listing.md` (한·영), 아이콘·대표 이미지, 스크린샷 7장 × 2개 언어 (10/15 새로 찍음: 시대별 실제 진행 세이브 기준)
+- [x] 개인정보처리방침 `public/privacy.html` (진동·의견 보내기 포함), 데이터 보안·콘텐츠 등급 답안 (아래 4번)
+- [x] 첫 15분 사용성: 안내만 따라가도 시대 3 (docs/PRODUCT.md 스프린트 1·2)
+- [x] GitHub Actions: 'Test & Deploy'(테스트 → GitHub Pages 게시), 'Android build'(디버그 APK, 비밀값 있으면 서명된 AAB)
+
+**만든 사람이 할 일 (순서대로)**
+1. [ ] GitHub 저장소 Settings › Pages › Source를 **GitHub Actions**로 → Actions › Test & Deploy › Run workflow. 개인정보처리방침 주소가 열리는지 확인: https://dongjushin-ai.github.io/steam_game_2/privacy.html
+   - 이 저장소엔 `main` 브랜치가 없고 기본 브랜치가 작업 브랜치다. 그래서 위 1번은 '푸시'가 아니라 'Run workflow'로 게시한다.
+2. [ ] Play Console 개발자 계정 (25달러, 신원 확인 며칠 걸림)
+3. [ ] 업로드 키 만들기 + 저장소 Actions 비밀값 4개 (아래 3번) → Actions › Android build › Run workflow (versionCode 1) → 결과물 `ai-kiugi-release-aab` 받기
+4. [ ] Play Console에서 앱 만들기 → 4번 양식 → 스토어 등록정보 (`store/listing.md` 그대로, 그림은 `store/`)
+5. [ ] (선택, 랭킹 켜기) 플레이 게임즈 서비스 설정 → ID를 알려 주면 코드에 넣고 versionCode 2로 다시 빌드
+   - **랭킹을 안 켠 채 프로덕션에 낼 거면** 스토어 설명의 'TOP 10 랭킹과 훈장' 문단을 빼야 한다 (없는 기능을 적으면 메타데이터 정책 위반). 비공개 테스트 동안은 그대로 둬도 된다.
+6. [ ] 의견 받을 구글 폼 만들기 (이름·이메일 묻지 않기) → 주소를 알려 주면 `src/ui/feedback.ts`에 넣음
+7. [ ] 비공개 테스트 트랙에 AAB 업로드, 테스터 12명 이상, 심사 제출 → 14일
+8. [ ] 14일 뒤 프로덕션 액세스 신청 → 출시
 
 ## 0. 먼저 정할 것 (되돌릴 수 없음)
 
@@ -147,7 +168,7 @@ GitHub Actions: Actions 탭 → **Android build** → Run workflow (versionCode 
 
 ## 6. 출시 순서
 
-1. 이 브랜치를 main에 머지 → GitHub Pages에 `privacy.html` 게시 확인
+1. GitHub Pages 게시(위 '만든 사람이 할 일' 1번) → `privacy.html` 열리는지 확인
 2. 업로드 키 만들고 Actions 비밀값 등록
 3. Play Console에서 앱 만들기 (기본 언어 한국어, 게임, 무료)
 4. 4번 양식 전부 작성, `store/listing.md`대로 스토어 등록정보 입력
