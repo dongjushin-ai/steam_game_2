@@ -12,10 +12,14 @@
 - [x] GitHub Actions: 'Test & Deploy'(테스트 → GitHub Pages 게시), 'Android build'(디버그 APK, 비밀값 있으면 서명된 AAB)
 
 **만든 사람이 할 일 (순서대로)**
-1. [ ] GitHub 저장소 Settings › Pages › Source를 **GitHub Actions**로 → Actions › Test & Deploy › Run workflow. 개인정보처리방침 주소가 열리는지 확인: https://dongjushin-ai.github.io/steam_game_2/privacy.html
-   - 이 저장소엔 `main` 브랜치가 없고 기본 브랜치가 작업 브랜치다. 그래서 위 1번은 '푸시'가 아니라 'Run workflow'로 게시한다.
+1. [ ] 저장소를 **공개**로 → GitHub Pages 켜기 → 게시
+   - Settings › General › 맨 아래 Danger Zone › Change visibility → Public (무료 계정의 Pages는 공개 저장소만 됨. 10/15 기록 검사: 비밀값·개인 이메일 없음, 커밋 작성자는 전부 noreply 주소. 회사 공식 문서 사본 7개는 공개 전에 지움)
+   - Settings › Pages › Build and deployment › Source: **GitHub Actions**
+   - Actions › Test & Deploy › Run workflow (브랜치: 기본 브랜치). 10/15 시험 실행: 테스트·빌드 통과, 게시 단계만 'Pages가 꺼져 있음(404)'으로 실패 → 위 두 설정 뒤 다시 실행하면 된다
+   - 확인: https://dongjushin-ai.github.io/steam_game_2/privacy.html (웹 버전 게임도 같은 주소의 첫 화면에 올라간다)
+   - 이 저장소엔 `main` 브랜치가 없고 기본 브랜치가 작업 브랜치라서, 푸시가 아니라 'Run workflow'로 게시한다.
 2. [ ] Play Console 개발자 계정 (25달러, 신원 확인 며칠 걸림)
-3. [ ] 업로드 키 만들기 + 저장소 Actions 비밀값 4개 (아래 3번) → Actions › Android build › Run workflow (versionCode 1) → 결과물 `ai-kiugi-release-aab` 받기
+3. [ ] 업로드 키 만들기 + 저장소 Actions 비밀값 4개 (아래 3번) → Actions › Android build › Run workflow (versionCode 1) → 결과물 `ai-kiugi-release-aab` 받기 (10/15 시험 실행: 성공, 비밀값이 없어 디버그 APK만 나옴 — 정상)
 4. [ ] Play Console에서 앱 만들기 → 4번 양식 → 스토어 등록정보 (`store/listing.md` 그대로, 그림은 `store/`)
 5. [ ] (선택, 랭킹 켜기) 플레이 게임즈 서비스 설정 → ID를 알려 주면 코드에 넣고 versionCode 2로 다시 빌드
    - **랭킹을 안 켠 채 프로덕션에 낼 거면** 스토어 설명의 'TOP 10 랭킹과 훈장' 문단을 빼야 한다 (없는 기능을 적으면 메타데이터 정책 위반). 비공개 테스트 동안은 그대로 둬도 된다.
