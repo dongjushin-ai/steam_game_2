@@ -111,6 +111,7 @@ export async function openRanking(game: Game, rerender: () => void): Promise<voi
     for (const e of entries) list.append(row(e, !!r?.me && e.rank === r.me.rank && e.name === r.me.name));
     if (r?.me && r.me.rank > 10) list.append(h("div", { class: "rank-gap" }, "⋯"), row(r.me, true));
     if (!r?.me) list.append(h("p", { class: "hint" }, L(`내 기록: ${mine()}`, `Your record: ${mine()}`)));
+    if (r?.total != null && r.total >= 0) list.append(h("p", { class: "hint rank-total" }, L(`참가 ${r.total.toLocaleString()}명`, `${r.total.toLocaleString()} players`)));
     reward(game, board, span, r?.me);
   };
   const paintSegs = () => {

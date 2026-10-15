@@ -30,7 +30,7 @@ export class Tutorial {
   private firstBuy(): { cost: number; el: HTMLElement | null } {
     const s = this.game.state;
     const b = BUILDINGS.find((x) => x.kind === "demand" && x.era <= s.era)!;
-    return { cost: buildingCost(s, b), el: document.querySelector<HTMLElement>("#panel .row .buy") };
+    return { cost: buildingCost(s, b), el: document.querySelector<HTMLElement>(`#panel .row[data-id="${b.id}"] .buy`) };
   }
 
   /** 매 프레임: 단계 진행과 말풍선 위치 */
@@ -48,11 +48,19 @@ export class Tutorial {
       target = this.scene.leadMobPoint();
       if (g.state.credits >= this.firstBuy().cost) this.step = "buy";
     } else if (this.step === "buy") {
-      setText(this.text, L("동전으로 유저를 늘리자. 여기를 눌러!", "Spend coins on users. Tap here!"));
       const btn = this.firstBuy().el;
-      if (btn) {
-        const r = btn.getBoundingClientRect();
+      const r = btn?.getBoundingClientRect();
+      if (btn && r && r.height > 0 && r.top < window.innerHeight) {
+        setText(this.text, L("동전으로 유저를 늘리자. 여기를 눌러!", "Spend coins on users. Tap here!"));
         target = [r.left + r.width / 2, r.top];
+      } else {
+        // 다른 탭에 있거나 아래 창이 접혀 있으면: 서비스 탭부터
+        const nav = document.querySelector<HTMLElement>("#nav button");
+        setText(this.text, L("서비스 탭에서 유저를 늘리자", "Open Service to get users"));
+        if (nav) {
+          const n = nav.getBoundingClientRect();
+          target = [n.left + n.width / 2, n.top];
+        }
       }
       if (g.state.stats.bought > this.boughtAtStart) {
         this.step = "done";

@@ -23,6 +23,7 @@ import { isNative, shareTextFile } from "./native";
 import { openRanking } from "./ranking";
 import { featScore, medalCount, overallScore, titleName } from "../core/ranking";
 import { L } from "../i18n/lang";
+import { nextHint } from "../core/guide";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
 import { AV, PH, PW, drawScene, lookStill, petStill, sceneStill } from "./pixel";
@@ -76,6 +77,7 @@ export class Panels {
   private key = "";
 
   private recoId = "";
+  private hintTarget = "";
   private recoKey = "";
 
   constructor(
@@ -124,6 +126,8 @@ export class Panels {
   }
 
   update(): void {
+    // '다음 할 일'이 가리키는 줄도 추천으로 표시 (안내와 화면이 같은 곳을 가리키게)
+    this.hintTarget = this.game.state.settings.hints ? nextHint(this.game)?.target ?? "" : "";
     const key = this.layoutKey();
     if (key !== this.key) {
       this.key = key;
@@ -183,12 +187,13 @@ export class Panels {
     btn.onclick = () => void buy();
     // 꾹 누르면 연속 구매 (MAX는 이미 한 번에 다 사니까 제외)
     holdToRepeat(btn, () => (this.buyMode === "max" ? { n: 0 } : buy(true)));
-    const row = h("div", { class: "row" }, h("div", { class: "ico" }, pxi(b.emoji)), foldable(h("div", { class: "body" }, name, fx, h("div", { class: "desc" }, b.desc))), btn);
+    const row = h("div", { class: "row", "data-id": b.id }, h("div", { class: "ico" }, pxi(b.emoji)), foldable(h("div", { class: "body" }, name, fx, h("div", { class: "desc" }, b.desc))), btn);
     this.rows.push({
       update: () => {
         const s = g.state;
         const owned = s.buildings[b.id] ?? 0;
-        const reco = this.recommended() === b.id;
+        const here = !!this.hintTarget && !!this.root.querySelector(`.row[data-id="${this.hintTarget}"]`);
+        const reco = here ? this.hintTarget === b.id : this.recommended() === b.id;
         row.classList.toggle("reco", reco);
         const ms = b.kind === "param" ? null : nextMilestone(owned);
         const nameKey = `${owned}|${reco}`;
@@ -328,21 +333,20 @@ export class Panels {
         h("summary", null, h("span", { class: "ico" }, pxi(week.emoji)), h("b", null, week.name), " ", ...week.effects.map((e) => h("span", { class: "chipline" }, effectText(e))), h("small", null, L(` ${left}일`, ` ${left}d`))),
         h("p", { class: "hint" }, week.desc)));
     }
+    // 순서: 핵심 행동(유저 사기)을 맨 위로, 목표(임무) → 제품 → 부가 기능(뽑기·파견) → 장부
+    this.root.append(this.title(L("유저", "Users"), this.buyModeSeg()), ...this.buildingList("demand"));
+    if (featureOn(g.state, "quests")) this.root.append(this.questCard());
+    this.root.append(this.title(L("제품", "Products")), ...this.upgradeTiles("credits"));
     // 시드 뽑기: 첫 보스를 이기면 열린다
     if (g.state.bossesBeaten.length || g.state.gacha.pulls || g.state.gacha.seeds) {
       const card = gachaCard(g, () => { this.key = ""; this.update(); });
       this.rows.push({ update: card.update });
       this.root.append(card.el);
     }
-    if (featureOn(g.state, "quests")) this.root.append(this.questCard());
     if (g.missionSlots() > 0) this.root.append(this.missionCard());
     this.root.append(
-      this.title(L("유저", "Users"), this.buyModeSeg()),
-      ...this.buildingList("demand"),
-      this.title(L("제품", "Products")),
-      ...this.upgradeTiles("credits"),
       h("details", { class: "card stats" }, h("summary", null, L("장부 보기", "Show the books")), kv,
-        h("p", { class: "hint" }, L("어려운 질문일수록 토큰이 비싸다. 단가를 낮추고 헛소리를 줄이면 남는다.", "Harder questions burn pricier tokens. Cut the price and the hallucinations to keep more."))),
+        h("p", { class: "hint" }, L("어려운 질문일수록 토큰이 많이 든다. 비용을 낮추고 헛소리를 줄이면 남는다.", "Harder questions burn more tokens. Cut the cost and the nonsense to keep more."))),
     );
   }
 

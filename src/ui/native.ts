@@ -48,7 +48,7 @@ interface PgPlugin {
   status(): Promise<PgStatus>;
   signIn(): Promise<PgStatus>;
   submitScore(o: { id: string; score: number }): Promise<void>;
-  loadTop(o: { id: string; span: string; collection?: string; max?: number }): Promise<{ available: boolean; entries?: PgEntry[]; me?: PgEntry; error?: string }>;
+  loadTop(o: { id: string; span: string; collection?: string; max?: number }): Promise<{ available: boolean; entries?: PgEntry[]; me?: PgEntry; total?: number; error?: string }>;
   showLeaderboard(o: { id?: string }): Promise<void>;
 }
 export const PlayGames = registerPlugin<PgPlugin>("PlayGames");

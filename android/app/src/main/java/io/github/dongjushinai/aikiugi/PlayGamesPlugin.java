@@ -10,9 +10,10 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.games.AnnotatedData;
 import com.google.android.gms.games.LeaderboardsClient;
 import com.google.android.gms.games.PlayGames;
+import com.google.android.gms.games.leaderboard.Leaderboard;
 import com.google.android.gms.games.leaderboard.LeaderboardScore;
-import com.google.android.gms.games.leaderboard.LeaderboardScoreBuffer;
 import com.google.android.gms.games.leaderboard.LeaderboardVariant;
+import com.google.android.gms.games.leaderboard.LeaderboardScoreBuffer;
 
 /**
  * 구글 플레이 게임즈 리더보드 (v2 SDK).
@@ -124,6 +125,15 @@ public class PlayGamesPlugin extends Plugin {
                         list.put(e);
                     }
                     buf.release();
+                    // 참가자 수 (시대별 타임어택이면 '그 시대까지 간 사람 수'). 모르면 -1
+                    long total = -1;
+                    Leaderboard board = scores.getLeaderboard();
+                    if (board != null) {
+                        for (LeaderboardVariant v : board.getVariants()) {
+                            if (v.getTimeSpan() == sp && v.getCollection() == col) total = v.getNumScores();
+                        }
+                    }
+                    r.put("total", total);
                     scores.release();
                 }
             } else {
