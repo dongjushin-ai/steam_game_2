@@ -311,6 +311,9 @@ export class Panels {
           [L("토큰 단가", "Token price"), `${fmt(st.price)} /${L("토큰", "token")}`],
           [L("토큰 가성비", "Token value ratio"), isFinite(eff) ? L(`${fmt(eff)}배`, `${fmt(eff)}×`) : "∞"],
           [L("매출 − 추론비", "Revenue − inference"), `${fmt(st.gross)} − ${fmt(st.cost)}`],
+          [L("담당 질문", "Handles"), `${st.tier.name} · ${fmtTokens(st.tokensPerQ)}`],
+          [L("할루시네이션", "Hallucination"), fmtPct(st.hall)],
+          ...(st.autoTap > 0 ? [[L("자동 답변", "Auto-answers"), `${fmt(st.autoTap)} /${L("초", "s")}`] as [string, string]] : []),
         ];
         for (const [k, v] of pairs) kv.append(h("span", null, k), h("b", null, v));
       },
@@ -318,10 +321,10 @@ export class Panels {
     const week = WEEKLIES.find((w) => w.id === g.state.weekly);
     if (week && featureOn(g.state, "quests")) {
       const left = 7 - ((new Date().getDay() + 6) % 7);
-      this.root.append(h("div", { class: "card weekly" }, h("div", { class: "ico" }, pxi(week.emoji)),
-        h("div", { class: "body" }, h("div", { class: "name" }, L("이번 주", "This week"), " · ", h("b", null, week.name)),
-          h("div", { class: "fx" }, ...week.effects.map((e) => h("span", null, effectText(e))), h("span", null, L(`${left}일 남음`, `${left}d left`))),
-          h("div", { class: "desc" }, week.desc))));
+      // 한 줄: 이번 주 이벤트 이름 · 효과 · 남은 날 (설명은 눌러서 펼침)
+      this.root.append(h("details", { class: "card strip weekly" },
+        h("summary", null, h("span", { class: "ico" }, pxi(week.emoji)), h("b", null, week.name), " ", ...week.effects.map((e) => h("span", { class: "chipline" }, effectText(e))), h("small", null, L(` ${left}일`, ` ${left}d`))),
+        h("p", { class: "hint" }, week.desc)));
     }
     // 시드 뽑기: 첫 보스를 이기면 열린다
     if (g.state.bossesBeaten.length || g.state.gacha.pulls || g.state.gacha.seeds) {
@@ -431,17 +434,17 @@ export class Panels {
         const st = g.stats;
         clear(power);
         const ratio = st.powerCap > 0 ? st.powerUse / st.powerCap : 1;
+        // 한 줄 요약: 처리량 · 전력 (모자라면 빨갛게)
         append(power,
-          h("div", { class: "kv" },
-            h("span", null, L("처리량", "Throughput")), h("b", null, `${fmt(st.tps)} ${L("토큰/초", "tokens/s")}`),
-            h("span", null, L("전력 사용 / 공급", "Power use / supply")), h("b", null, `${fmt(st.powerUse)} / ${fmt(st.powerCap)}`)),
-          h("div", { class: `bar ${ratio > 1 ? "red" : ""}`, style: { marginTop: "6px" } }, h("i", { style: { width: `${Math.min(100, ratio * 100)}%` } })),
-          ratio > 1 ? h("div", { class: "hint warn", style: { marginTop: "4px" } }, L(`전력 부족! 처리량 ${fmtPct(st.powerEff)}`, `Low power! Throughput ${fmtPct(st.powerEff)}`)) : null,
+          h("div", { class: "strip-line" },
+            h("span", null, ic("chip"), h("b", null, fmt(st.tps)), L(" 토큰/초", " tok/s")),
+            h("span", { class: ratio > 1 ? "warn" : "" }, ic("bolt"), h("b", null, `${fmt(st.powerUse)} / ${fmt(st.powerCap)}`), ratio > 1 ? L(` 부족 ${fmtPct(st.powerEff)}`, ` low ${fmtPct(st.powerEff)}`) : "")),
+          h("div", { class: `bar thin ${ratio > 1 ? "red" : ""}` }, h("i", { style: { width: `${Math.min(100, ratio * 100)}%` } })),
         );
       },
     });
     this.root.append(
-      h("div", { class: "card" }, power),
+      h("div", { class: "card strip" }, power),
       this.title(L("컴퓨트", "Compute"), this.buyModeSeg()),
       ...this.buildingList("compute"),
       this.title(L("전력", "Power")),
@@ -459,20 +462,20 @@ export class Panels {
         const st = g.stats;
         clear(info);
         const next = st.nextTier;
+        // 한 줄 요약: 지능 · 컨텍스트 (연구 포인트는 위 헤더에 있다) + 다음 질문 조건은 작게
         append(info,
-          h("div", { class: "kv" },
-            h("span", null, L("지능", "Intelligence")), h("b", null, fmt(st.intel)),
-            h("span", null, L("컨텍스트 창", "Context window")), h("b", null, st.ctx ? `${fmtTokens(st.ctx)} ${L("토큰", "tokens")}` : L("없음", "None")),
-            h("span", null, L("연구 포인트", "Research points")), h("b", null, `${fmt(g.state.rp)} (+${fmt(st.rpRate)}/${L("초", "s")})`)),
-          next ? h("div", { class: "hint", style: { marginTop: "6px" } },
-            `${L("다음 질문", "Next question")} ${next.name}: ${L("지능", "intelligence")} ${fmt(next.intelReq)}${next.ctxReq ? ` · ${L("컨텍스트", "context")} ${fmtTokens(next.ctxReq)}` : ""}` +
-            (st.intel >= next.intelReq && st.ctx < next.ctxReq ? L(" ← 컨텍스트 연구 필요!", " ← research more context!") : "")) : null,
+          h("div", { class: "strip-line" },
+            h("span", null, L("지능 ", "IQ "), h("b", null, fmt(st.intel))),
+            h("span", null, L("컨텍스트 ", "Context "), h("b", null, st.ctx ? fmtTokens(st.ctx) : "-"))),
+          next ? h("div", { class: "strip-sub" },
+            `${L("다음 질문", "Next")} ${next.name}: ${L("지능", "IQ")} ${fmt(next.intelReq)}${next.ctxReq ? ` · ${L("컨텍스트", "ctx")} ${fmtTokens(next.ctxReq)}` : ""}` +
+            (st.intel >= next.intelReq && st.ctx < next.ctxReq ? L(" ← 컨텍스트 연구!", " ← research context!") : "")) : null,
         );
       },
     });
     const param = BUILDINGS.filter((b) => b.kind === "param");
     this.root.append(
-      h("div", { class: "card" }, info),
+      h("div", { class: "card strip" }, info),
       this.title(L("모델", "Model"), this.buyModeSeg()),
       ...param.map((b) => this.buildingRow(b)),
       this.title(L("연구팀", "Research team")),

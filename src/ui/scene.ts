@@ -89,7 +89,8 @@ export class Scene {
     };
     this.root.append(this.canvas, this.say, this.top, this.comboEl, this.levelEl, this.hud);
     this.meter.append(this.meterBar, this.meterText);
-    this.hud.append(this.meter, this.bottleneck, h("div", { class: "hud-row" }, this.tierChip, this.hallChip, this.autoChip, this.thinkBtn));
+    // 장면 위 표시는 두 줄만: 다음 시대 막대 / 지금 할 일 + 생각 모드. (티어·환각·자동 답변은 서비스 탭 장부로)
+    this.hud.append(this.meter, h("div", { class: "hud-row" }, this.bottleneck, this.thinkBtn));
     // 장면을 탭하면 답변 한 발 (몬스터를 직접 누르면 바로 처치)
     this.root.addEventListener("pointerdown", (e) => {
       if ((e.target as HTMLElement).closest(".think-btn, .golden, .threat, button.chip")) return;
@@ -551,7 +552,8 @@ export class Scene {
     // 가이드가 켜져 있으면 '다음 할 일'을, 아니면 병목을 보여준다 (탭하면 해당 화면으로)
     const hint = g.state.settings.hints ? nextHint(g) : null;
     if (hint) {
-      setText(this.bottleneck, `${hint.text}`);
+      // 보스 도전은 위 막대가 이미 보스 이름·준비도를 보여 주니 짧게
+      setText(this.bottleneck, hint.tab === "bench" && this.meter.style.display !== "none" ? L("보스 도전 ▶", "Fight the boss ▶") : `${hint.text}`);
       this.bottleneck.className = "chip hint";
       this.hintTab = hint.tab;
     } else if (st.bottleneck === "power") {

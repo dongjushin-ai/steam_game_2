@@ -18,6 +18,7 @@ import { music } from "./music";
 import { Tutorial } from "./tutorial";
 import { playCutscene } from "./cutscene";
 import { setupNative } from "./native";
+import { Sheet } from "./sheet";
 import { rarityName, resolveLook, rewardFor } from "../core/looks";
 import { titleName } from "../core/ranking";
 import { ENDLESS_BONUS, ENDLESS_GROWTH, endlessName } from "../core/formulas";
@@ -33,6 +34,7 @@ export class App {
   private game!: Game;
   private scene!: Scene;
   private panels!: Panels;
+  private sheet!: Sheet;
   /** 방금 이긴 보스의 시대 (새 시대 창에 함께 보여 준다) */
   private lastWin: number | null = null;
   private header = {
@@ -214,6 +216,9 @@ export class App {
         hd.powerBox),
       this.ticker,
     );
+    // 장면과 아래 창 사이 손잡이: 끌어서 아래 창 크기 조절
+    this.sheet = new Sheet(() => this.panels?.update());
+    $("#panel").before(this.sheet.handle);
     const nav = $("#nav");
     for (const t of TABS) {
       const b = h("button", { onclick: () => this.selectTab(t.id), "aria-label": t.label }, h("span", { class: "i" }, ic(t.icon, "nav-ic")), t.label);
@@ -223,6 +228,7 @@ export class App {
   }
 
   private selectTab(id: TabId): void {
+    this.sheet?.open();
     for (const [k, b] of this.navButtons) {
       b.classList.toggle("on", k === id);
       if (k === id) b.setAttribute("aria-current", "page");

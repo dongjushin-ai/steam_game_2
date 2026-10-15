@@ -32,7 +32,7 @@ export function gachaCard(g: Game, rerender: () => void): { el: HTMLElement; upd
   const pick = pickupFor(new Date());
   const el = h("div", { class: "card gacha" },
     h("div", { class: "g-top" },
-      h("div", null, h("div", { class: "name" }, h("b", null, L("시드 뽑기", "Seed Gacha")), " ", h("span", { class: "hint" }, "seed=42")), seeds),
+      h("div", null, h("div", { class: "name" }, h("b", null, L("시드 뽑기", "Seed Gacha"))), seeds),
       h("div", { class: `g-pick rar${pick.rarity}` }, itemImg(g, pick), h("small", null, pick.limited ? L("이번 주 한정 · 픽업", "This week only · pickup") : L("이번 주 픽업", "This week's pickup")), h("span", null, pick.name))),
     h("div", { class: "g-btns" }, one, ten),
     h("div", { class: "g-foot" }, pity,
