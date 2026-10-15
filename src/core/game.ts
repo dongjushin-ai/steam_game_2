@@ -16,6 +16,8 @@ const START_KIT: Record<string, number> = { c_diff: 1, p_dorm: 1, d_neighbors: 1
 /** VIP 질문이 화면에 머무는 시간(초) */
 export const GOLDEN_LIFETIME = 12;
 /** 이벤트 대신 퀴즈가 나올 확률 */
+/** 이만큼(초) 플레이한 뒤부터 퀴즈 */
+export const QUIZ_AFTER = 600;
 const QUIZ_CHANCE = 0.3;
 /** 탈옥 프롬프트가 나오기 시작하는 시대 (ChatGPT 이후) */
 export const THREAT_ERA = 6;
@@ -636,6 +638,8 @@ export class Game {
 
   eligibleQuiz(): QuizQuestion[] {
     const s = this.state;
+    // 처음 10분은 퀴즈 없이 (배울 것이 많은 때라 창을 줄인다)
+    if (s.stats.playSeconds < QUIZ_AFTER) return [];
     return QUIZ.filter((q) => q.era <= s.era && !s.quizSolved.includes(q.id));
   }
 

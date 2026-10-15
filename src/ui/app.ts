@@ -38,6 +38,8 @@ export class App {
   private panels!: Panels;
   private sheet!: Sheet;
   private intros: Intros | null = null;
+  /** 시대 전환 창에 함께 보여 준 AI 겨울 (곧 올 이벤트 알림은 짧게) */
+  private winterInEra: string | null = null;
   /** 방금 이긴 보스의 시대 (새 시대 창에 함께 보여 준다) */
   private lastWin: number | null = null;
   private header = {
@@ -351,7 +353,11 @@ export class App {
       case "event": {
         const ev = n.event;
         sfx("event");
-        if (ev.id.startsWith("winter")) {
+        if (ev.id === this.winterInEra) {
+          // 시대 전환 창에 이미 같이 보여 줬다
+          this.winterInEra = null;
+          toast(`${ev.name} (${ev.year})`, effectsLine(ev.effects, ev.duration));
+        } else if (ev.id.startsWith("winter")) {
           showModal({
             icon: ev.emoji, title: ev.name, sub: ev.year,
             body: [ev.desc, effectsLine(ev.effects, ev.duration)],
@@ -422,12 +428,16 @@ export class App {
         setTimeout(() => sfx("era"), 600);
         const era = ERAS[n.era];
         const won = this.lastWin !== null ? ERAS[this.lastWin].boss : null;
+        const winter = era.winter ? EVENTS.find((e) => e.id === era.winter) ?? null : null;
+        this.winterInEra = winter?.id ?? null;
         this.lastWin = null;
         showModal({
           icon: era.avatar, hero: heroHtml(n.era, era.color), title: era.name, sub: era.years,
           body: [
             ...(won ? [h("p", { class: "won" }, h("b", null, L(`${won.name} 클리어!`, `${won.name} cleared!`)), " ", won.winText)] : []),
-            era.intro, L("새 유닛·연구·질문이 열렸어요! 이 시대의 AI 모습과 방은 꾸미기에서 언제든 다시 고를 수 있어요.", "New units, research and questions unlocked! This era's AI look and room are now in Style.")],
+            era.intro, L("새 유닛·연구·질문이 열렸어요! 이 시대의 AI 모습과 방은 꾸미기에서 언제든 다시 고를 수 있어요.", "New units, research and questions unlocked! This era's AI look and room are now in Style."),
+            // AI 겨울이 같이 오면 창 하나로 (따로 또 띄우지 않음)
+            ...(winter ? [h("p", { class: "won" }, h("b", null, `${winter.emoji} ${winter.name}`), " ", winter.desc, " ", effectsLine(winter.effects, winter.duration))] : [])],
           buttons: [{ label: L("시작하기", "Let's go"), onClick: () => { this.panels.update(); } }],
         });
         saveGame(g.state);
