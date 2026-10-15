@@ -12,7 +12,7 @@
 - [x] GitHub Actions: 'Test & Deploy'(테스트 → GitHub Pages 게시), 'Android build'(디버그 APK, 비밀값 있으면 서명된 AAB)
 
 **만든 사람이 할 일 (순서대로)**
-1. [ ] 저장소를 **공개**로 → GitHub Pages 켜기 → 게시
+1. [x] 저장소를 **공개**로 → GitHub Pages 켜기 → 게시 (10/15 완료: 개인정보처리방침·웹 게임 열림 확인)
    - Settings › General › 맨 아래 Danger Zone › Change visibility → Public (무료 계정의 Pages는 공개 저장소만 됨. 10/15 기록 검사: 비밀값·개인 이메일 없음, 커밋 작성자는 전부 noreply 주소. 회사 공식 문서 사본 7개는 공개 전에 지움)
    - Settings › Pages › Build and deployment › Source: **GitHub Actions**
    - Actions › Test & Deploy › Run workflow (브랜치: 기본 브랜치). 10/15 시험 실행: 테스트·빌드 통과, 게시 단계만 'Pages가 꺼져 있음(404)'으로 실패 → 위 두 설정 뒤 다시 실행하면 된다
