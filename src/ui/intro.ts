@@ -29,7 +29,7 @@ const FEATURES: Feature[] = [
     title: () => L("에이전트 파견", "Agent Missions"), body: () => L("AI를 출장 보내요. 앱을 꺼도 시간이 흐르고, 돌아오면 보상을 받아요.", "Send your AI on trips. Time passes even when the app is closed; collect when they're back.") },
   { id: "side", tab: "bench", when: (g) => g.state.era >= 1 && g.sideBenches().length > 0,
     title: () => L("사이드 벤치마크", "Side Benchmarks"), body: () => L("벤치마크 탭의 작은 시험들. 20초 안에 깨면 영구 보너스를 줘요.", "Small tests in the Bench tab. Clear one in 20 seconds for a permanent bonus.") },
-  { id: "release", tab: "bench", when: (g) => g.releaseGain() >= 1,
+  { id: "release", tab: "bench", when: (g) => g.releaseGain() >= 1 && (g.state.era >= 2 || g.state.stats.playSeconds - g.state.eraStartedAt > 600),
     title: () => L("새 모델 출시", "Release a New Model"), body: () => L("벤치마크 탭 아래. 돈·연구 점수·모델은 처음부터지만, 체크포인트를 받아 보상과 연구가 영구로 빨라져요. 막혔을 때 쓰는 비장의 카드.", "Bottom of Bench. Money, research score and model reset, but checkpoints permanently speed up rewards and research. Your ace when stuck.") },
   { id: "style", tab: "codex", when: (g) => g.state.achievements.length >= 3,
     title: () => L("꾸미기", "Style"), body: () => L("업적을 깨면 모자·색·효과가 열려요. 도감 › 꾸미기에서 AI를 마음대로 꾸며 보세요.", "Feats unlock hats, colors and effects. Dress up your AI in Codex › Style.") },
