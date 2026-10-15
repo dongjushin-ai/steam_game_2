@@ -11,7 +11,7 @@ export const MISSIONS: MissionDef[] = [
   { id: "m_kaggle", era: 5, emoji: "🥇", name: "캐글 대회", duration: 900, rpSeconds: 600, desc: "리더보드 상위권을 노린다. 마지막 날 앙상블은 필수." },
   { id: "m_gpu_auction", era: 6, emoji: "🔨", name: "GPU 경매", duration: 720, effects: fx({ cost: 0.7 }), effectDuration: 180, desc: "중고 GPU 경매에 참가한다. 돌아오면 3분간 구매 비용 −30%." },
   { id: "m_oss", era: 6, emoji: "🐙", name: "오픈소스 기여", duration: 1200, incomeSeconds: 500, desc: "인기 라이브러리에 PR을 보낸다. 머지되면 명성과 사용자가 따라온다." },
-  { id: "m_labeling", era: 7, emoji: "🏷️", name: "데이터 라벨링 캠프", duration: 1200, effects: fx({ hall: 0.8 }), effectDuration: 300, desc: "고품질 데이터를 직접 만든다. 돌아오면 5분간 할루시네이션 −20%." },
+  { id: "m_labeling", era: 7, emoji: "🏷️", name: "데이터 라벨링 캠프", duration: 1200, effects: fx({ hall: 0.8 }), effectDuration: 300, desc: "고품질 데이터를 직접 만든다. 돌아오면 5분간 헛소리 −20%." },
   { id: "m_redteam", era: 7, emoji: "🛡️", name: "레드팀 훈련", duration: 900, effects: fx({ hall: 0.85, demand: 1.2 }), effectDuration: 300, desc: "모델을 일부러 공격해 약점을 찾는다. 돌아오면 5분간 더 안전하고 믿음직해진다." },
   { id: "m_poc", era: 8, emoji: "💼", name: "기업 PoC", duration: 1800, incomeSeconds: 900, desc: "대기업과 개념 검증 프로젝트. 성공하면 큰 계약이 따라온다." },
   { id: "m_summit", era: 9, emoji: "🏛️", name: "국제 정상회의 자문", duration: 2400, effects: fx({ demand: 1.5, reward: 1.2 }), effectDuration: 600, rpSeconds: 600, desc: "각국 대표에게 프런티어 AI를 설명한다. 돌아오면 10분간 신뢰가 오른다." },

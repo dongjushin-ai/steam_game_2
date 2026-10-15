@@ -19,7 +19,7 @@ export const WEEKLIES: Weekly[] = [
   { id: "w_meme", emoji: "😂", name: "밈 대유행", desc: "AI 대화 캡처가 타임라인을 덮었다. 질문이 몰려온다.", effects: fx({ demand: 1.3 }) },
   { id: "w_leaderboard", emoji: "📈", name: "리더보드 시즌", desc: "모두가 벤치마크 점수를 올리려 GPU를 돌린다.", effects: fx({ tps: 1.2 }) },
   { id: "w_open_weights", emoji: "🔓", name: "오픈 웨이트 축제", desc: "공개 모델이 줄줄이 나왔다. 답변 값이 오른다.", effects: fx({ reward: 1.2 }) },
-  { id: "w_bug_bounty", emoji: "🐛", name: "버그 바운티", desc: "사람들이 오답을 제보해 준다. 할루시네이션이 줄어든다.", effects: fx({ hall: 0.85 }) },
+  { id: "w_bug_bounty", emoji: "🐛", name: "버그 바운티", desc: "사람들이 오답을 제보해 준다. 헛소리가 줄어든다.", effects: fx({ hall: 0.85 }) },
   { id: "w_freeze", emoji: "🧊", name: "배포 동결 주간", desc: "금요일 배포 금지. 쉬는 동안 더 많이 번다.", effects: fx({ offline: 1.5 }) },
 ];
 

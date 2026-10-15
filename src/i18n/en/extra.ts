@@ -30,7 +30,7 @@ export const MISSIONS_EN: Record<string, { name: string; desc: string }> = {
   m_kaggle: { name: "Kaggle Competition", desc: "Aim for the top of the leaderboard. Ensembling on the last day is mandatory." },
   m_gpu_auction: { name: "GPU Auction", desc: "Bid on used GPUs. When back, purchase costs −30% for 3 minutes." },
   m_oss: { name: "Open-Source Contribution", desc: "Send a PR to a popular library. Once merged, reputation and users follow." },
-  m_labeling: { name: "Data Labeling Camp", desc: "Make high-quality data by hand. When back, hallucination −20% for 5 minutes." },
+  m_labeling: { name: "Data Labeling Camp", desc: "Make high-quality data by hand. When back, nonsense −20% for 5 minutes." },
   m_redteam: { name: "Red-Team Drill", desc: "Attack the model on purpose to find weak spots. When back, safer and more trusted for 5 minutes." },
   m_poc: { name: "Enterprise PoC", desc: "A proof-of-concept with a big company. Succeed and a large contract follows." },
   m_summit: { name: "Advising an International Summit", desc: "Explain frontier AI to national delegates. When back, trust rises for 10 minutes." },
@@ -76,7 +76,7 @@ export const WEEKLIES_EN: Record<string, { name: string; desc: string }> = {
   w_meme: { name: "Meme Wave", desc: "AI chat screenshots took over the timeline. Questions pour in." },
   w_leaderboard: { name: "Leaderboard Season", desc: "Everyone spins up GPUs to climb the benchmarks." },
   w_open_weights: { name: "Open Weights Fest", desc: "Open models drop one after another. Answers are worth more." },
-  w_bug_bounty: { name: "Bug Bounty", desc: "People report wrong answers for you. Fewer hallucinations." },
+  w_bug_bounty: { name: "Bug Bounty", desc: "People report wrong answers for you. Less nonsense." },
   w_freeze: { name: "Deploy Freeze", desc: "No Friday deploys. You earn more while you rest." },
 };
 

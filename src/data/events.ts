@@ -30,8 +30,8 @@ export const EVENTS: GameEvent[] = [
     desc: "추천 정확도를 10% 올리면 상금 100만 달러! 참가하시겠습니까?",
     effects: [], duration: 0,
     choices: [
-      { label: "참가한다", desc: "연구 포인트 대량 획득", effects: [], duration: 0, rpSeconds: 120 },
-      { label: "본업에 집중", desc: "60초간 처리량 +30%", effects: fx({ tps: 1.3 }), duration: 60 },
+      { label: "참가한다", desc: "연구 점수 대량 획득", effects: [], duration: 0, rpSeconds: 120 },
+      { label: "본업에 집중", desc: "60초간 답변 속도 +30%", effects: fx({ tps: 1.3 }), duration: 60 },
     ],
   },
   {
@@ -49,8 +49,8 @@ export const EVENTS: GameEvent[] = [
     desc: "새 모델이 그럴듯한 가짜 뉴스를 너무 잘 쓴다. 바로 공개할까, 단계적으로 공개할까?",
     effects: [], duration: 0,
     choices: [
-      { label: "전면 공개", desc: "90초간 유입 ×2, 할루시네이션 ×1.3", effects: fx({ demand: 2, hall: 1.3 }), duration: 90 },
-      { label: "단계적 공개", desc: "90초간 할루시네이션 ×0.7, 연구 +50%", effects: fx({ hall: 0.7, rp: 1.5 }), duration: 90 },
+      { label: "전면 공개", desc: "90초간 유입 ×2, 헛소리 ×1.3", effects: fx({ demand: 2, hall: 1.3 }), duration: 90 },
+      { label: "단계적 공개", desc: "90초간 헛소리 ×0.7, 연구 +50%", effects: fx({ hall: 0.7, rp: 1.5 }), duration: 90 },
     ],
   },
   {
@@ -68,8 +68,8 @@ export const EVENTS: GameEvent[] = [
     desc: "수많은 연구자가 '6개월간 거대 AI 학습을 멈추자'는 서한에 서명했다. 어떻게 대응할까?",
     effects: [], duration: 0,
     choices: [
-      { label: "안전 연구에 투자", desc: "120초간 할루시네이션 ×0.6", effects: fx({ hall: 0.6 }), duration: 120 },
-      { label: "계속 달린다", desc: "60초간 처리량 ×1.5, 유입 ×0.8", effects: fx({ tps: 1.5, demand: 0.8 }), duration: 60 },
+      { label: "안전 연구에 투자", desc: "120초간 헛소리 ×0.6", effects: fx({ hall: 0.6 }), duration: 120 },
+      { label: "계속 달린다", desc: "60초간 답변 속도 ×1.5, 유입 ×0.8", effects: fx({ tps: 1.5, demand: 0.8 }), duration: 60 },
     ],
   },
   {
@@ -193,7 +193,7 @@ export const EVENTS: GameEvent[] = [
   },
   {
     id: "punchcard_drop", name: "펀치카드 대참사", emoji: "🗂️", minEra: 1, maxEra: 2, weight: 2, year: "1950s",
-    desc: "대학원생이 펀치카드 2,000장을 계단에 쏟았다. 다시 정렬할 때까지 처리량이 떨어진다.",
+    desc: "대학원생이 펀치카드 2,000장을 계단에 쏟았다. 다시 정렬할 때까지 답변 속도가 떨어진다.",
     effects: fx({ tps: 0.6 }), duration: 30,
   },
   {
@@ -211,8 +211,8 @@ export const EVENTS: GameEvent[] = [
     desc: "규칙이 1만 개를 넘자 서로 충돌하기 시작했다. 유지보수 비용이 치솟는다. 어떻게 할까?",
     effects: [], duration: 0,
     choices: [
-      { label: "규칙을 정리한다", desc: "수익 30초분 지불, 90초간 할루시네이션 ×0.7", effects: fx({ hall: 0.7 }), duration: 90, incomeSeconds: -30 },
-      { label: "그냥 덮어둔다", desc: "60초간 할루시네이션 ×1.4", effects: fx({ hall: 1.4 }), duration: 60 },
+      { label: "규칙을 정리한다", desc: "수익 30초분 지불, 90초간 헛소리 ×0.7", effects: fx({ hall: 0.7 }), duration: 90, incomeSeconds: -30 },
+      { label: "그냥 덮어둔다", desc: "60초간 헛소리 ×1.4", effects: fx({ hall: 1.4 }), duration: 60 },
     ],
   },
   {
@@ -235,7 +235,7 @@ export const EVENTS: GameEvent[] = [
     desc: "\"이 논문은 참신성이 부족합니다. 베이스라인을 20개 더 추가하세요.\" 반박문을 쓸까?",
     effects: [], duration: 0,
     choices: [
-      { label: "밤새 반박문을 쓴다", desc: "연구 포인트 60초분, 30초간 처리량 ×0.8", effects: fx({ tps: 0.8 }), duration: 30, rpSeconds: 60 },
+      { label: "밤새 반박문을 쓴다", desc: "연구 점수 60초분, 30초간 답변 속도 ×0.8", effects: fx({ tps: 0.8 }), duration: 30, rpSeconds: 60 },
       { label: "다른 학회에 낸다", desc: "60초간 연구 ×1.3", effects: fx({ rp: 1.3 }), duration: 60 },
     ],
   },
@@ -251,10 +251,10 @@ export const EVENTS: GameEvent[] = [
   },
   {
     id: "fake_case", name: "가짜 판례", emoji: "⚖️", minEra: 7, weight: 2, year: "2023",
-    desc: "변호사가 AI가 지어낸 판례를 법원에 냈다가 망신을 당했다. 할루시네이션 경계령!",
+    desc: "변호사가 AI가 지어낸 판례를 법원에 냈다가 망신을 당했다. 헛소리 경계령!",
     effects: [], duration: 0,
     choices: [
-      { label: "출처 표기 기능을 넣는다", desc: "120초간 할루시네이션 ×0.7", effects: fx({ hall: 0.7 }), duration: 120 },
+      { label: "출처 표기 기능을 넣는다", desc: "120초간 헛소리 ×0.7", effects: fx({ hall: 0.7 }), duration: 120 },
       { label: "'AI는 실수할 수 있습니다' 문구만 단다", desc: "60초간 유입 ×0.8", effects: fx({ demand: 0.8 }), duration: 60 },
     ],
   },
@@ -284,7 +284,7 @@ export const EVENTS: GameEvent[] = [
     effects: [], duration: 0,
     choices: [
       { label: "한도를 올린다", desc: "60초간 유입 ×1.5, 전력 사용 ×1.3", effects: fx({ demand: 1.5, powerUse: 1.3 }), duration: 60 },
-      { label: "대기열을 건다", desc: "60초간 유입 ×0.8, 토큰 단가 ×0.8", effects: fx({ demand: 0.8, price: 0.8 }), duration: 60 },
+      { label: "대기열을 건다", desc: "60초간 유입 ×0.8, 답변 가격 ×0.8", effects: fx({ demand: 0.8, price: 0.8 }), duration: 60 },
     ],
   },
   {
