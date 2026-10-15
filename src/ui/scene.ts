@@ -246,7 +246,7 @@ export class Scene {
     this.meter.dataset.stage = String(stage);
     const pctText = `${Math.floor(Math.min(1, look) * 100)}%`;
     const need = lackIntel ? L(`지능 ${fmt(st.intel)}/${fmt(boss.intelReq)}`, `IQ ${fmt(st.intel)}/${fmt(boss.intelReq)}`)
-      : L(`컨텍스트 ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`, `Context ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`);
+      : L(`기억력 ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`, `Memory ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`);
     const goal = done ? endlessName(nextLv) : L(`다음 시대 · ${boss.name}`, `Next era · ${boss.name}`);
     setText(this.meterText, !ready ? `${goal} · ${need}` : stage === 3 ? L(`${goal} · 준비 완료`, `${goal} · ready`) : L(`${goal} · 준비 ${pctText}`, `${goal} · ${pctText} ready`));
   }
@@ -306,7 +306,7 @@ export class Scene {
     this.dropLabel(m.id);
     const [cx, cy] = this.toCss(m.x + m.size / 2, m.y - m.size);
     if (wrong) {
-      this.pop(cx, cy, L("환각!", "Hallucination!"), "bad");
+      this.pop(cx, cy, L("헛소리!", "Nonsense!"), "bad");
       // 가끔 AI가 유명한 오답을 자신 있게 말한다
       if (this.blooperCd <= 0 && Math.random() < 0.4) {
         this.blooperCd = 25;
@@ -540,8 +540,8 @@ export class Scene {
     this.root.dataset.era = String(g.state.era);
     setText(this.tierChip, `${st.tier.name} · ${fmtTokens(st.tokensPerQ)}`);
     this.tierChip.title = L(`담당 질문: ${st.tier.name}, 질문당 ${fmtTokens(st.tokensPerQ)} 토큰`, `Handles: ${st.tier.name}, ${fmtTokens(st.tokensPerQ)} tokens per question`);
-    setText(this.hallChip, `${L("환각", "Halluc.")} ${fmtPct(st.hall)}`);
-    this.hallChip.title = `${L("할루시네이션", "Hallucination")} ${fmtPct(st.hall)}`;
+    setText(this.hallChip, `${L("헛소리", "Nonsense")} ${fmtPct(st.hall)}`);
+    this.hallChip.title = `${L("헛소리", "Nonsense")} ${fmtPct(st.hall)}`;
     this.hallChip.className = `chip ${st.hall > 0.3 ? "bad" : st.hall < 0.08 ? "good" : ""}`;
     // 처음 1~2분은 상태 칩을 숨긴다 (기능을 차례로 보여준다)
     const hudOn = featureOn(g.state, "hud");
@@ -565,12 +565,12 @@ export class Scene {
       this.bottleneck.className = "chip warn";
       this.hintTab = "service";
     } else {
-      setText(this.bottleneck, L("처리량 부족 → 인프라", "Need throughput → Infra"));
+      setText(this.bottleneck, L("답변 속도 부족 → 인프라", "Need answer speed → Infra"));
       this.bottleneck.className = "chip warn";
       this.hintTab = "infra";
     }
     if (st.net < 0) {
-      setText(this.bottleneck, L("적자! 토큰 단가를 낮추세요", "Losing money! Lower your token price"));
+      setText(this.bottleneck, L("적자! 답변 가격을 낮추세요", "Losing money! Lower your answer price"));
       this.bottleneck.className = "chip bad";
       this.hintTab = "research";
     }

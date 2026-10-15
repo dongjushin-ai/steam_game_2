@@ -30,7 +30,7 @@ function tagline(g: Game): string {
   const s = g.state, st = g.stats;
   if (s.ended) return L("AI를 키웠다. 아니, AI가 나를 키웠다.", "I grew an AI. Or did it grow me?");
   if (s.stats.breaches > 0) return L(`할머니 공격에 ${s.stats.breaches}번 당함`, `Fell for the grandma exploit ${s.stats.breaches}×`);
-  if (st.hall > 0.2) return L(`환각률 ${fmtPct(st.hall)}. 자신감은 100%.`, `Hallucinates ${fmtPct(st.hall)}. Confidence: 100%.`);
+  if (st.hall > 0.2) return L(`헛소리율 ${fmtPct(st.hall)}. 자신감은 100%.`, `Talks nonsense ${fmtPct(st.hall)}. Confidence: 100%.`);
   if (s.stats.taps > 500) return L(`${fmt(s.stats.taps)}번 탭 = ${fmt(s.stats.taps)}개의 인간 피드백`, `${fmt(s.stats.taps)} taps = ${fmt(s.stats.taps)} pieces of human feedback`);
   return L("strawberry의 r은 아직 세는 중", "Still counting the r's in strawberry");
 }

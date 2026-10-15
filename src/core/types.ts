@@ -358,6 +358,9 @@ export interface GameState {
     music: boolean;
     /** 첫 30초 안내를 마쳤는지 */
     tutorialDone: boolean;
+    /** 새 기능 소개를 본 것 / 기존 세이브 처리를 했는지 */
+    seen: string[];
+    introSeeded: boolean;
     /** 알림 (앱에서만) / 알림을 물어본 적 있는지 */
     notify: boolean;
     notifyAsked: boolean;

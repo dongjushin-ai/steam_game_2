@@ -15,6 +15,8 @@ import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
 import { shareCard } from "./sharecard";
 import { gachaCard } from "./gacha";
+import { helpContent } from "./help";
+import { openFeedback } from "./feedback";
 import { holdToRepeat } from "./hold";
 import { enableNotify, maybeAskNotify } from "./notify";
 import { isNative, shareTextFile } from "./native";
@@ -46,11 +48,11 @@ export const TABS: { id: TabId; icon: IconName; readonly label: string }[] = [
 /** 스탯 이름 */
 export function statLabel(stat: MultStat): string {
   const ko: Record<MultStat, string> = {
-    tps: "처리량", intel: "지능", hall: "할루시네이션", price: "토큰 단가", reward: "보상", demand: "질문 유입",
+    tps: "답변 속도", intel: "지능", hall: "헛소리", price: "답변 가격", reward: "보상", demand: "질문 유입",
     rp: "연구", power: "전력", powerUse: "전력 사용", cost: "구매 비용", tap: "탭 보상", offline: "오프라인 보상", think: "생각 토큰",
   };
   const en: Record<MultStat, string> = {
-    tps: "Throughput", intel: "Intelligence", hall: "Hallucination", price: "Token price", reward: "Reward", demand: "Demand",
+    tps: "Answer speed", intel: "Intelligence", hall: "Nonsense", price: "Answer price", reward: "Reward", demand: "Demand",
     rp: "Research", power: "Power", powerUse: "Power use", cost: "Build cost", tap: "Tap reward", offline: "Offline reward", think: "Thinking tokens",
   };
   return L(ko[stat], en[stat]);
@@ -69,7 +71,7 @@ interface Updatable {
 export class Panels {
   tab: TabId = "service";
   private buyMode: BuyMode = 1;
-  private codexTab: "history" | "tech" | "models" | "ach" | "style" | "settings" = "history";
+  private codexTab: "history" | "tech" | "models" | "ach" | "style" | "help" | "settings" = "history";
   private rows: Updatable[] = [];
   private key = "";
 
@@ -217,7 +219,7 @@ export class Panels {
   /** 업그레이드 효과 칩들 */
   private upgradeFx(u: Upgrade): HTMLElement {
     const fx = h("div", { class: "fx" }, ...u.effects.map((e) => h("span", null, effectText(e))));
-    if (u.ctx) fx.append(h("span", null, `${L("컨텍스트", "Context")} ${fmtTokens(u.ctx)}`));
+    if (u.ctx) fx.append(h("span", null, `${L("기억력", "Memory")} ${fmtTokens(u.ctx)}`));
     if (u.unlockThinking) fx.append(h("span", null, L("생각 모드", "Thinking Mode")));
     if (u.autoTap) fx.append(h("span", null, L(`자동 답변 +${u.autoTap}/초`, `Auto-answer +${u.autoTap}/s`)));
     if (u.autoBlock) fx.append(h("span", null, L(`탈옥 자동 차단 +${Math.round(u.autoBlock * 100)}%`, `Jailbreak auto-block +${Math.round(u.autoBlock * 100)}%`)));
@@ -308,11 +310,11 @@ export class Panels {
           [L("처리 가능", "Capacity"), `${fmt(st.capacityQ)} /${L("초", "s")}`],
           [L("실제 답변", "Answered"), `${fmt(st.answered)} /${L("초", "s")}`],
           [L("질문당 보상", "Reward / question"), `${fmt(st.rewardPerQ)}`],
-          [L("토큰 단가", "Token price"), `${fmt(st.price)} /${L("토큰", "token")}`],
+          [L("답변 가격", "Answer price"), `${fmt(st.price)} /${L("토큰", "token")}`],
           [L("토큰 가성비", "Token value ratio"), isFinite(eff) ? L(`${fmt(eff)}배`, `${fmt(eff)}×`) : "∞"],
           [L("매출 − 추론비", "Revenue − inference"), `${fmt(st.gross)} − ${fmt(st.cost)}`],
           [L("담당 질문", "Handles"), `${st.tier.name} · ${fmtTokens(st.tokensPerQ)}`],
-          [L("할루시네이션", "Hallucination"), fmtPct(st.hall)],
+          [L("헛소리", "Nonsense"), fmtPct(st.hall)],
           ...(st.autoTap > 0 ? [[L("자동 답변", "Auto-answers"), `${fmt(st.autoTap)} /${L("초", "s")}`] as [string, string]] : []),
         ];
         for (const [k, v] of pairs) kv.append(h("span", null, k), h("b", null, v));
@@ -340,7 +342,7 @@ export class Panels {
       this.title(L("제품", "Products")),
       ...this.upgradeTiles("credits"),
       h("details", { class: "card stats" }, h("summary", null, L("장부 보기", "Show the books")), kv,
-        h("p", { class: "hint" }, L("어려운 질문일수록 토큰이 비싸다. 단가를 낮추고 환각을 줄이면 남는다.", "Harder questions burn pricier tokens. Cut the price and the hallucinations to keep more."))),
+        h("p", { class: "hint" }, L("어려운 질문일수록 토큰이 비싸다. 단가를 낮추고 헛소리를 줄이면 남는다.", "Harder questions burn pricier tokens. Cut the price and the hallucinations to keep more."))),
     );
   }
 
@@ -388,7 +390,7 @@ export class Panels {
       const running = s.missions.some((x) => x.id === m.id);
       const reward: string[] = [];
       if (m.incomeSeconds) reward.push(L(`수익 ${fmtDurationShort(m.incomeSeconds)}분`, `${fmtDurationShort(m.incomeSeconds)} min of income`));
-      if (m.rpSeconds) reward.push(L(`RP ${fmtDurationShort(m.rpSeconds)}분`, `${fmtDurationShort(m.rpSeconds)} min of RP`));
+      if (m.rpSeconds) reward.push(L(`연구 점수 ${fmtDurationShort(m.rpSeconds)}분`, `${fmtDurationShort(m.rpSeconds)} min of research`));
       if (m.effects) reward.push(...m.effects.map(effectText));
       const btn = h("button", { class: "buy" });
       btn.onclick = () => {
@@ -466,10 +468,10 @@ export class Panels {
         append(info,
           h("div", { class: "strip-line" },
             h("span", null, L("지능 ", "IQ "), h("b", null, fmt(st.intel))),
-            h("span", null, L("컨텍스트 ", "Context "), h("b", null, st.ctx ? fmtTokens(st.ctx) : "-"))),
+            h("span", null, L("기억력 ", "Memory "), h("b", null, st.ctx ? fmtTokens(st.ctx) : "-"))),
           next ? h("div", { class: "strip-sub" },
-            `${L("다음 질문", "Next")} ${next.name}: ${L("지능", "IQ")} ${fmt(next.intelReq)}${next.ctxReq ? ` · ${L("컨텍스트", "ctx")} ${fmtTokens(next.ctxReq)}` : ""}` +
-            (st.intel >= next.intelReq && st.ctx < next.ctxReq ? L(" ← 컨텍스트 연구!", " ← research context!") : "")) : null,
+            `${L("다음 질문", "Next")} ${next.name}: ${L("지능", "IQ")} ${fmt(next.intelReq)}${next.ctxReq ? ` · ${L("기억력", "mem")} ${fmtTokens(next.ctxReq)}` : ""}` +
+            (st.intel >= next.intelReq && st.ctx < next.ctxReq ? L(" ← 기억력 연구!", " ← research memory!") : "")) : null,
         );
       },
     });
@@ -506,7 +508,7 @@ export class Panels {
         clear(req);
         const ok = (b: boolean) => (b ? "chip good" : "chip bad");
         req.append(h("span", { class: ok(st.intel >= boss.intelReq) }, `${L("지능", "Intelligence")} ${fmt(st.intel)} / ${fmt(boss.intelReq)}`));
-        if (boss.ctxReq) req.append(h("span", { class: ok(st.ctx >= boss.ctxReq) }, `${L("컨텍스트", "Context")} ${fmtTokens(st.ctx)} / ${fmtTokens(boss.ctxReq)}`));
+        if (boss.ctxReq) req.append(h("span", { class: ok(st.ctx >= boss.ctxReq) }, `${L("기억력", "Memory")} ${fmtTokens(st.ctx)} / ${fmtTokens(boss.ctxReq)}`));
         // 예상 달성률: 보통 속도로 탭하며 싸웠을 때. 35%면 도전이 열리고, 100%면 거의 확실히 이긴다.
         const look = bossOutlook(st, boss.hp, boss.time);
         const idle = bossDps(st) * boss.time / boss.hp;
@@ -552,8 +554,8 @@ export class Panels {
       });
       this.root.append(this.title(L("특이점 너머", "Beyond the Singularity")), h("div", { class: "card boss-card endless" },
         h("h3", null, endlessName(lv)),
-        h("p", { class: "desc" }, L(`밀레니엄 난제 다음엔 무엇이 있을까. 단계마다 목표가 ${ENDLESS_GROWTH}배, 깨면 처리량·보상이 영구로 ×${ENDLESS_BONUS} (지금 ×${fmt(ENDLESS_BONUS ** s.endless.level)}). 랭킹 '무한 단계'에 기록돼요.`,
-          `What comes after the Millennium Problems? Each level's goal is ×${ENDLESS_GROWTH}; clearing it permanently boosts throughput and rewards ×${ENDLESS_BONUS} (now ×${fmt(ENDLESS_BONUS ** s.endless.level)}). Counts on the 'Endless' leaderboard.`)),
+        h("p", { class: "desc" }, L(`밀레니엄 난제 다음엔 무엇이 있을까. 단계마다 목표가 ${ENDLESS_GROWTH}배, 깨면 답변 속도·보상이 영구로 ×${ENDLESS_BONUS} (지금 ×${fmt(ENDLESS_BONUS ** s.endless.level)}). 랭킹 '무한 단계'에 기록돼요.`,
+          `What comes after the Millennium Problems? Each level's goal is ×${ENDLESS_GROWTH}; clearing it permanently boosts answer speed and rewards ×${ENDLESS_BONUS} (now ×${fmt(ENDLESS_BONUS ** s.endless.level)}). Counts on the 'Endless' leaderboard.`)),
         info, go));
     }
 
@@ -588,7 +590,7 @@ export class Panels {
             h("span", null, L("지금 출시하면", "Release now for")), h("b", null, gain ? `+${fmt(gain)} → ×${after.toFixed(2)}` : L("아직 없음", "Nothing yet")),
             h("span", null, L("다음 체크포인트", "Next checkpoint")), h("b", null, `${L("누적", "Total")} ${fmt(nextAt)}`)),
           h("div", { class: "hint", style: { margin: "6px 0 8px" } },
-            L("크레딧·RP·모델·연구팀은 처음부터. 나머지는 그대로.", "Credits, RP, model and research team reset. Everything else stays.")),
+            L("크레딧·연구 점수·모델·연구팀은 처음부터. 나머지는 그대로.", "Credits, research score, model and research team reset. Everything else stays.")),
         );
         relBtn.disabled = gain < 1;
         setText(relBtn, gain >= 1 ? L(`v${s.releases + 2} 출시하기`, `Release v${s.releases + 2}`) : L("출시할 체크포인트가 없어요", "No checkpoints to claim yet"));
@@ -681,7 +683,7 @@ export class Panels {
       title: L(`v${g.state.releases + 2} 출시할까요?`, `Release v${g.state.releases + 2}?`),
       body: [
         L(`체크포인트 +${fmt(gain)}개를 받아 보상과 연구가 영구히 빨라집니다.`, `Get +${fmt(gain)} checkpoints for a permanent boost to rewards and research.`),
-        L("크레딧·RP·모델·연구팀은 처음부터. 나머지는 그대로.", "Credits, RP, model and research team reset. Everything else stays."),
+        L("크레딧·연구 점수·모델·연구팀은 처음부터. 나머지는 그대로.", "Credits, research score, model and research team reset. Everything else stays."),
       ],
       buttons: [
         {
@@ -705,7 +707,7 @@ export class Panels {
 
   private buildCodex(): void {
     const seg = h("div", { class: "seg", style: { marginBottom: "8px" } });
-    const tabs: [typeof this.codexTab, string][] = [["history", L("역사", "History")], ["tech", L("기술", "Tech")], ["models", L("모델", "Models")], ["ach", L("업적", "Feats")], ["style", L("꾸미기", "Style")], ["settings", L("설정", "Settings")]];
+    const tabs: [typeof this.codexTab, string][] = [["history", L("역사", "History")], ["tech", L("기술", "Tech")], ["models", L("모델", "Models")], ["ach", L("업적", "Feats")], ["style", L("꾸미기", "Style")], ["help", L("도움말", "Help")], ["settings", L("설정", "Settings")]];
     for (const [id, label] of tabs) {
       seg.append(h("button", { class: this.codexTab === id ? "on" : "", onclick: () => { this.codexTab = id; this.update(); } }, label));
     }
@@ -715,6 +717,7 @@ export class Panels {
     else if (this.codexTab === "models") this.buildModels();
     else if (this.codexTab === "ach") this.buildAchievements();
     else if (this.codexTab === "style") this.buildStyle();
+    else if (this.codexTab === "help") this.root.append(h("div", { class: "card" }, ...helpContent()));
     else this.buildSettings();
   }
 
@@ -766,7 +769,7 @@ export class Panels {
     const line = (v: string, era: number, intel: number, ctx: number, tier: number, hall: number, at: string, now = false) =>
       h("div", { class: `codex-item ${now ? "now" : ""}` }, h("div", { class: "e" }, pxi(ERAS[era]?.avatar ?? "")),
         h("div", null, h("b", null, `${s.aiName} ${v}`), h("small", null, ` · ${ERAS[era]?.name ?? ""} · ${at}`),
-          h("div", { class: "hint" }, `${fmt(intel)} · ${fmtTokens(ctx)} · ${TIERS[tier]?.emoji ?? ""} ${TIERS[tier]?.name ?? ""} · ${L("환각", "Hall.")} ${fmtPct(hall)}`)));
+          h("div", { class: "hint" }, `${fmt(intel)} · ${fmtTokens(ctx)} · ${TIERS[tier]?.emoji ?? ""} ${TIERS[tier]?.name ?? ""} · ${L("헛소리", "Nonsense")} ${fmtPct(hall)}`)));
     this.root.append(
       h("p", { class: "hint" }, L("새 모델을 출시할 때마다 그 순간의 스펙이 여기 기록돼요.", "Every model you release leaves its spec sheet here.")),
       line(L(`v${s.releases + 1} (개발 중)`, `v${s.releases + 1} (in training)`), s.era, st.intel, st.ctx, st.tier.id, st.hall, fmtClock(s.stats.playSeconds), true),
@@ -798,7 +801,7 @@ export class Panels {
       this.title(L("기록", "Stats")),
       h("div", { class: "card kv" },
         h("span", null, L("답변한 질문", "Questions answered")), h("b", null, fmt(st.answered)),
-        h("span", null, L("할루시네이션", "Hallucinations")), h("b", null, fmt(st.hallucinations)),
+        h("span", null, L("헛소리", "Nonsense")), h("b", null, fmt(st.hallucinations)),
         h("span", null, L("탭", "Taps")), h("b", null, fmt(st.taps)),
         h("span", null, L("겪은 이벤트", "Events")), h("b", null, fmt(st.eventsSeen)),
         h("span", null, L("누적 크레딧", "Total credits")), h("b", null, fmt(s.totalEarned)),
@@ -975,6 +978,10 @@ export class Panels {
       h("div", { class: "hint", style: { margin: "6px 2px" } },
         L("키보드: ", "Keyboard: "), h("span", { class: "kbd" }, "Space"), L(" 답변 · ", " answer · "), h("span", { class: "kbd" }, "1~5"), L(" 탭 이동 · ", " tabs · "),
         h("span", { class: "kbd" }, "B"), L(" 보스 도전 · ", " boss · "), h("span", { class: "kbd" }, "T"), L(" 생각 모드 · ", " thinking · "), h("span", { class: "kbd" }, "V"), L(" VIP 질문", " VIP question")),
+      this.title(L("의견 보내기", "Feedback")),
+      h("div", { class: "card" },
+        h("p", { class: "hint", style: { marginTop: "0" } }, L("헷갈리거나 지루했던 곳, 좋았던 곳을 알려 주세요. 진행 정도와 기기 종류가 함께 붙어요(이름·연락처 없음).", "Tell us what confused or bored you, or what you liked. Your progress and device type are attached (no name or contact info).")),
+        h("button", { class: "btn", onclick: () => openFeedback(this.game) }, L("의견 보내기", "Send feedback"))),
       this.title(L("세이브", "Save")),
       h("div", { class: "stack" },
         io,
@@ -1071,7 +1078,7 @@ export function shareSummary(g: Game): void {
     `${L("AI 키우기", "Grow Your AI")} — ${s.aiName} v${s.releases + 1}`,
     `${ERAS[s.era].avatar} ${L("도달", "Reached")}: ${ERAS[s.era].name} (${ERAS[s.era].years})${s.ended ? L(" · 엔딩 완료", " · Ending cleared") : ""}`,
     `${L("벤치마크", "Benchmarks")} ${s.bossesBeaten.map((e) => ERAS[e].boss.emoji).join("") || "-"}`,
-    `${L("지능", "Intelligence")} ${fmt(st.intel)} · ${L("컨텍스트", "Context")} ${fmtTokens(st.ctx)} · ${L("할루시네이션", "Hallucination")} ${fmtPct(st.hall)}`,
+    `${L("지능", "Intelligence")} ${fmt(st.intel)} · ${L("기억력", "Memory")} ${fmtTokens(st.ctx)} · ${L("헛소리", "Nonsense")} ${fmtPct(st.hall)}`,
     L(`답변 ${fmt(s.stats.answered)}개 · 누적 ${fmt(s.totalEarned)} · 업적 ${s.achievements.length}개`, `${fmt(s.stats.answered)} answers · ${fmt(s.totalEarned)} earned · ${s.achievements.length} achievements`),
     `${L("플레이", "Played")} ${fmtClock(s.stats.playSeconds)}`,
     L("#AI키우기 #AttentionIsAllYouIdle", "#GrowYourAI #AttentionIsAllYouIdle"),
@@ -1135,9 +1142,9 @@ function modelCard(g: Game): string {
   return [
     `MODEL CARD — ${s.aiName} v${s.releases + 1}`,
     `${L("시대", "Era")}: ${ERAS[s.era].name} (${ERAS[s.era].years})`,
-    `${L("지능", "Intelligence")}: ${fmt(st.intel)} · ${L("컨텍스트", "Context")}: ${fmtTokens(st.ctx)}`,
-    `${L("처리량", "Throughput")}: ${fmt(st.tps)} ${L("토큰/초", "tokens/s")}`,
-    `${L("할루시네이션", "Hallucination")}: ${fmtPct(st.hall)} · ${L("담당 질문", "Handles")}: ${st.tier.name}`,
+    `${L("지능", "Intelligence")}: ${fmt(st.intel)} · ${L("기억력", "Memory")}: ${fmtTokens(st.ctx)}`,
+    `${L("답변 속도", "Answer speed")}: ${fmt(st.tps)} ${L("토큰/초", "tokens/s")}`,
+    `${L("헛소리", "Nonsense")}: ${fmtPct(st.hall)} · ${L("담당 질문", "Handles")}: ${st.tier.name}`,
     `${L("벤치마크", "Benchmarks")}: ${beaten || L("없음", "none")}`,
     `${L("보유 기술", "Tech owned")}: ${s.upgrades.length}`,
   ].join("\n");

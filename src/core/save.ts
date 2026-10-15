@@ -89,6 +89,7 @@ export function migrate(raw: unknown): GameState | null {
       // 첫 안내가 생기기 전 세이브: 이미 1분 넘게 했으면 안내를 건너뛴다
       tutorialDone: r.settings?.tutorialDone ?? num(r.stats?.playSeconds) > 60,
       look: sanitizeLook(r.settings?.look),
+      seen: Array.isArray(r.settings?.seen) ? r.settings.seen.filter((x: unknown): x is string => typeof x === "string").slice(0, 100) : [],
     },
     lastSaved: num(r.lastSaved, Date.now()),
   };

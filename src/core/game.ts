@@ -93,7 +93,7 @@ export function newState(aiName = "나의 AI"): GameState {
       blocked: 0, breaches: 0, missionsDone: 0, benchWins: 0,
     },
     ended: false,
-    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, notify: true, notifyAsked: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
+    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, notify: true, notifyAsked: false, seen: [], introSeeded: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
     lastSaved: Date.now(),
   };
 }
@@ -380,7 +380,7 @@ export class Game {
     const boss = ERAS[s.era].boss;
     if (s.boss || s.sideFight) return { ok: false, reason: L("도전 중", "In progress") };
     if (this.stats.intel < boss.intelReq) return { ok: false, reason: L(`지능 ${boss.intelReq} 필요`, `Needs intelligence ${boss.intelReq}`) };
-    if (this.stats.ctx < boss.ctxReq) return { ok: false, reason: L(`컨텍스트 ${boss.ctxReq} 필요`, `Needs context ${boss.ctxReq}`) };
+    if (this.stats.ctx < boss.ctxReq) return { ok: false, reason: L(`기억력 ${boss.ctxReq} 필요`, `Needs memory ${boss.ctxReq}`) };
     const look = bossOutlook(this.stats, boss.hp, boss.time);
     if (look < BOSS_MIN_OUTLOOK) return { ok: false, reason: L(`아직 일러요 · 예상 ${Math.floor(look * 100)}%`, `Too early · ${Math.floor(look * 100)}% expected`) };
     return { ok: true };
@@ -479,7 +479,7 @@ export class Game {
     if (s.benchDone.includes(id)) return { ok: false, reason: L("정복", "Cleared") };
     if (s.boss || s.sideFight) return { ok: false, reason: L("다른 도전 중", "Another run in progress") };
     if (this.stats.intel < b.intelReq) return { ok: false, reason: L(`지능 ${b.intelReq} 필요`, `Needs intelligence ${b.intelReq}`) };
-    if (this.stats.ctx < b.ctxReq) return { ok: false, reason: L(`컨텍스트 ${b.ctxReq} 필요`, `Needs context ${b.ctxReq}`) };
+    if (this.stats.ctx < b.ctxReq) return { ok: false, reason: L(`기억력 ${b.ctxReq} 필요`, `Needs memory ${b.ctxReq}`) };
     return { ok: true };
   }
 

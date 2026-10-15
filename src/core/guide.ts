@@ -32,7 +32,7 @@ export function nextHint(g: Game): Hint | null {
     if (buildingCost(s, param) <= s.credits) return { text: L(`모델 키우기 → 지능 ${Math.ceil(boss.intelReq)}`, `Grow the model → IQ ${Math.ceil(boss.intelReq)}`), tab: "research" };
     return { text: L(`보스까지 지능 ${Math.ceil(boss.intelReq)} (지금 ${st.intel.toFixed(1)})`, `Boss needs IQ ${Math.ceil(boss.intelReq)} (now ${st.intel.toFixed(1)})`), tab: "research" };
   }
-  if (st.ctx < boss.ctxReq) return { text: L("컨텍스트를 늘려라", "Need more context"), tab: "research" };
+  if (st.ctx < boss.ctxReq) return { text: L("기억력을 늘려라", "Need more memory"), tab: "research" };
 
   if (st.bottleneck === "demand") return { text: L("질문 부족 → 유저", "Need questions → Users"), tab: "service" };
   return { text: L("컴퓨트를 늘려라", "Need more compute"), tab: "infra" };

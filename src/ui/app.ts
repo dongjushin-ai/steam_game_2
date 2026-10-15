@@ -19,6 +19,8 @@ import { Tutorial } from "./tutorial";
 import { playCutscene } from "./cutscene";
 import { setupNative } from "./native";
 import { Sheet } from "./sheet";
+import { Intros } from "./intro";
+import { openHelp } from "./help";
 import { rarityName, resolveLook, rewardFor } from "../core/looks";
 import { titleName } from "../core/ranking";
 import { ENDLESS_BONUS, ENDLESS_GROWTH, endlessName } from "../core/formulas";
@@ -35,6 +37,7 @@ export class App {
   private scene!: Scene;
   private panels!: Panels;
   private sheet!: Sheet;
+  private intros: Intros | null = null;
   /** 방금 이긴 보스의 시대 (새 시대 창에 함께 보여 준다) */
   private lastWin: number | null = null;
   private header = {
@@ -178,6 +181,7 @@ export class App {
     music.setEnabled(state.settings.music);
     this.history = [];
     this.game.onNotice((n) => this.notice(n));
+    this.intros = new Intros(this.game, (t) => this.selectTab(t));
     clear($("#scene"));
     this.scene = new Scene(this.game, () => {
       sfx("tap");
@@ -209,7 +213,8 @@ export class App {
     const hd = this.header;
     hd.powerBox.append(h("div", { class: "res-main" }, ic("bolt"), hd.power), hd.powerSub);
     $("#top").append(
-      h("div", { class: "top-row" }, h("div", { style: { minWidth: "0", display: "flex", alignItems: "baseline" } }, hd.name, hd.ver), hd.era),
+      h("div", { class: "top-row" }, h("div", { style: { minWidth: "0", display: "flex", alignItems: "baseline" } }, hd.name, hd.ver),
+        h("div", { class: "top-right" }, hd.era, h("button", { class: "help-btn", "aria-label": L("게임 방법", "How to play"), onclick: () => openHelp() }, "?"))),
       h("div", { class: "res-row" },
         h("div", { class: "res money" }, h("div", { class: "res-main" }, ic("coin"), hd.money), hd.moneySub),
         h("div", { class: "res rp" }, h("div", { class: "res-main" }, ic("rp"), hd.rp), hd.rpSub),
@@ -229,6 +234,7 @@ export class App {
 
   private selectTab(id: TabId): void {
     this.sheet?.open();
+    this.intros?.visit(id);
     for (const [k, b] of this.navButtons) {
       b.classList.toggle("on", k === id);
       if (k === id) b.setAttribute("aria-current", "page");
@@ -265,6 +271,7 @@ export class App {
       });
       this.tutorial?.frame(dt);
     }
+    this.intros?.frame(dt);
     this.rollCounters(dt);
     this.uiAcc += dt;
     this.saveAcc += dt;
@@ -328,6 +335,11 @@ export class App {
       const has = !!b.querySelector(".dot");
       if (dots[id] && !has) b.append(h("span", { class: "dot" }));
       if (!dots[id] && has) b.querySelector(".dot")?.remove();
+      // 새 기능이 생긴 탭: 들어가 볼 때까지 NEW
+      const isNew = !!this.intros?.newTabs.has(id);
+      const tag = b.querySelector(".new-tag");
+      if (isNew && !tag) b.append(h("span", { class: "new-tag", "aria-label": L("새 기능", "New") }, "NEW"));
+      if (!isNew && tag) tag.remove();
     }
   }
 
@@ -390,7 +402,7 @@ export class App {
       }
       case "endlessWin": {
         sfx("win");
-        this.scene.celebrate(L(`처리량·보상 ×${ENDLESS_BONUS} · 시드 +${n.seeds}`, `Throughput & rewards ×${ENDLESS_BONUS} · +${n.seeds} seeds`), endlessName(n.level).toUpperCase());
+        this.scene.celebrate(L(`답변 속도·보상 ×${ENDLESS_BONUS} · 시드 +${n.seeds}`, `Answer speed & rewards ×${ENDLESS_BONUS} · +${n.seeds} seeds`), endlessName(n.level).toUpperCase());
         toast(L(`${endlessName(n.level)} 돌파!`, `${endlessName(n.level)} cleared!`), L(`다음 단계는 목표 ${ENDLESS_GROWTH}배`, `Next level: goal ×${ENDLESS_GROWTH}`), "ach rar3");
         void submitAll(g).then(() => checkRanks(g, BOARDS.filter((b) => b.key === "endless")));
         saveGame(g.state);
@@ -402,7 +414,7 @@ export class App {
         const pct = Math.floor(n.pct * 100);
         toast(L(`${boss.name} ${pct}%에서 멈췄다`, `${boss.name}: stopped at ${pct}%`),
           pct >= 80 ? L("거의 다 왔어요! 한 번 더, 더 빠르게 탭!", "So close! Once more, tap faster!")
-            : L("인프라에서 처리량을 키우고 다시 도전", "Grow throughput in Infra, then retry"));
+            : L("인프라에서 답변 속도를 키우고 다시 도전", "Grow answer speed in Infra, then retry"));
         break;
       }
       case "era": {
@@ -440,7 +452,7 @@ export class App {
       }
       case "benchLose":
         sfx("lose");
-        toast(L(`${n.bench.name} 실패`, `${n.bench.name} failed`), L("처리량을 늘리고 다시.", "Add throughput and retry."));
+        toast(L(`${n.bench.name} 실패`, `${n.bench.name} failed`), L("답변 속도를 늘리고 다시.", "Add answer speed and retry."));
         break;
       case "threat":
         sfx("event");
@@ -556,7 +568,7 @@ export class App {
       sub: fmtDuration(secs),
       body: [L("AI가 쉬지 않고 질문에 답했어요.", "Your AI kept answering questions."), h("div", { class: "card kv" },
         h("span", null, L("번 크레딧", "Credits earned")), h("b", null, `${fmt(credits)}`),
-        h("span", null, L("연구 포인트", "Research points")), h("b", null, `${fmt(rp)}`))],
+        h("span", null, L("연구 점수", "Research score")), h("b", null, `${fmt(rp)}`))],
       buttons: [{ label: L("좋아!", "Nice!") }],
     });
   }

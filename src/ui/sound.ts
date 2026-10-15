@@ -1,4 +1,7 @@
-// 효과음: Web Audio로 직접 합성한다 (오디오 파일 없음). 진동은 navigator.vibrate.
+// 효과음: Web Audio로 직접 합성한다 (오디오 파일 없음).
+// 진동: 앱에서는 Capacitor Haptics(짧고 또렷한 진동), 웹에서는 navigator.vibrate.
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+import { isNative } from "./native";
 type Sfx = "tap" | "buy" | "research" | "golden" | "claim" | "event" | "quest" | "win" | "lose" | "era" | "error" | "correct" | "wrong";
 
 let ctx: AudioContext | null = null;
@@ -63,8 +66,32 @@ const VIBES: Partial<Record<Sfx, number | number[]>> = {
 
 let lastTap = 0;
 
+/** 앱 진동: 손맛이 필요한 순간만, 세기를 다르게 */
+const HAPTIC: Partial<Record<Sfx, () => Promise<void>>> = {
+  tap: () => Haptics.impact({ style: ImpactStyle.Light }),
+  buy: () => Haptics.impact({ style: ImpactStyle.Light }),
+  research: () => Haptics.impact({ style: ImpactStyle.Medium }),
+  quest: () => Haptics.impact({ style: ImpactStyle.Medium }),
+  claim: () => Haptics.impact({ style: ImpactStyle.Medium }),
+  golden: () => Haptics.notification({ type: NotificationType.Success }),
+  win: () => Haptics.notification({ type: NotificationType.Success }),
+  era: () => Haptics.impact({ style: ImpactStyle.Heavy }),
+  lose: () => Haptics.notification({ type: NotificationType.Warning }),
+  wrong: () => Haptics.notification({ type: NotificationType.Warning }),
+  error: () => Haptics.notification({ type: NotificationType.Error }),
+};
+let lastHaptic = 0;
+
 export function sfx(name: Sfx): void {
-  if (vibrateOn && VIBES[name] && "vibrate" in navigator) {
+  if (vibrateOn && isNative() && HAPTIC[name]) {
+    // 연타·연속 구매 때 진동이 뭉개지지 않게 가벼운 것은 60ms 간격
+    const now = performance.now();
+    const light = name === "tap" || name === "buy";
+    if (!light || now - lastHaptic > 60) {
+      lastHaptic = now;
+      void HAPTIC[name]!().catch(() => {});
+    }
+  } else if (vibrateOn && VIBES[name] && "vibrate" in navigator) {
     try {
       navigator.vibrate(VIBES[name]!);
     } catch {

@@ -614,7 +614,7 @@ details.stats[open] > summary { margin-bottom: 6px; }
 .cut-lines p.big { font-size: 26px; font-weight: 700; color: #ffe600; margin-top: 18px; }
 .cut-hint { font-size: 14px; animation: coach 0.8s steps(2) infinite; }
 .cut-skip { position: absolute; top: calc(12px + var(--safe-t)); right: 12px; background: #000; color: #fff; border: 2px solid #fff; padding: 3px 10px; font: inherit; font-size: 12px; }
-.say.wrong { background: #ff2d2d; color: #fff; border-color: #000; }
+.say.wrong { background: #c81e1e; color: #fff; border-color: #000; }
 .say.wrong::before { content: "?! "; font-weight: 700; }
 
 
@@ -769,3 +769,23 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 .gacha .g-pick .lt-img, .gacha .g-pick .lt-img.pet { width: 32px !important; height: 30px !important; }
 .gacha .g-pick .lt-img.head { width: 40px !important; height: auto !important; }
 .gacha .g-btns .btn { padding: 6px 4px; }
+#nav button { position: relative; }
+#nav .new-tag { position: absolute; top: 1px; right: 4px; padding: 0 3px; font-size: 8px; line-height: 11px; font-weight: 700; color: #fff; background: #d6002a; border: 1px solid #000; animation: newpulse 1s steps(2) infinite; }
+@keyframes newpulse { 50% { transform: translateY(-1px); } }
+@media (prefers-reduced-motion: reduce) { #nav .new-tag { animation: none; } }
+
+/* 게임 방법 · 용어 사전 */
+.top-right { display: flex; align-items: center; gap: 6px; flex: none; }
+.help-btn { width: 22px; height: 22px; padding: 0; font: inherit; font-weight: 700; font-size: 13px; line-height: 18px; color: var(--ink); background: var(--panel); border: 2px solid var(--line); cursor: pointer; }
+.help-steps { display: grid; gap: 8px; }
+.help-step { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; text-align: left; }
+.help-step .hi img { width: 20px; height: 20px; }
+.help-step p { margin: 2px 0 0; font-size: 12px; }
+.help-sub { margin: 12px 0 4px; font-size: 13px; text-align: left; }
+.glossary { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 12px; text-align: left; }
+.glossary dt { font-weight: 700; white-space: nowrap; }
+.glossary dd { margin: 0; }
+@media (max-width: 380px) { .glossary { grid-template-columns: 1fr; } .glossary dd { margin-bottom: 4px; color: var(--muted); } }
+.fb-text { width: 100%; font: inherit; font-size: 13px; padding: 6px; background: var(--panel2); color: var(--ink); border: var(--bw) solid var(--line); resize: vertical; }
+.fb-info { text-align: left; font-size: 10px; }
+.fb-info code { white-space: pre-wrap; font: inherit; }
