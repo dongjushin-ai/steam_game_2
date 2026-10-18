@@ -1,0 +1,55 @@
+English reviews: positive 3736, negative 951 (negative after 10h+ play: 615), Korean 333
+
+theme            in +   in - lift(-/+) - after10h
+bugs_save        0.9%   4.1%     4.64x       4.4%
+monetization     5.0%  13.8%     2.74x      12.7%
+automation       2.2%   4.8%     2.23x       5.7%
+prestige         2.5%   5.3%     2.14x       7.6%
+pacing_wall      9.7%  20.2%     2.07x      21.3%
+ui_clarity       3.0%   5.2%     1.72x       4.7%
+dev_updates      5.2%   8.6%     1.66x       9.9%
+art_music        4.3%   7.0%     1.62x       5.0%
+learning         3.5%   5.5%     1.58x       6.7%
+offline_idle     4.9%   6.7%     1.37x       8.9%
+active_click     4.5%   6.0%     1.34x       5.7%
+length_value    11.5%  15.0%     1.31x      15.6%
+achievements     5.9%   6.8%     1.15x       7.8%
+new_systems      6.7%   7.0%     1.05x       8.5%
+content_end      4.4%   4.6%     1.04x       5.0%
+depth_choice     7.8%   7.7%     0.99x       9.1%
+humor_story      4.0%   2.7%     0.68x       2.0%
+numbers_up      13.2%   8.3%     0.63x      10.1%
+relaxing         4.2%   1.9%     0.45x       2.0%
+time_gate        0.7%   0.1%     0.15x       0.2%
+
+Top negative themes per game:
+  Antimatter Dimensions    n= 22 pacing_wall 22%, new_systems 13%, offline_idle 9%, achievements 9%
+  Cell to Singularity      n=141 monetization 33%, length_value 24%, pacing_wall 21%, learning 15%
+  Clicker Heroes           n= 89 pacing_wall 14%, prestige 12%, achievements 11%, monetization 11%
+  Cookie Clicker           n=167 pacing_wall 10%, length_value 9%, numbers_up 7%, offline_idle 5%
+  Gnorp Apologue           n= 29 pacing_wall 62%, depth_choice 31%, art_music 24%, offline_idle 20%
+  Idle Champions           n= 59 monetization 35%, length_value 25%, dev_updates 16%, new_systems 15%
+  Idle Slayer              n= 89 pacing_wall 35%, numbers_up 15%, length_value 14%, achievements 11%
+  Idle Wizard              n= 18 ui_clarity 27%, numbers_up 16%
+  Increlution              n=  5 active_click 40%, prestige 20%, offline_idle 20%, depth_choice 20%
+  Incremental Epic Hero 2  n= 16 pacing_wall 31%, automation 31%, dev_updates 31%, depth_choice 18%
+  Kittens Game             n=  2 pacing_wall 100%, automation 100%
+  Leaf Blower Revolution   n= 45 length_value 24%, numbers_up 20%, monetization 17%, bugs_save 17%
+  Melvor Idle              n= 62 offline_idle 27%, dev_updates 17%, length_value 16%, bugs_save 12%
+  NGU IDLE                 n= 17 pacing_wall 17%, depth_choice 5%, numbers_up 5%, ui_clarity 5%
+  Nodebuster               n= 43 art_music 27%, pacing_wall 18%, numbers_up 13%, dev_updates 13%
+  Realm Grinder            n= 11 pacing_wall 36%, prestige 27%, offline_idle 27%, new_systems 27%
+  Revolution Idle          n=106 pacing_wall 22%, automation 16%, length_value 16%, numbers_up 10%
+  Unnamed Space Idle       n= 30 monetization 33%, pacing_wall 30%, new_systems 23%, dev_updates 20%
+
+Korean reviews (theme: positive / negative counts):
+  pacing_wall    +17 -10
+  prestige       +7 -6
+  monetization   +7 -3
+  ui_clarity     +9 -0
+  offline_idle   +44 -13
+  content_end    +14 -3
+  depth_choice   +11 -0
+  numbers_up     +9 -2
+  bugs_save      +4 -0
+  learning       +2 -0

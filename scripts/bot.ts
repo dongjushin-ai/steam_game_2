@@ -33,6 +33,8 @@ export interface SimOptions {
    * 처음 15분은 빠르게 탭하다가 이후 느슨하게, VIP 질문 60%만 잡음, 퀴즈 60% 정답.
    */
   human?: boolean;
+  /** 매 초 호출 (평가 스크립트가 진행을 관찰할 때) */
+  onSecond?: (t: number, game: Game, bought: number) => void;
   /** 이 시대에 진입하고 이 초만큼 지나면 멈춘다 (보정용) */
   stopAfter?: { era: number; seconds: number };
 }
@@ -84,10 +86,12 @@ export function runSim(opts: SimOptions = {}): SimResult {
       if (b.kind === "rp" && game.isBuildingUnlocked(b.id) && buildingCost(s, b) <= s.credits * 0.2) game.buyBuilding(b.id);
     }
 
+    // 자동 구매가 켜져 있으면 사람은 건물을 손으로 사지 않는다 (제품·연구·모델만)
+    const handsOff = process.env.HANDS_OFF !== "0" && game.autoBuyRate() > 0 && s.settings.autoBuy;
     let best: { kind: "b" | "u"; id: string; cost: number; ratio: number } | null = null;
     const affordable: { kind: "b" | "u"; id: string }[] = [];
     for (const b of BUILDINGS) {
-      if (b.kind === "rp" || b.kind === "param" || !game.isBuildingUnlocked(b.id)) continue;
+      if (b.kind === "rp" || b.kind === "param" || !game.isBuildingUnlocked(b.id) || handsOff) continue;
       const cost = buildingCost(s, b);
       if (cost <= s.credits) affordable.push({ kind: "b", id: b.id });
       const ratio = gainOf("b", b.id) / cost;
@@ -107,6 +111,8 @@ export function runSim(opts: SimOptions = {}): SimResult {
     } else if (best && best.cost <= s.credits) {
       if (best.kind === "b") game.buyBuilding(best.id);
       else game.buyUpgrade(best.id);
+      // BUY_ALL: 꾹 누르기로 살 수 있는 만큼 사는 부지런한 사람 (같은 건물을 돈이 떨어질 때까지)
+      if (process.env.BUY_ALL && best.kind === "b") for (let k = 0; k < 30 && game.buyBuilding(best.id); k++);
     }
 
     if (game.hasThinking()) {
@@ -150,6 +156,7 @@ export function runSim(opts: SimOptions = {}): SimResult {
       catchThreat = false;
     }
     if (!human || t % 4 === 0) step();
+    opts.onSecond?.(t, game, game.state.stats.bought);
     const s = game.state;
     if (s.era >= res.eraReached.length) {
       res.eraReached.push(t);

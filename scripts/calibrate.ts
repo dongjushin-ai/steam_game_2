@@ -10,8 +10,9 @@ import { BUILDINGS, ERAS, UPGRADES, applyBalance } from "../src/data";
 import { BALANCE, type Balance } from "../src/data/balance";
 import { fmtTime, runSim } from "./bot";
 
-/** 시대별 목표 체류 시간(분) — 봇 기준. 사람은 대략 두 배 걸린다. */
-const TARGET_MIN = [3, 4, 6, 9, 11, 13, 15, 17, 19, 21, 24];
+/** 시대별 목표 체류 시간(분). 기준 플레이어: 자동 구매 + 꾹 누르기로 버는 만큼 쓰는 사람 (BUY_ALL=1 HANDS_OFF=0, 24차 진행).
+ *  예전 값 [3,4,6,9,11,13,15,17,19,21,24]은 1초에 하나만 사는 봇 기준이라 실제 사람보다 훨씬 느렸다. */
+const TARGET_MIN = process.env.TARGETS ? process.env.TARGETS.split(",").map(Number) : [2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 15];
 const FIRST_UNIT_SECONDS = 20;
 const FIRST_RESEARCH_SECONDS = 30;
 const INNER = 4;

@@ -1,6 +1,6 @@
 import { newRanking } from "./ranking";
 import { SEEDS, newGacha, pull, type PullResult } from "./gacha";
-import { ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSlots } from "../data";
+import { BUILDINGS, ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSlots } from "../data";
 import type { GoldenDef } from "../data/golden";
 import { ACHIEVEMENTS } from "./achievements";
 import {
@@ -18,6 +18,8 @@ export const GOLDEN_LIFETIME = 12;
 /** 이벤트 대신 퀴즈가 나올 확률 */
 /** 이만큼(초) 플레이한 뒤부터 퀴즈 */
 export const QUIZ_AFTER = 600;
+/** 자동 구매는 가진 돈의 이 비율 이하인 건물만 산다 */
+export const AUTO_BUY_SHARE = 0.15;
 const QUIZ_CHANCE = 0.3;
 /** 탈옥 프롬프트가 나오기 시작하는 시대 (ChatGPT 이후) */
 export const THREAT_ERA = 6;
@@ -91,11 +93,11 @@ export function newState(aiName = "나의 AI"): GameState {
     achievements: [],
     stats: {
       answered: 0, hallucinations: 0, taps: 0, playSeconds: 0, eventsSeen: 0, goldens: 0, quizCorrect: 0,
-      quizAsked: 0, questsDone: 0, maxCombo: 0, bought: 0, researched: 0, thinkSeconds: 0, bonusEarned: 0,
+      quizAsked: 0, questsDone: 0, maxCombo: 0, bought: 0, researched: 0, thinkSeconds: 0, bonusEarned: 0, autoBought: 0,
       blocked: 0, breaches: 0, missionsDone: 0, benchWins: 0,
     },
     ended: false,
-    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, notify: true, notifyAsked: false, seen: [], introSeeded: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
+    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, autoBuy: true, notify: true, notifyAsked: false, seen: [], introSeeded: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
     lastSaved: Date.now(),
   };
 }
@@ -105,6 +107,7 @@ export class Game {
   stats: Stats;
   private listeners: ((n: GameNotice) => void)[] = [];
   private autoAcc = 0;
+  private autoBuyAcc = 0;
   private questAcc = 0;
   /** 테스트·시뮬레이션용 난수 */
   rng: () => number;
@@ -154,6 +157,8 @@ export class Game {
         if (s.sideFight) s.sideFight.dealt += bossDps(st) * 0.25 * n;
       }
     }
+
+    this.autoBuyTick(dt);
 
     let changed = false;
     for (const a of s.active) a.remaining -= dt;
@@ -267,6 +272,51 @@ export class Game {
     this.state.upgrades.push(id);
     this.refresh();
     return true;
+  }
+
+  // ── 자동 구매 ──────────────────────────────────────
+
+  /** 초당 자동 구매 횟수 (해금 안 됐으면 0) */
+  autoBuyRate(): number {
+    return this.state.upgrades.reduce((a, id) => a + (UPGRADE_MAP[id]?.autoBuy ?? 0), 0);
+  }
+
+  /** 자동 구매가 고를 건물: 지금·직전 시대 건물 중 순이익을 비용 대비 가장 많이 올리는 것. 전력이 꽉 차서 아무것도 안 오르면 전력.
+   *  옛 시대 건물은 안 산다 (싼 옛 건물을 수백 개 사서 ×2 마일스톤을 쌓는 게 최적이 되면 후반 속도가 무너진다) */
+  autoBuyPick(): string | null {
+    const s = this.state;
+    const base = this.stats.net;
+    let best: string | null = null, top = 0;
+    for (const b of BUILDINGS) {
+      if ((b.kind !== "demand" && b.kind !== "compute" && b.kind !== "power") || !this.isBuildingUnlocked(b.id) || b.era < s.era - 1) continue;
+      const next = { ...s, buildings: { ...s.buildings, [b.id]: (s.buildings[b.id] ?? 0) + 1 } };
+      const r = (computeStats(next).net - base) / buildingCost(s, b, 1, this.stats.mult.cost);
+      if (r > top) {
+        top = r;
+        best = b.id;
+      }
+    }
+    if (best) return best;
+    const power = BUILDINGS.filter((b) => b.kind === "power" && this.isBuildingUnlocked(b.id) && b.era >= s.era - 1)
+      .sort((a, b) => buildingCost(s, a) / (a.power ?? 1) - buildingCost(s, b) / (b.power ?? 1))[0];
+    return power?.id ?? null;
+  }
+
+  /** 1초마다 고른 건물을 rate개까지 산다. 가진 돈의 AUTO_BUY_SHARE 이하인 것만 (제품 살 돈은 모이게) */
+  private autoBuyTick(dt: number): void {
+    const rate = this.autoBuyRate();
+    if (!rate || !this.state.settings.autoBuy) return;
+    this.autoBuyAcc = Math.min(this.autoBuyAcc + dt, 2);
+    if (this.autoBuyAcc < 1) return;
+    this.autoBuyAcc -= 1;
+    const id = this.autoBuyPick();
+    if (!id) return;
+    const b = BUILDING_MAP[id];
+    for (let i = 0; i < rate; i++) {
+      if (buildingCost(this.state, b, 1, this.stats.mult.cost) > this.state.credits * AUTO_BUY_SHARE) break;
+      if (!this.buyBuilding(id, 1)) break;
+      this.state.stats.autoBought += 1;
+    }
   }
 
   hasThinking(): boolean {

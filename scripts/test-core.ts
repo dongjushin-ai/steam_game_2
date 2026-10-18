@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { ERAS, EVENTS, WEEKLIES, weeklyFor } from "../src/data";
 import { Game, newState } from "../src/core/game";
-import { ENDLESS_BONUS, ENDLESS_GROWTH, endlessHp, BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
+import { ENDLESS_BONUS, ENDLESS_GROWTH, ENDLESS_OFFSET, endlessHp, BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
 import { resolveLook, rewardFor, sanitizeLook } from "../src/core/looks";
 import { clearTime, grantRank, overallScore, sanitizeRanking, tierFor } from "../src/core/ranking";
@@ -691,8 +691,8 @@ test("특이점 너머: 엔딩 뒤에만, 깨면 단계·영구 보너스·시�
   g.refresh();
   const tps0 = g.stats.tps;
   const hp = endlessHp(1);
-  ERAS[ERAS.length - 1].boss.hp = hp / ENDLESS_GROWTH;
-  assert.equal(endlessHp(1), ERAS[ERAS.length - 1].boss.hp * ENDLESS_GROWTH);
+  ERAS[ERAS.length - 1].boss.hp = hp / ENDLESS_GROWTH ** (1 + ENDLESS_OFFSET);
+  assert.equal(endlessHp(1), ERAS[ERAS.length - 1].boss.hp * ENDLESS_GROWTH ** (1 + ENDLESS_OFFSET));
   // 이기는 경우
   g.state.boss = { era: ERAS.length - 1, dealt: endlessHp(1), remaining: 10, endless: 1 };
   const seeds = g.state.gacha.seeds;
@@ -742,6 +742,31 @@ test("주간 한정: 그 주에만 뽑기·교환에 나오고 그 주의 픽업
     assert.equal(exchange(g, other.id, date), false, "다른 주 한정은 교환 불가");
     assert.ok(exchange(g, pick.id, date));
   }
+});
+
+test("자동 구매: 해금 전엔 안 사고, 지금·직전 시대 건물을 가진 돈의 15% 이하로만, 끄면 멈춘다", () => {
+  const st = newState();
+  st.era = 4;
+  st.credits = 1e12;
+  const g = new Game(st);
+  const before = JSON.stringify(st.buildings);
+  g.tick(1);
+  assert.equal(JSON.stringify(st.buildings), before, "해금 전엔 그대로");
+  st.upgrades.push("a_cron");
+  assert.equal(g.autoBuyRate(), 1);
+  const bought0 = st.stats.autoBought;
+  for (let i = 0; i < 5; i++) g.tick(1);
+  assert.ok(st.stats.autoBought > bought0, "1초에 하나씩 산다");
+  const pick = g.autoBuyPick()!;
+  assert.ok(BUILDING_MAP[pick].era >= st.era - 1, "옛 시대 건물은 안 고른다");
+  st.credits = buildingCost(st, BUILDING_MAP[pick]) * 5;
+  const n = st.stats.autoBought;
+  g.tick(1);
+  assert.equal(st.stats.autoBought, n, "가격이 가진 돈의 15%를 넘으면 안 산다");
+  st.credits = 1e15;
+  st.settings.autoBuy = false;
+  g.tick(1);
+  assert.equal(st.stats.autoBought, n, "끄면 멈춘다");
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

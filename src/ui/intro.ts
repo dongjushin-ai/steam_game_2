@@ -31,6 +31,8 @@ const FEATURES: Feature[] = [
     title: () => L("사이드 벤치마크", "Side Benchmarks"), body: () => L("벤치마크 탭의 작은 시험들. 20초 안에 깨면 영구 보너스를 줘요.", "Small tests in the Bench tab. Clear one in 20 seconds for a permanent bonus.") },
   { id: "release", tab: "bench", when: (g) => g.releaseGain() >= 1 && (g.state.era >= 4 || g.state.stats.playSeconds - g.state.eraStartedAt > 600),
     title: () => L("새 모델 출시", "Release a New Model"), body: () => L("벤치마크 탭 아래. 돈·연구 점수·모델은 처음부터지만, 체크포인트를 받아 보상과 연구가 영구로 빨라져요. 막혔을 때 쓰는 비장의 카드.", "Bottom of Bench. Money, research score and model reset, but checkpoints permanently speed up rewards and research. Your ace when stuck.") },
+  { id: "autobuy", tab: "infra", when: (g) => g.autoBuyRate() > 0,
+    title: () => L("자동 구매", "Auto-buy"), body: () => L("이제 AI가 1초마다 가장 효율 좋은 건물을 알아서 사요. 가진 돈의 15% 이하인 것만 사니까 제품 살 돈은 모여요. 인프라 탭 맨 위에서 켜고 끌 수 있어요.", "Your AI now buys the best-value building every second. It only buys when the price is 15% of your coins or less, so you can still save for products. Toggle it at the top of Infra.") },
   { id: "style", tab: "codex", when: (g) => g.state.achievements.length >= 3,
     title: () => L("꾸미기", "Style"), body: () => L("업적을 깨면 모자·색·효과가 열려요. 도감 › 꾸미기에서 AI를 마음대로 꾸며 보세요.", "Feats unlock hats, colors and effects. Dress up your AI in Codex › Style.") },
   { id: "ranking", tab: "bench", when: (g) => g.state.era >= 4,

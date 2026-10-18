@@ -3,7 +3,7 @@ import type { Effect, MultStat, Upgrade, UpgradeCategory } from "../core/types";
 const fx = (pairs: Partial<Record<MultStat, number>>): Effect[] =>
   Object.entries(pairs).map(([stat, mul]) => ({ stat: stat as MultStat, mul: mul as number }));
 
-type Extra = Pick<Upgrade, "ctx" | "unlockThinking" | "requires" | "autoTap" | "autoBlock" | "missionSlots">;
+type Extra = Pick<Upgrade, "ctx" | "unlockThinking" | "requires" | "autoTap" | "autoBlock" | "missionSlots" | "autoBuy">;
 
 const research = (
   id: string, era: number, year: string, emoji: string, name: string, cost: number,
@@ -99,6 +99,7 @@ const PRODUCTS: Upgrade[] = [
   product("a_autoreply", 2, "1966", "📟", "자동 응답 스크립트", 4e4, "service", {}, "ELIZA처럼 정해진 패턴으로 알아서 대답한다. 초당 0.5회 자동 답변(탭).", { autoTap: 0.5 }),
   product("s_maintenance", 3, "1980s", "🔧", "유지보수 계약", 4e5, "service", { reward: 1.5 }, "규칙이 1만 개를 넘자 유지보수비가 개발비를 넘어섰다. 그래도 돈은 된다."),
   product("s_aircool", 3, "1980s", "🌬️", "공랭식 냉각", 6e5, "hardware", { power: 1.3 }, "큰 선풍기. 아주 큰 선풍기."),
+  product("a_cron", 3, "1979", "⏰", "예약 작업 스크립트", 3e5, "hardware", {}, "정해진 시간마다 같은 일을 알아서 한다. 자동 구매: 1초에 건물 1개 (가장 효율 좋은 것, 가진 돈의 15% 이하만).", { autoBuy: 1 }),
   product("s_search", 4, "1998", "🔍", "검색 엔진 연동", 8e6, "service", { demand: 1.5 }, "질문하기 전에 검색부터. 페이지랭크가 웹을 정리했다."),
   product("s_clippy", 4, "1997", "📎", "도우미 캐릭터", 1.2e7, "service", { tap: 3 }, "\"편지를 쓰시는 것 같네요! 도와드릴까요?\" 탭 보상 ×3."),
   product("s_autoscale", 5, "2006", "📦", "클라우드 오토스케일링", 2e8, "hardware", { tps: 1.5 }, "트래픽이 몰리면 서버가 알아서 늘어난다."),
@@ -106,6 +107,7 @@ const PRODUCTS: Upgrade[] = [
   product("a_macro", 5, "2011", "🤖", "답변 매크로", 2.5e8, "service", {}, "자주 오는 질문은 매크로가 처리한다. 초당 1회 자동 답변(탭).", { autoTap: 1 }),
   product("s_autocomplete", 6, "2021", "⌨️", "코드 자동완성", 5e9, "dev", { reward: 1.5 }, "에디터에서 다음 줄을 제안한다. 개발자들이 Tab 키를 사랑하게 됐다."),
   product("s_hub", 6, "2019", "🤗", "모델 허브", 8e9, "service", { demand: 1.5 }, "모델과 데이터셋을 공유하는 플랫폼. 오픈소스 AI의 광장."),
+  product("a_pipeline", 6, "2018", "🏗️", "자동 조달 파이프라인", 3e9, "hardware", {}, "설정 파일 한 장이면 서버가 깔리고 늘어난다. 자동 구매 +1 (1초에 건물 2개).", { autoBuy: 1, requires: ["a_cron"] }),
   product("p_websearch", 7, "2023", "🌐", "플러그인: 웹 검색", 1.2e11, "tool", { hall: 0.85, demand: 1.2 }, "최신 정보를 검색해서 답한다. 지식 컷오프 탈출."),
   product("p_interpreter", 7, "2023", "🐍", "플러그인: 코드 인터프리터", 1.6e11, "tool", { reward: 1.4 }, "직접 코드를 실행해서 계산한다. strawberry의 r도 이제 정확히 센다."),
   product("p_functions", 7, "2023", "🛠️", "함수 호출", 2.2e11, "tool", { tps: 1.3, reward: 1.2 }, "JSON으로 외부 함수를 부른다. 도구 사용의 시작."),
@@ -123,6 +125,7 @@ const PRODUCTS: Upgrade[] = [
   product("v_vibe", 8, "2025", "🎸", "바이브 코딩 모드", 9e12, "dev", { demand: 1.6 }, "코드는 안 보고 느낌으로 만든다. 2025 콜린스 올해의 단어."),
   product("s_nuclear", 8, "2024", "☢️", "원전 재가동 계약", 8e12, "hardware", { power: 1.5 }, "멈춘 원자력 발전소를 AI 전력용으로 다시 켠다."),
   product("a_autopilot", 8, "2025", "🛫", "에이전트 오토파일럿", 1.1e13, "dev", {}, "에이전트가 스스로 질문을 골라 처리한다. 초당 3회 자동 답변(탭).", { autoTap: 3 }),
+  product("a_procure", 8, "2025", "🛒", "조달 에이전트", 6e12, "hardware", {}, "에이전트가 견적을 비교하고 알아서 사들인다. 자동 구매 +2 (1초에 건물 4개).", { autoBuy: 2, requires: ["a_pipeline"] }),
   product("v_skills", 9, "2025", "🧰", "스킬", 3e13, "dev", { reward: 1.3 }, "업무 노하우를 패키지로 묶어 필요할 때 불러온다."),
   product("v_subagents", 9, "2025", "🪆", "서브에이전트", 4e13, "dev", { tps: 1.5 }, "큰 일을 쪼개 작은 에이전트들에게 맡긴다."),
   product("v_hooks", 9, "2025", "🪝", "훅", 5e13, "dev", { hall: 0.85 }, "도구 실행 전후에 검사를 끼워 넣는다."),

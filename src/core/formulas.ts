@@ -14,7 +14,7 @@ export const BASE_HALL = 0.3;
 export const HALL_PER_TIER = 0.1;
 export const THINK_TOKENS = 3;
 export const THINK_HALL = 0.35;
-export const CP_BONUS = 0.01;
+export const CP_BONUS = 0.005;
 export const OFFLINE_BASE = 0.5;
 export const OFFLINE_CAP_SEC = 8 * 3600;
 /** 같은 건물을 이만큼 모으면 그 건물 생산량 ×2 */
@@ -92,6 +92,8 @@ export function multipliers(state: GameState): Record<MultStat, number> {
 // ── 특이점 너머 (엔딩 뒤 무한 벤치마크) ──
 /** 단계마다 보스 체력 배수 */
 export const ENDLESS_GROWTH = 2;
+/** 1단계 목표 = 마지막 보스 × 2^(1+이 값). 24차: 자동 구매로 엔딩 때 힘이 세져서 1~8단계가 10분 만에 지나가던 것을 한 칸 밀었다 */
+export const ENDLESS_OFFSET = 1;
 /** 단계를 깰 때마다 처리량·보상 배수 (영구) */
 export const ENDLESS_BONUS = 1.25;
 export const ENDLESS_TIME = 30;
@@ -101,7 +103,7 @@ export function endlessName(level: number): string {
 
 /** level 단계 보스의 체력 (1단계부터) */
 export function endlessHp(level: number): number {
-  return ERAS[ERAS.length - 1].boss.hp * ENDLESS_GROWTH ** level;
+  return ERAS[ERAS.length - 1].boss.hp * ENDLESS_GROWTH ** (level + ENDLESS_OFFSET);
 }
 
 /** 누적 수익에 따른 체크포인트 총량. 로그 곡선이라 인플레이션이 폭주하지 않는다. */

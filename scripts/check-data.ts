@@ -73,7 +73,7 @@ for (const u of UPGRADES) {
     else if (UPGRADES.find((x) => x.id === r)!.era > u.era) fail(`${u.id}: 선행 연구 ${r}가 더 늦은 시대`);
   }
   for (const e of u.effects) if (!(e.mul > 0)) fail(`${u.id}: 효과 배수 이상 ${e.stat}`);
-  if (!u.effects.length && !u.ctx && !u.unlockThinking && !u.autoTap) fail(`${u.id}: 효과 없음`);
+  if (!u.effects.length && !u.ctx && !u.unlockThinking && !u.autoTap && !u.autoBuy) fail(`${u.id}: 효과 없음`);
 }
 
 // 보스 컨텍스트 요구치는 그 시대까지 열리는 연구로 달성 가능해야 한다

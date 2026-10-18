@@ -84,6 +84,8 @@ export interface Upgrade {
   autoBlock?: number;
   /** 동시 파견 슬롯 추가 */
   missionSlots?: number;
+  /** 자동 구매: 초당 건물 구매 횟수 (합산) */
+  autoBuy?: number;
   requires?: string[];
   desc: string;
 }
@@ -350,6 +352,8 @@ export interface GameState {
     breaches: number;
     missionsDone: number;
     benchWins: number;
+    /** 자동 구매로 산 건물 수 */
+    autoBought: number;
   };
   ended: boolean;
   settings: {
@@ -358,6 +362,8 @@ export interface GameState {
     music: boolean;
     /** 첫 30초 안내를 마쳤는지 */
     tutorialDone: boolean;
+    /** 자동 구매 켜짐 (해금된 뒤에만 의미 있음) */
+    autoBuy: boolean;
     /** 새 기능 소개를 본 것 / 기존 세이브 처리를 했는지 */
     seen: string[];
     introSeeded: boolean;

@@ -789,3 +789,9 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 .fb-text { width: 100%; font: inherit; font-size: 13px; padding: 6px; background: var(--panel2); color: var(--ink); border: var(--bw) solid var(--line); resize: vertical; }
 .fb-info { text-align: left; font-size: 10px; }
 .fb-info code { white-space: pre-wrap; font: inherit; }
+
+/* 자동 구매 줄 (인프라 탭) */
+.auto-row { display: flex; align-items: center; gap: 8px; }
+.auto-row > span { flex: 1; font-size: 12px; }
+.auto-toggle { min-width: 56px; justify-content: center; }
+.auto-toggle.on { background: var(--good); color: #000; border-color: var(--good); }

@@ -455,8 +455,28 @@ export class Panels {
         );
       },
     });
+    this.root.append(h("div", { class: "card strip" }, power));
+    // 자동 구매 (해금 뒤): 켜고 끄기 + 지금까지 산 수
+    const rate = g.autoBuyRate();
+    if (rate > 0) {
+      const btn = h("button", { class: "chip auto-toggle" });
+      const info = h("span");
+      const paint = () => {
+        const on = g.state.settings.autoBuy;
+        btn.className = `chip auto-toggle ${on ? "on" : ""}`;
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+        setText(btn, on ? L("켜짐", "ON") : L("꺼짐", "OFF"));
+        setText(info, L(`자동 구매 1초에 ${rate}개 · 지금까지 ${fmt(g.state.stats.autoBought)}개`, `Auto-buy ${rate}/s · ${fmt(g.state.stats.autoBought)} bought`));
+      };
+      btn.onclick = () => {
+        g.state.settings.autoBuy = !g.state.settings.autoBuy;
+        sfx("tap");
+        paint();
+      };
+      this.rows.push({ update: paint });
+      this.root.append(h("div", { class: "card strip auto-row", title: L("가장 효율 좋은 건물을 가진 돈의 15% 이하일 때 삽니다", "Buys the best-value building when it costs 15% of your coins or less") }, ic("chip"), info, btn));
+    }
     this.root.append(
-      h("div", { class: "card strip" }, power),
       this.title(L("컴퓨트", "Compute"), this.buyModeSeg()),
       ...this.buildingList("compute"),
       this.title(L("전력", "Power")),
