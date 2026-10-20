@@ -1,6 +1,6 @@
 import { newRanking } from "./ranking";
 import { SEEDS, newGacha, pull, type PullResult } from "./gacha";
-import { BUILDINGS, ERAS, EVENTS, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSlots } from "../data";
+import { BUILDINGS, ERAS, EVENTS, LOST, GOLDENS, MISSIONS, QUIZ, THREATS, UPGRADES, baseMissionSlots } from "../data";
 import type { GoldenDef } from "../data/golden";
 import { ACHIEVEMENTS } from "./achievements";
 import {
@@ -8,7 +8,7 @@ import {
   checkpointsFor, comboMult, computeStats, maxAffordable, tapValue, type Stats,
 } from "./formulas";
 import { QUEST_SLOTS, makeQuest, questProgress } from "./quests";
-import type { EventChoice, GameEvent, GameState, MissionDef, Quest, QuizQuestion, SideBench } from "./types";
+import type { EventChoice, GameEvent, GameState, LostTech, MissionDef, Quest, QuizQuestion, SideBench } from "./types";
 import { L } from "../i18n/lang";
 
 export const SAVE_VERSION = 2;
@@ -18,6 +18,10 @@ export const GOLDEN_LIFETIME = 12;
 /** 이벤트 대신 퀴즈가 나올 확률 */
 /** 이만큼(초) 플레이한 뒤부터 퀴즈 */
 export const QUIZ_AFTER = 600;
+/** 무작위 사건 차례에 잃어버린 기술을 발굴할 확률 */
+export const LOST_CHANCE = 0.12;
+/** 보안 연구로 악성코드 피해 시간을 최대 이만큼 줄인다 */
+export const MALWARE_SHIELD_MAX = 0.7;
 /** 자동 구매는 가진 돈의 이 비율 이하인 건물만 산다 */
 export const AUTO_BUY_SHARE = 0.15;
 const QUIZ_CHANCE = 0.3;
@@ -48,6 +52,7 @@ export type GameNotice =
   | { kind: "threatBlocked"; auto: boolean; amount: number }
   | { kind: "breach" }
   | { kind: "missionDone"; mission: MissionDef; credits: number; rp: number }
+  | { kind: "lost"; tech: LostTech }
   | { kind: "ending" };
 
 export function newState(aiName = "나의 AI"): GameState {
@@ -81,6 +86,7 @@ export function newState(aiName = "나의 AI"): GameState {
     eraStartedAt: 0,
     eraTimes: [0],
     benchDone: [],
+    lost: [],
     sideFight: null,
     threat: null,
     nextThreatIn: 120,
@@ -696,6 +702,15 @@ export class Game {
   triggerRandomEvent(): void {
     const s = this.state;
     s.nextEventIn = 90 + this.rng() * 90;
+    // 가끔 사건 대신 잃어버린 기술을 발굴한다 (지금 시대까지의 것 중 아직 못 찾은 것)
+    const lost = LOST.filter((x) => x.era <= s.era && !s.lost.includes(x.id));
+    if (lost.length && this.rng() < LOST_CHANCE) {
+      const tech = lost[Math.floor(this.rng() * lost.length)];
+      s.lost.push(tech.id);
+      this.refresh();
+      this.emit({ kind: "lost", tech });
+      return;
+    }
     const quizzes = this.eligibleQuiz();
     if (quizzes.length && this.rng() < QUIZ_CHANCE) {
       const quiz = quizzes[Math.floor(this.rng() * quizzes.length)];
@@ -718,15 +733,21 @@ export class Game {
     }
   }
 
-  applyEvent(ev: GameEvent | (EventChoice & { id: string; name: string; emoji: string })): void {
+  /** 보안 연구로 줄어드는 악성코드 이벤트 시간 비율 (0~MALWARE_SHIELD_MAX) */
+  malwareShield(): number {
+    return Math.min(MALWARE_SHIELD_MAX, this.state.upgrades.reduce((a, id) => a + (UPGRADE_MAP[id]?.malwareShield ?? 0), 0));
+  }
+
+  applyEvent(ev: GameEvent | (EventChoice & { id: string; name: string; emoji: string; malware?: boolean })): void {
     const s = this.state;
     if ("desc" in ev && "minEra" in ev) {
       s.stats.eventsSeen += 1;
       this.emit({ kind: "event", event: ev });
     }
     if (ev.duration > 0 && ev.effects.length) {
+      const duration = ev.malware ? ev.duration * (1 - this.malwareShield()) : ev.duration;
       s.active = s.active.filter((a) => a.id !== ev.id);
-      s.active.push({ id: ev.id, name: ev.name, emoji: ev.emoji, effects: ev.effects, remaining: ev.duration });
+      s.active.push({ id: ev.id, name: ev.name, emoji: ev.emoji, effects: ev.effects, remaining: duration });
     }
     this.refresh();
     if (ev.incomeSeconds) {
@@ -734,7 +755,7 @@ export class Game {
       if (amount >= 0) this.earnBonus(amount);
       else s.credits = Math.max(0, s.credits + amount);
     }
-    if (ev.rpSeconds) s.rp += this.stats.rpRate * ev.rpSeconds;
+    if (ev.rpSeconds) s.rp = Math.max(0, s.rp + this.stats.rpRate * ev.rpSeconds);
   }
 
   choose(index: number): void {
@@ -743,7 +764,7 @@ export class Game {
     s.pendingChoice = null;
     const choice = ev?.choices?.[index];
     if (!ev || !choice) return;
-    this.applyEvent({ ...choice, id: ev.id, name: `${ev.name}: ${choice.label}`, emoji: ev.emoji });
+    this.applyEvent({ ...choice, id: ev.id, name: `${ev.name}: ${choice.label}`, emoji: ev.emoji, malware: ev.malware });
   }
 
   /** 퀴즈 답하기. 맞히면 수익 2분 + RP 1분치. */

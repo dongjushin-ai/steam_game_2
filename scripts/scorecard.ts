@@ -6,6 +6,7 @@ import { readFileSync } from "fs";
 import { BUILDINGS, ERAS } from "../src/data";
 import { OFFLINE_CAP_SEC, milestoneMult } from "../src/core/formulas";
 import { fmtTime, runSim } from "./bot";
+import type { Game } from "../src/core/game";
 
 // 기준 플레이어: 사람형(4초마다 판단, 40%는 아무거나) + 자동 구매가 열려도 손으로도 산다
 process.env.HANDS_OFF ??= "0";
@@ -15,24 +16,31 @@ const rows: { id: string; what: string; evidence: string; target: string; v: Ver
 const add = (id: string, what: string, evidence: string, target: string, v: Verdict) => rows.push({ id, what, evidence, target, v });
 const src = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
+/** '새로운 일'(새 시대, 새 업그레이드·연구, 처음 사는 건물, 마일스톤 ×2) 없이 지나간 가장 긴 구간을 재는 관찰기 */
+function wallWatcher() {
+  let lastNew = 0, prev = { era: 0, ups: 0, types: 0, ms: 0 };
+  const worst = { secs: 0, at: 0, era: 0 };
+  const onSecond = (t: number, game: Game) => {
+    const s = game.state;
+    const types = BUILDINGS.filter((b) => (s.buildings[b.id] ?? 0) > 0).length;
+    const ms = BUILDINGS.reduce((a, b) => a + Math.log2(milestoneMult(s.buildings[b.id] ?? 0)), 0);
+    const cur = { era: s.era, ups: s.upgrades.length, types, ms };
+    if (cur.era !== prev.era || cur.ups > prev.ups || cur.types > prev.types || cur.ms > prev.ms) {
+      if (t - lastNew > worst.secs) Object.assign(worst, { secs: t - lastNew, at: lastNew, era: prev.era });
+      lastNew = t;
+    }
+    prev = cur;
+  };
+  return { worst, onSecond };
+}
+
 // ── 사람형 봇 한 판 (출시 포함), 매 초 관찰 ──
-let lastNew = 0, worst = { secs: 0, at: 0, era: 0 };
-let prev = { era: 0, ups: 0, types: 0, ms: 0 };
 let releases: number[] = [];
 let lastRel = 0;
 const res = runSim({
   maxHours: 4, human: true,
   onSecond: (t, game) => {
     const s = game.state;
-    const types = BUILDINGS.filter((b) => (s.buildings[b.id] ?? 0) > 0).length;
-    const ms = BUILDINGS.reduce((a, b) => a + Math.log2(milestoneMult(s.buildings[b.id] ?? 0)), 0);
-    const cur = { era: s.era, ups: s.upgrades.length, types, ms };
-    // '새로운 일': 새 시대, 새 업그레이드·연구, 처음 사는 건물, 마일스톤(생산 ×2)
-    if (cur.era !== prev.era || cur.ups > prev.ups || cur.types > prev.types || cur.ms > prev.ms) {
-      if (t - lastNew > worst.secs) worst = { secs: t - lastNew, at: lastNew, era: prev.era };
-      lastNew = t;
-    }
-    prev = cur;
     if (s.releases > lastRel) {
       releases.push(t);
       lastRel = s.releases;
@@ -42,21 +50,25 @@ const res = runSim({
 const g = res.game, s = g.state;
 const end = s.ended ? s.stats.playSeconds : res.net.length;
 
-// C1 진행 벽 (부정 리뷰 1위 주제: 느림·벽·지루함 20%)
-add("C1", "진행 벽: 새로운 일(시대·연구·새 건물·×2) 없이 지나간 가장 긴 시간", `${Math.round(worst.secs / 60)}분 (${fmtTime(worst.at)}, 시대 ${worst.era})`, "5분 이하", worst.secs <= 300 ? "통과" : worst.secs <= 600 ? "주의" : "부족");
-
 // C1b 가장 긴 시대 (새 연구·건물이 있어도 다음 시대가 너무 멀면 벽으로 느낀다: Idle Slayer·Revolution Idle 불만)
 // 사람형 봇은 판마다 차이가 커서 씨앗 7개의 중앙값으로 본다
 const med = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 const seedNets: number[][] = [];
+const walls: { secs: number; at: number; era: number }[] = [];
 const seeds = [1, 2, 3, 4, 5, 6, 7].map((seed) => {
-  const r = runSim({ maxHours: 4, human: true, seed });
+  const w = wallWatcher();
+  const r = runSim({ maxHours: 4, human: true, seed, onSecond: w.onSecond });
+  walls.push(w.worst);
   seedNets.push(r.net);
   const rs = r.game.state;
   const e = rs.ended ? rs.stats.playSeconds : 4 * 3600;
   return ERAS.map((_, i) => (r.eraReached[i + 1] ?? e) - (r.eraReached[i] ?? e)).concat([e]);
 });
 const eraMed = ERAS.map((_, i) => med(seeds.map((x) => x[i])));
+// C1 진행 벽 (부정 리뷰 1위 주제: 느림·벽·지루함 20%) — 7판 중앙값, 가장 나쁜 판도 같이
+const wallMed = med(walls.map((w) => w.secs));
+const wallMax = walls.reduce((a, w) => (w.secs > a.secs ? w : a), walls[0]);
+add("C1", "진행 벽: 새로운 일(시대·연구·새 건물·×2) 없이 지나간 가장 긴 시간 (7판 중앙값)", `${Math.round(wallMed / 60)}분 · 가장 나쁜 판 ${Math.round(wallMax.secs / 60)}분 (시대 ${wallMax.era})`, "5분 이하", wallMed <= 300 ? "통과" : wallMed <= 600 ? "주의" : "부족");
 const longest = eraMed.reduce((a, d, i) => (d > eraMed[a] ? i : a), 0);
 const endMed = med(seeds.map((x) => x[ERAS.length]));
 add("C1b", "가장 긴 시대 체류 (사람형 봇 7판 중앙값)", `시대 ${longest} ${Math.round(eraMed[longest] / 60)}분 · 시대별 ${eraMed.map((d) => Math.round(d / 60)).join("·")}분`, "20분 이하", eraMed[longest] <= 1200 ? "통과" : eraMed[longest] <= 1800 ? "주의" : "부족");

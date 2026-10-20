@@ -2,7 +2,7 @@
 // 한꺼번에 몰려오지 않게 15초 간격(보스 소개는 바로), 다른 창이 닫힌 뒤 5초, 보스전·튜토리얼 중엔 기다린다.
 import type { Game } from "../core/game";
 import { L } from "../i18n/lang";
-import { showModal, modalOpen } from "./modals";
+import { showModal, modalOpen, toast } from "./modals";
 import type { TabId } from "./panels";
 import { featureOn } from "./panels";
 
@@ -77,6 +77,12 @@ export class Intros {
       return;
     }
     if (this.calm > 0 || s.boss || s.sideFight || !s.settings.tutorialDone) return;
+    // 한 번만: 버튼을 꾹 누르면 설명이 나온다는 걸 짧게 알린다 (창 대신 알림)
+    if (!s.settings.seen.includes("tips") && s.stats.playSeconds > 90) {
+      s.settings.seen.push("tips");
+      toast(L("버튼을 꾹 누르면 설명이 나와요", "Long-press any button to see what it does"), L("돈·연구 점수·전력 칸은 그냥 눌러도 돼요.", "Tap the coin, research and power boxes too."));
+      return;
+    }
     const ready = FEATURES.filter((x) => !s.settings.seen.includes(x.id) && x.when(g));
     const f = ready.find((x) => URGENT.has(x.id)) ?? (this.wait > 0 ? undefined : ready[0]);
     if (!f) return;

@@ -64,6 +64,9 @@ export const UPGRADES_EN: Record<string, { name: string; desc: string }> = {
   s_oil: { name: "Oil the Gears", desc: "Less creaking. Tap reward ×2." },
   s_punchcard: { name: "Punch Card Feeder", desc: "One deck, one program. Drop it and start over." },
   s_terminal: { name: "Interactive Terminal", desc: "Conversations appear on a screen instead of a teletype." },
+  u_antivirus: { name: "Antivirus Software", desc: "After the Morris worm, antivirus programs poured out. Malware and security incidents last 30% shorter." },
+  u_autopatch: { name: "Automatic Security Patches", desc: "The habit of not postponing updates. After the ransomware outbreak, auto-patching became the default. Malware and security incidents last another 25% shorter." },
+  u_secagent: { name: "AI Security Agent", desc: "AI reads the logs and stops anomalies first. Malware and security incidents last another 15% shorter (up to 70%)." },
   a_cron: { name: "Scheduled Job Script", desc: "Does the same chore on a timer. Auto-buy: 1 building per second (the best value, only if it costs 15% of your coins or less)." },
   a_pipeline: { name: "Provisioning Pipeline", desc: "One config file and servers appear and scale. Auto-buy +1 (2 buildings per second)." },
   a_procure: { name: "Procurement Agent", desc: "Agents compare quotes and buy for you. Auto-buy +2 (4 buildings per second)." },
@@ -110,4 +113,5 @@ export const YEARS_EN: Record<string, string> = {
   "고대": "Antiquity",
   "1세기": "1st c.",
   "언제나": "Anytime",
+  "2010년대": "2010s",
 };

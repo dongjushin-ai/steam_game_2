@@ -1,6 +1,6 @@
 // 핵심 로직 테스트 (npm test). 외부 테스트 프레임워크 없이 node:assert만 쓴다.
 import assert from "node:assert/strict";
-import { ERAS, EVENTS, WEEKLIES, weeklyFor } from "../src/data";
+import { ERAS, EVENTS, LOST, LOST_MAP, WEEKLIES, weeklyFor } from "../src/data";
 import { Game, newState } from "../src/core/game";
 import { ENDLESS_BONUS, ENDLESS_GROWTH, ENDLESS_OFFSET, endlessHp, BUILDING_MAP, COMBO_MAX, OFFLINE_CAP_SEC, bossOutlook, buildingCost, checkpointsFor, comboMult, computeStats, milestoneMult } from "../src/core/formulas";
 import { arenaTable } from "../src/core/arena";
@@ -767,6 +767,45 @@ test("자동 구매: 해금 전엔 안 사고, 지금·직전 시대 건물을 �
   st.settings.autoBuy = false;
   g.tick(1);
   assert.equal(st.stats.autoBought, n, "끄면 멈춘다");
+});
+
+test("잃어버린 기술: 사건 차례에 가끔 발굴되고, 영구 보너스이며, 출시로도 남는다", () => {
+  const st = newState();
+  st.era = 3;
+  const g = new Game(st, () => 0);
+  const notes: string[] = [];
+  g.onNotice((n) => notes.push(n.kind));
+  const tps0 = g.stats.tps;
+  g.triggerRandomEvent();
+  assert.equal(st.lost.length, 1, "난수 0 → 발굴");
+  assert.ok(notes.includes("lost"));
+  const x = LOST_MAP[st.lost[0]];
+  assert.ok(x.era <= st.era, "지금 시대까지의 것만");
+  if (x.effects[0].stat === "tps") assert.ok(g.stats.tps > tps0);
+  st.lost = LOST.filter((t) => t.era <= 3).map((t) => t.id);
+  g.triggerRandomEvent();
+  assert.ok(st.lost.every((id) => LOST_MAP[id].era <= 3), "더 찾을 게 없으면 다음 시대 것은 안 나온다");
+  st.credits = 0; st.totalEarned = 1e15;
+  const kept = st.lost.length;
+  g.release();
+  assert.equal(st.lost.length, kept, "출시해도 남는다");
+});
+
+test("보안 연구: 악성코드 사건의 피해 시간이 줄고, 최대 70%", () => {
+  const st = newState();
+  const g = new Game(st);
+  const worm = EVENTS.find((e) => e.id === "iloveyou")!;
+  g.applyEvent(worm);
+  const full = st.active.find((a) => a.id === "iloveyou")!.remaining;
+  st.upgrades.push("u_antivirus");
+  assert.equal(g.malwareShield(), 0.3);
+  g.applyEvent(worm);
+  assert.ok(Math.abs(st.active.find((a) => a.id === "iloveyou")!.remaining - full * 0.7) < 1e-9);
+  st.upgrades.push("u_autopatch", "u_secagent");
+  assert.ok(Math.abs(g.malwareShield() - 0.7) < 1e-9);
+  const storm = EVENTS.find((e) => e.id === "solar_storm")!;
+  g.applyEvent(storm);
+  assert.equal(st.active.find((a) => a.id === "solar_storm")!.remaining, storm.duration, "악성코드가 아니면 그대로");
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

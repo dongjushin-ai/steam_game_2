@@ -1,9 +1,10 @@
 // 언어 전환. UI 문구는 L("한국어", "English"), 콘텐츠 데이터는 applyLanguage()가 id별 번역표로 덮어쓴다.
-import { BUILDINGS, CODEX, ERAS, EVENTS, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES, WEEKLIES, LOOKS, BOARDS } from "../data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, LOST, GOLDENS, MISSIONS, NEWS, QUIZ, RIVALS, SIDE_BENCHES, THREATS, TIERS, UPGRADES, WEEKLIES, LOOKS, BOARDS } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import type { NewsItem } from "../core/types";
 import { BUILDINGS_EN } from "./en/buildings";
 import { CODEX_EN } from "./en/codex";
+import { LOST_EN } from "./en/lost";
 import { ERAS_EN, TIERS_EN } from "./en/eras";
 import { EVENTS_EN } from "./en/events";
 import { BENCHES_EN, EXTRA_ACHIEVEMENTS_EN, EXTRA_UPGRADES_EN, MISSIONS_EN, THREATS_EN, WEEKLIES_EN, LOOKS_EN, BOARDS_EN } from "./en/extra";
@@ -33,6 +34,7 @@ const KO = {
   upgrades: UPGRADES.map((u) => ({ name: u.name, desc: u.desc, year: u.year })),
   events: EVENTS.map((e) => ({ name: e.name, desc: e.desc, year: e.year, choices: clone(e.choices?.map((c) => ({ label: c.label, desc: c.desc })) ?? []) })),
   codex: CODEX.map((c) => ({ title: c.title, text: c.text, year: c.year })),
+  lost: LOST.map((x) => ({ name: x.name, desc: x.desc, year: x.year })),
   quiz: QUIZ.map((q) => ({ q: q.q, options: [...q.options], explain: q.explain })),
   news: NEWS.map((n) => ({ ...n })),
   goldens: GOLDENS.map((g) => ({ name: g.name, asks: [...g.asks], result: g.result })),
@@ -104,6 +106,12 @@ export function applyLanguage(next: Lang): void {
       c.label = tc?.label ?? ko.choices[j].label;
       c.desc = tc?.desc ?? ko.choices[j].desc;
     });
+  });
+  LOST.forEach((x, i) => {
+    const t = en ? pick(LOST_EN, x.id, "lost") : undefined;
+    x.name = t?.name ?? KO.lost[i].name;
+    x.desc = t?.desc ?? KO.lost[i].desc;
+    x.year = t?.year ?? KO.lost[i].year;
   });
   CODEX.forEach((x, i) => {
     const t = en ? pick(CODEX_EN, x.id, "codex") : undefined;

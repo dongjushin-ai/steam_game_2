@@ -347,11 +347,11 @@ const ROOMS: Room[] = [
       }
     },
   },
-  // 3 80년대 사무실 (EGA 16색 그대로)
+  // 3 80년대 사무실 (EGA 16색을 채도만 낮춰서)
   {
     bg(p) {
       p.vgrad(0, 0, PW, HZ, ["#000000", "#555555"], 3);
-      p.r(0, HZ, PW, PH - HZ, "#AA5500");
+      p.r(0, HZ, PW, PH - HZ, "#7a5a3a");
       p.d(0, HZ, PW, PH - HZ, "#000000", null, 6);
       p.r(0, HZ, PW, 1, "#000000");
       // 블라인드 창과 밤의 도시
@@ -360,20 +360,20 @@ const ROOMS: Room[] = [
       const rnd = rand(31);
       for (let i = 0; i < 9; i++) {
         const bx = 10 + i * 6, bh = 8 + Math.floor(rnd() * 20);
-        p.r(bx, 50 - bh, 5, bh, "#0000AA");
-        for (let k = 0; k < 4; k++) if (rnd() < 0.6) p.p(bx + 1 + Math.floor(rnd() * 3), 50 - bh + 2 + Math.floor(rnd() * (bh - 3)), "#FFFF55");
+        p.r(bx, 50 - bh, 5, bh, "#2f3f7a");
+        for (let k = 0; k < 4; k++) if (rnd() < 0.6) p.p(bx + 1 + Math.floor(rnd() * 3), 50 - bh + 2 + Math.floor(rnd() * (bh - 3)), "#d9cf8a");
       }
       for (let y = 13; y < 50; y += 3) p.r(10, y, 52, 1, "#555555");
       // 포스터
       p.r(72, 12, 22, 30, "#FFFFFF");
-      p.r(74, 14, 18, 14, "#5555FF");
-      p.circ(83, 21, 4, "#FFFF55");
+      p.r(74, 14, 18, 14, "#6f7fc0");
+      p.circ(83, 21, 4, "#d9cf8a");
       p.r(74, 31, 14, 2, "#555555");
       p.r(74, 35, 10, 2, "#555555");
       // 책상
       for (const [x, w] of [[4, 60], [66, 60]]) {
         p.r(x + 2, HZ - 1, w - 4, 3, "#000000");
-        p.r(x, 68, w, 3, "#AA5500");
+        p.r(x, 68, w, 3, "#7a5a3a");
         p.r(x, 71, w, 1, "#000000");
         p.r(x + 2, 72, 2, 16, "#555555");
         p.r(x + w - 4, 72, 2, 16, "#555555");
@@ -382,16 +382,16 @@ const ROOMS: Room[] = [
         p.r(x, 49, 20, 18, "#AAAAAA");
         p.box(x, 49, 20, 18, "#555555");
         p.r(x + 2, 51, 16, 11, "#000000");
-        for (let k = 0; k < 3; k++) p.r(x + 3, 53 + k * 3, 5 + ((x + k * 7) % 8), 1, "#55FF55");
+        for (let k = 0; k < 3; k++) p.r(x + 3, 53 + k * 3, 5 + ((x + k * 7) % 8), 1, "#8fcf98");
         p.r(x + 6, 66, 8, 2, "#555555");
         p.r(x - 1, 66, 22, 2, "#AAAAAA");
       }
       p.r(40, 64, 4, 4, "#000000");
       p.r(41, 64, 2, 1, "#AAAAAA");
-      p.r(52, 63, 3, 5, "#AA0000");
+      p.r(52, 63, 3, 5, "#8a3a36");
     },
     fg(p, t) {
-      if (Math.floor(t * 2) % 2 === 0) for (const x of [10, 70, 98]) p.r(x + 3, 62 - 1, 2, 1, "#55FF55");
+      if (Math.floor(t * 2) % 2 === 0) for (const x of [10, 70, 98]) p.r(x + 3, 62 - 1, 2, 1, "#8fcf98");
     },
   },
   // 4 90년대 서버실 (VGA 보라)
@@ -448,9 +448,9 @@ const ROOMS: Room[] = [
       p.d(0, HZ, PW, PH - HZ, "#3a1f52", null, 3);
       // 선반과 소품
       p.r(8, 32, 48, 2, "#5a3a72");
-      p.r(12, 24, 5, 8, "#ffd36f");
-      p.r(20, 26, 12, 6, "#6fe3ff");
-      p.circ(42, 28, 4, "#7cd67c");
+      p.r(12, 24, 5, 8, "#d9c48e");
+      p.r(20, 26, 12, 6, "#8cc4d4");
+      p.circ(42, 28, 4, "#93c79a");
       // 책상
       p.r(4, 72, 124, 3, "#4a2a5e");
       p.r(4, 75, 124, 2, "#2a1638");
@@ -467,13 +467,13 @@ const ROOMS: Room[] = [
       let py = 52;
       for (let i = 0; i < 24; i++) {
         const y = 52 + Math.round(11 * (1 - Math.exp(-i / 6)));
-        p.p(11 + i, y, "#ff6fae");
-        if (i && Math.abs(y - py) > 1) p.p(11 + i, y - 1, "#ff6fae");
+        p.p(11 + i, y, "#c98aa6");
+        if (i && Math.abs(y - py) > 1) p.p(11 + i, y - 1, "#c98aa6");
         py = y;
       }
       const rnd = rand(51);
-      for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) p.r(43 + c * 4, 51 + r * 4, 3, 3, ["#ff6fae", "#b48cff", "#6fe3ff", "#ffd36f", "#7cd67c"][Math.floor(rnd() * 5)]);
-      for (let k = 0; k < 5; k++) p.r(75 + (k % 2) * 3, 52 + k * 3, 6 + Math.floor(rnd() * 14), 1, ["#7fdbca", "#c792ea", "#ffcb6b"][k % 3]);
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) p.r(43 + c * 4, 51 + r * 4, 3, 3, ["#c98aa6", "#a99bd0", "#8cc4d4", "#d9c48e", "#93c79a"][Math.floor(rnd() * 5)]);
+      for (let k = 0; k < 5; k++) p.r(75 + (k % 2) * 3, 52 + k * 3, 6 + Math.floor(rnd() * 14), 1, ["#94c7bc", "#b6a0cf", "#d8c08a"][k % 3]);
       // GPU 타워
       p.r(104, 40, 22, 32, "#0d0a10");
       p.r(106, 42, 18, 28, "#1a1322");
@@ -482,7 +482,7 @@ const ROOMS: Room[] = [
     },
     fg(p, t) {
       // RGB 띠: 색이 흘러간다
-      const cols = ["#ff6fae", "#b48cff", "#6fe3ff"];
+      const cols = ["#c98aa6", "#a99bd0", "#8cc4d4"];
       for (let x = 0; x < PW; x += 8) p.r(x, 14, 8, 2, cols[(Math.floor(x / 8) + Math.floor(t * 4)) % 3]);
       p.d(0, 16, PW, 3, cols[Math.floor(t * 4) % 3], null, 3);
       for (const cy of [50, 62]) {
@@ -497,7 +497,7 @@ const ROOMS: Room[] = [
       // Y2K 반짝이
       [[30, 8], [70, 22], [140, 10], [96, 30]].forEach(([x, y], i) => {
         const ph = Math.floor(t * 3 + i * 2) % 4;
-        if (ph < 2) p.sparkle(x, y, "#ffe9ff", ph === 0);
+        if (ph < 2) p.sparkle(x, y, "#efe6ef", ph === 0);
       });
     },
   },
@@ -537,7 +537,7 @@ const ROOMS: Room[] = [
   // 7 챗봇 데이터센터 통로 (Y2K 아쿠아)
   aisleRoom({ wall: ["#05140f", "#0f3a30"], face: ["#1d4a42", "#163a34"], top: "#7fe8c9", led: ["#7fffd4", "#10a37f", "#6fe3ff"], floor: ["#0d3a30", "#05140f"], light: "#e8fff6", glossy: true }),
   // 8 추론과 에이전트 (브루탈 시작: 종이 흰색 + 검정 + 주황)
-  aisleRoom({ wall: ["#f2f2ed", "#f2f2ed"], face: ["#111111", "#000000"], top: "#f2f2ed", led: ["#ff4a1c", "#f2f2ed"], floor: ["#d8d8d0", "#f2f2ed"], light: "#000000", pipes: "#ff4a1c", holo: true, mono: true }),
+  aisleRoom({ wall: ["#f2f2ed", "#f2f2ed"], face: ["#111111", "#000000"], top: "#f2f2ed", led: ["#c2603e", "#f2f2ed"], floor: ["#d8d8d0", "#f2f2ed"], light: "#000000", pipes: "#c2603e", holo: true, mono: true }),
   // 9 기가와트 캠퍼스 (1비트 밤 + 전기 파랑)
   {
     bg(p) {
@@ -560,7 +560,7 @@ const ROOMS: Room[] = [
       for (const [x, w, h] of [[0, 34, 16], [36, 30, 22], [134, 58, 20]]) {
         p.r(x, HZ - 12 - h, w, h, "#000000");
         p.box(x, HZ - 12 - h, w, h, "#f2f2ed");
-        for (let row = 0; row < Math.floor((h - 4) / 4); row++) p.r(x + 3, HZ - 12 - h + 3 + row * 4, w - 6, 1, row % 2 ? "#2b2bff" : "#f2f2ed");
+        for (let row = 0; row < Math.floor((h - 4) / 4); row++) p.r(x + 3, HZ - 12 - h + 3 + row * 4, w - 6, 1, row % 2 ? "#3f51a8" : "#f2f2ed");
       }
       p.r(0, HZ - 12, PW, 12, "#000000");
       p.r(0, HZ - 12, PW, 1, "#f2f2ed");
@@ -581,35 +581,59 @@ const ROOMS: Room[] = [
       }
     },
   },
-  // 10 우주 (거의 순수한 흑백 + 노랑)
+  // 10 피지컬 AI (팬픽): 로봇이 돌리는 공장 도시. 흑연색 + 센서 불빛 빨강 하나
   {
-    bg(p) {
-      p.r(0, 0, PW, PH, "#000000");
-      // 행성 가장자리
-      for (let y = 84; y < PH; y++) {
-        const dy = (y - 140) / 58;
-        const half = Math.sqrt(Math.max(0, 1 - dy * dy)) * 110;
-        p.d(-40, y, 40 + half, 1, "#f2f2ed", null, Math.min(10, (y - 84) / 3));
+    bg(p, accent) {
+      p.vgrad(0, 0, PW, HZ - 14, ["#0e1013", "#15181d", "#1f2329"], 4);
+      // 먼 공장 도시: 굴뚝과 낮은 건물
+      for (const [x, w, h] of [[0, 22, 26], [20, 14, 40], [36, 26, 22], [64, 10, 46], [76, 30, 30], [108, 16, 38], [126, 34, 24], [162, 12, 44], [176, 16, 28]] as const) {
+        p.r(x, HZ - 14 - h, w, h, "#1a1d22");
+        for (let yy = HZ - 14 - h + 4; yy < HZ - 18; yy += 5) for (let xx = x + 2; xx < x + w - 2; xx += 4) if (hash(xx, yy) > 0.72) p.p(xx, yy, "#3a414b");
       }
-      p.circ(70, 46, 14, "#ffe600");
-      p.d(50, 26, 40, 40, "#ffe600", null, 2);
-      p.circ(70, 46, 9, "#f2f2ed");
+      for (const x of [26, 68, 166]) p.r(x, 8, 3, 30, "#1a1d22");
+      // 위쪽 크레인 들보
+      p.r(0, 6, PW, 3, "#2a2f36");
+      for (let x = 2; x < PW; x += 8) p.line(x, 9, x + 4, 6, "#1a1d22");
+      // 충전 거치대에 줄 선 휴머노이드 (실루엣)
+      for (let k = 0; k < 9; k++) {
+        const x = 14 + k * 20, y = HZ - 34;
+        p.r(x - 1, y - 2, 12, 22, "#181b20");
+        p.circ(x + 5, y + 3, 3, "#2c3138");
+        p.r(x + 2, y + 7, 7, 9, "#2c3138");
+        p.r(x + 2, y + 16, 2, 4, "#2c3138");
+        p.r(x + 7, y + 16, 2, 4, "#2c3138");
+      }
+      // 조립 라인 (컨베이어)
+      p.r(0, HZ - 14, PW, 6, "#2a2f36");
+      p.r(0, HZ - 14, PW, 1, "#4a515c");
+      p.r(0, HZ - 8, PW, 2, "#14171b");
+      // 바닥
+      p.r(0, HZ - 6, PW, PH - HZ + 6, "#121418");
+      for (let y = HZ; y < PH; y += 6) p.r(0, y, PW, 1, "#181b20");
+      p.d(0, HZ - 6, PW, 4, accent, null, 1);
     },
-    fg(p, t) {
-      for (let i = 0; i < 60; i++) {
-        const x = Math.floor(hash(i, 7) * PW), y = Math.floor(hash(i, 8) * 80);
-        if ((x - 70) ** 2 + (y - 46) ** 2 < 400) continue;
-        if (Math.floor(t * 1.5 + i * 0.7) % 5 !== 0) p.p(x, y, "#f2f2ed");
+    fg(p, t, accent) {
+      // 거치대 로봇 눈: 하나씩 차례로 켜졌다 꺼진다
+      for (let k = 0; k < 9; k++) {
+        const on = Math.floor(t * 1.2 - k * 0.35) % 3 !== 0;
+        if (on) p.r(14 + k * 20 + 3, HZ - 34 + 2, 5, 1, accent);
       }
-      // 다이슨 스웜
-      for (const [rx, ry, n, sp] of [[30, 9, 14, 0.25], [44, 14, 20, -0.16]] as const) {
-        for (let k = 0; k < n; k++) {
-          const a = (k / n) * Math.PI * 2 + t * sp;
-          const x = 70 + Math.cos(a) * rx, y = 46 + Math.sin(a) * ry;
-          if (Math.sin(a) < 0 && (x - 70) ** 2 + (y - 46) ** 2 < 200) continue;
-          p.r(x, y, 2, 1, "#f2f2ed");
-        }
+      // 컨베이어 롤러와 위에 실려 가는 몸통
+      const off = (t * 12) % 8;
+      for (let x = -8 + off; x < PW; x += 8) p.r(x, HZ - 11, 2, 2, "#4a515c");
+      for (let k = 0; k < 5; k++) {
+        const x = ((t * 12 + k * 44) % (PW + 30)) - 20;
+        p.r(x, HZ - 22, 10, 8, "#5a626d");
+        p.r(x + 2, HZ - 26, 6, 4, "#5a626d");
+        p.r(x + 3, HZ - 25, 4, 1, k % 2 ? accent : "#14171b");
       }
+      // 크레인 팔이 천천히 오간다
+      const cx = 96 + Math.sin(t * 0.5) * 60;
+      p.r(cx - 4, 9, 8, 3, "#3a414b");
+      p.r(cx - 1, 12, 2, 14 + Math.round(Math.sin(t * 1.3) * 3), "#3a414b");
+      p.r(cx - 4, 26 + Math.round(Math.sin(t * 1.3) * 3), 8, 2, "#4a515c");
+      // 경고등
+      if (Math.floor(t * 2) % 2) p.circ(PW - 8, 14, 2, accent);
     },
   },
 ];
@@ -674,7 +698,7 @@ function aisleRoom(o: AisleSpec): Room {
       if (o.holo) {
         for (const [x, y, w, h] of [[14, 30, 26, 18], [48, 18, 20, 13]]) {
           p.r(x, y, w, h, "#000000");
-          p.box(x, y, w, h, "#ff4a1c");
+          p.box(x, y, w, h, "#c2603e");
           for (let k = 0; k < 3; k++) p.r(x + 3, y + 3 + k * Math.floor(h / 4), 6 + ((x + k * 5) % (w - 8)), 1, "#f2f2ed");
         }
       }
@@ -845,17 +869,17 @@ const AVATARS: ((p: Px, a: AvatarCtx) => void)[] = [
   (p, a) => {
     for (let k = 0; k < 3; k++) {
       const ang = a.t * 0.9 + (k * Math.PI * 2) / 3;
-      p.r(20 + Math.cos(ang) * 21 - 1, 20 + Math.sin(ang) * 21 - 1, 3, 3, ["#ff4a1c", "#000000", "#ff4a1c"][k]);
+      p.r(20 + Math.cos(ang) * 21 - 1, 20 + Math.sin(ang) * 21 - 1, 3, 3, ["#c2603e", "#000000", "#c2603e"][k]);
     }
     p.r(3, 15, 4, 10, "#000000");
     p.r(33, 15, 4, 10, "#000000");
     p.r(6, 6, 28, 28, "#000000");
     p.r(8, 8, 24, 24, "#f2f2ed");
     p.r(10, 15, 20, 10, "#000000");
-    eyes(p, 13, 23, 17, 4, 5, "#ff4a1c", a);
+    eyes(p, 13, 23, 17, 4, 5, "#c2603e", a);
     p.r(5, 25, 2, 7, "#000000");
     p.r(5, 31, 8, 2, "#000000");
-    p.r(12, 30, 2, 2, "#ff4a1c");
+    p.r(12, 30, 2, 2, "#c2603e");
   },
   // 9 신경망 구체 (흰 선 와이어프레임)
   (p, a) => {
@@ -863,22 +887,35 @@ const AVATARS: ((p: Px, a: AvatarCtx) => void)[] = [
     p.ring(20, 20, 17, "#f2f2ed");
     for (let k = 0; k < 3; k++) {
       const rx = Math.abs(Math.cos(a.t * 0.8 + (k * Math.PI) / 3)) * 17;
-      p.ellipse(20, 20, rx, 17, k === 0 ? "#2b2bff" : "#f2f2ed");
+      p.ellipse(20, 20, rx, 17, k === 0 ? "#3f51a8" : "#f2f2ed");
     }
     p.ellipse(20, 20, 17, 5, "#f2f2ed");
     p.circ(20, 20, 7, "#000000");
     p.ring(20, 20, 7, "#f2f2ed");
     eyes(p, 17, 22, 18, 2, 4, "#f2f2ed", a);
   },
-  // 10 빛의 존재
+  // 10 휴머노이드 로봇 머리: 강철판 + 검은 바이저 안을 오가는 빨간 센서
   (p, a) => {
-    for (let k = 0; k < 12; k++) {
-      const ang = a.t * 0.4 + (k / 12) * Math.PI * 2;
-      p.line(20 + Math.cos(ang) * 12, 20 + Math.sin(ang) * 12, 20 + Math.cos(ang) * (k % 2 ? 16 : 19), 20 + Math.sin(ang) * (k % 2 ? 16 : 19), k % 2 ? "#f2f2ed" : "#ffe600");
+    p.r(9, 33, 22, 5, "#2c3138");
+    p.r(15, 30, 10, 4, "#3a414b");
+    p.r(4, 14, 4, 9, "#3a414b");
+    p.r(32, 14, 4, 9, "#3a414b");
+    p.r(8, 5, 24, 27, "#3a414b");
+    p.r(9, 6, 22, 25, "#5a626d");
+    p.r(9, 6, 22, 2, "#7d8590");
+    p.r(9, 28, 22, 3, "#4a515c");
+    p.r(11, 13, 18, 8, "#0e1013");
+    if (a.blink) p.r(12, 17, 16, 1, a.accent);
+    else if (a.happy) eyes(p, 13, 23, 15, 4, 3, a.accent, a);
+    else {
+      const x = 12 + Math.round((Math.sin(a.t * 1.6) + 1) * 6);
+      p.d(x - 2, 14, 9, 6, a.accent, null, 3);
+      p.r(x, 15, 5, 3, a.accent);
+      p.r(x + 1, 15, 2, 1, "#e9b1ad");
     }
-    p.circ(20, 20, 10, "#ffe600");
-    p.circ(20, 20, 8, "#f2f2ed");
-    eyes(p, 16, 22, 18, 2, 4, "#000000", a);
+    for (const y of [24, 26]) p.r(14, y, 12, 1, "#2c3138");
+    p.r(19, 2, 2, 4, "#3a414b");
+    if (Math.floor(a.t * 1.5) % 2) p.p(20, 1, a.accent);
   },
 ];
 
@@ -1025,7 +1062,8 @@ export interface Battle {
   power?: number;
 }
 
-const MOB_COLORS = ["#9be37a", "#6fd3ff", "#ffd36f", "#ff9f6f", "#ff7eb6", "#b48cff", "#ff5e4d", "#5ee0c0", "#ffe600", "#7f9cff", "#ff6fd8", "#ff9a3a"];
+/** 질문 티어별 몬스터 색 (채도를 낮춘 파스텔: 여러 마리가 한 화면에 있어도 어수선하지 않게) */
+const MOB_COLORS = ["#a9c99a", "#9cc3d6", "#d9c48e", "#d8a98c", "#d4a0b6", "#b3a5d6", "#d08a80", "#93c9b8", "#d6cf8a", "#9faad6", "#c99ac4", "#d6a77a"];
 
 /** 색을 어둡게 (몸통 아래 그림자용) */
 function shade(hex: string, k = 0.65): string {
@@ -1035,10 +1073,11 @@ function shade(hex: string, k = 0.65): string {
 }
 
 /** 몬스터 색: 브루탈 시대에는 바탕과 반대인 흑/백 */
-function mobFill(era: number, tier: number, boss = false, accent = "#ff4a1c"): [string, string] {
+function mobFill(era: number, tier: number, boss = false, accent = "#c2603e"): [string, string] {
   if (boss) return [accent, "#000000"];
   if (era === 8) return ["#000000", "#f2f2ed"];
-  if (era >= 9) return ["#f2f2ed", "#000000"];
+  if (era === 9) return ["#f2f2ed", "#000000"];
+  if (era >= 10) return ["#8d959f", "#0e1013"];
   return [MOB_COLORS[tier % MOB_COLORS.length], "#000000"];
 }
 

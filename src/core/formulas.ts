@@ -1,4 +1,4 @@
-import { BUILDINGS, ERAS, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES } from "../data";
+import { BUILDINGS, ERAS, LOST_MAP, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES } from "../data";
 import { L } from "../i18n/lang";
 import type { Building, GameState, MultStat, SideBench, Tier, Upgrade } from "./types";
 
@@ -76,6 +76,10 @@ export function multipliers(state: GameState): Record<MultStat, number> {
   for (const id of state.benchDone ?? []) {
     const b = BENCH_MAP[id];
     if (b) for (const e of b.effects) m[e.stat] *= e.mul;
+  }
+  for (const id of state.lost ?? []) {
+    const x = LOST_MAP[id];
+    if (x) for (const e of x.effects) m[e.stat] *= e.mul;
   }
   const week = state.weekly ? WEEKLY_MAP[state.weekly] : undefined;
   if (week) for (const e of week.effects) m[e.stat] *= e.mul;

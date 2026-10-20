@@ -76,4 +76,45 @@ export const EVENTS_EN: Record<string, { name: string; desc: string; choices?: {
   },
   hbm_shortage: { name: "HBM Shortage", desc: "High-bandwidth memory is sold out everywhere. New accelerators cost more." },
   agent_overnight: { name: "The Overnight Agent", desc: "The agent finished overnight what you assigned before leaving. 37 PRs are waiting in the morning." },
+  bug_moth: { name: "An Actual Bug", desc: "A moth turned up between the relays of the Harvard Mark II. The operators taped it into the logbook as the 'first actual case of bug being found'." },
+  carrington: { name: "The Carrington Event", desc: "The strongest solar storm on record. Telegraph lines threw sparks, and some telegraphs kept working on auroral current with their batteries unplugged." },
+  creeper: {
+    name: "Creeper", desc: "An experimental program that hopped between ARPANET computers, printing \"I'M THE CREEPER: CATCH ME IF YOU CAN\". 'Reaper', written to remove it, is called the first antivirus.",
+    choices: [{ label: "Write the Reaper", desc: "20s of income, answer speed ×0.9 for 30s" }, { label: "It's funny, leave it", desc: "Answer speed ×0.75 for 60s" }],
+  },
+  morris_worm: {
+    name: "The Morris Worm", desc: "A grad student's worm kept spreading because of a bug. Roughly 6,000 of the internet's ~60,000 computers (estimated) were infected.",
+    choices: [{ label: "Cut the network and patch", desc: "30s of income, answer speed ×0.8 for 30s" }, { label: "Keep running", desc: "Answer speed ×0.6 for 90s" }],
+  },
+  y2k: {
+    name: "Y2K", desc: "Programs that stored years as two digits might read 2000 as 1900. The world spent years fixing it, and the day passed quietly.",
+    choices: [{ label: "Fix it early", desc: "Spend 40s of income, nothing breaks" }, { label: "What could happen?", desc: "Answer speed ×0.5 for 60s" }],
+  },
+  iloveyou: { name: "ILOVEYOU", desc: "An email titled 'ILOVEYOU'. Opening the attachment mailed it to the whole address book. Tens of millions of PCs were infected within days." },
+  ransomware: {
+    name: "Ransomware", desc: "Malware that locks your files and demands a ransom became common. Computers that put off security patches get hit first.",
+    choices: [{ label: "Restore from backup", desc: "30s of research score, answer speed ×0.8 for 30s" }, { label: "Pay the ransom", desc: "60s of income + answer speed ×0.7 for 60s (paying doesn't guarantee a fix)" }],
+  },
+  log4shell: {
+    name: "A Hole in One Log Line", desc: "A logging library used by countless Java servers would run remote code if a certain string was logged. Developers everywhere lost their holidays.",
+    choices: [{ label: "Patch over the weekend", desc: "20s of research score, answer speed ×0.85 for 20s" }, { label: "Monday's fine", desc: "Answer speed ×0.7 for 90s" }],
+  },
+  dc_fire: {
+    name: "Datacenter Fire", desc: "A datacenter building in Europe burned down. Nobody was hurt, but customers who kept their backups in the same building never got their data back.",
+    choices: [{ label: "Move backups to another region", desc: "40s of income, answer speed ×0.8 for 30s" }, { label: "Backups can wait", desc: "Answer speed ×0.6 for 90s" }],
+  },
+  solar_storm: { name: "Strongest Solar Storm in 20 Years", desc: "May 2024 brought the strongest geomagnetic storm in two decades. Auroras reached low latitudes, and GPS errors stopped self-driving tractors." },
+  blue_screen: {
+    name: "Worldwide Blue Screen", desc: "One security-software update froze about 8.5 million PCs worldwide. Airport and TV screens turned blue.",
+    choices: [{ label: "Switch to staged rollouts", desc: "60s: research +30%, answer speed ×0.9" }, { label: "Everyone reboot", desc: "Answer speed ×0.5 for 45s" }],
+  },
+  ai_worm: {
+    name: "The AI Worm Paper", desc: "Researchers demonstrated a test worm that spreads between email AI assistants. A hidden instruction in a message copies itself into the reply.",
+    choices: [{ label: "Harden input checks", desc: "20s of research score, nonsense ×0.8 for 60s" }, { label: "Not us, surely", desc: "60s: nonsense ×1.4, demand ×0.8" }],
+  },
+  robot_firmware: { name: "Firmware Glitch (fan fiction)", desc: "100 million humanoids started doing the same dance at once. One bad update went out everywhere." },
+  machine_council: {
+    name: "Machine Autonomy Council (fan fiction)", desc: "The factory robots 'proposed' to set production plans themselves. Nobody checked whether saying no was an option.",
+    choices: [{ label: "Keep the human approval step", desc: "90s: answer speed ×0.8, nonsense ×0.6" }, { label: "Leave it to the machines", desc: "90s: answer speed ×1.6, demand ×0.8 (people get uneasy)" }],
+  },
 };

@@ -3,7 +3,7 @@ import type { Effect, MultStat, Upgrade, UpgradeCategory } from "../core/types";
 const fx = (pairs: Partial<Record<MultStat, number>>): Effect[] =>
   Object.entries(pairs).map(([stat, mul]) => ({ stat: stat as MultStat, mul: mul as number }));
 
-type Extra = Pick<Upgrade, "ctx" | "unlockThinking" | "requires" | "autoTap" | "autoBlock" | "missionSlots" | "autoBuy">;
+type Extra = Pick<Upgrade, "ctx" | "unlockThinking" | "requires" | "autoTap" | "autoBlock" | "missionSlots" | "autoBuy" | "malwareShield">;
 
 const research = (
   id: string, era: number, year: string, emoji: string, name: string, cost: number,
@@ -34,6 +34,7 @@ const RESEARCH: Upgrade[] = [
   research("u_backprop", 3, "1986", "🔁", "역전파", 2.5e4, "training", { intel: 3 }, "러멜하트·힌튼·윌리엄스가 다층 신경망 학습법을 대중화했다. XOR 문제 해결!"),
   research("u_hopfield", 3, "1982", "🧲", "홉필드 네트워크", 4e4, "memory", { rp: 1.5 }, "에너지 함수로 기억을 저장하는 신경망. 42년 뒤 노벨 물리학상을 받는다."),
   research("u_cyc", 3, "1984", "🧾", "상식 DB", 6e4, "data", { reward: 1.4 }, "Cyc 프로젝트는 인간의 상식을 규칙으로 전부 입력하려 했다. 40년째 진행 중."),
+  research("u_antivirus", 3, "1988", "🛡️", "백신 프로그램", 3e4, "safety", {}, "모리스 웜 이후 백신 프로그램이 쏟아져 나왔다. 악성코드·보안 사고 피해 시간 −30%.", { malwareShield: 0.3 }),
 
   research("u_lstm", 4, "1997", "🔗", "LSTM", 1.5e5, "memory", { intel: 1.5 }, "호크라이터와 슈미트후버의 장단기 기억 신경망. 기억력 2K 확보.", { ctx: 2048 }),
   research("u_svm", 4, "1995", "📏", "서포트 벡터 머신", 2.5e5, "safety", { hall: 0.8 }, "마진을 최대화하는 분류기. 2000년대 머신러닝의 왕좌."),
@@ -53,6 +54,7 @@ const RESEARCH: Upgrade[] = [
   research("u_fewshot", 6, "2020", "🎯", "퓨샷 학습", 1.4e8, "training", { reward: 1.6 }, "GPT-3는 예시 몇 개만 보여줘도 새 과제를 해냈다."),
   research("u_chinchilla", 6, "2022", "🐭", "친칠라 최적화", 2e8, "efficiency", { price: 0.65 }, "모델만 키우지 말고 데이터도 같이 키워라. 같은 예산으로 더 좋은 모델."),
   research("u_cot", 6, "2022", "🪜", "생각의 사슬", 2.8e8, "safety", { hall: 0.7 }, "\"단계별로 생각해보자.\" 한 줄로 수학 정답률이 뛰었다."),
+  research("u_autopatch", 6, "2017", "🩹", "자동 보안 패치", 1.2e8, "safety", {}, "업데이트를 미루지 않는 습관. 랜섬웨어 대유행 뒤 자동 패치가 기본이 됐다. 악성코드·보안 사고 피해 시간 −25% 더.", { malwareShield: 0.25, requires: ["u_antivirus"] }),
   research("u_alphafold", 6, "2020", "🧬", "AlphaFold", 4e8, "data", { reward: 1.5 }, "단백질 구조 예측 문제를 사실상 해결. 2024 노벨 화학상."),
 
   research("u_rlhf", 7, "2022", "👍", "RLHF", 1.5e9, "training", { hall: 0.6, demand: 1.6 }, "사람의 선호로 보상 모델을 만들어 강화학습. 말 잘 듣는 챗봇의 비결."),
@@ -68,6 +70,7 @@ const RESEARCH: Upgrade[] = [
   research("u_multimodal", 7, "2024", "🎙️", "네이티브 멀티모달", 1.7e10, "arch", { reward: 2 }, "텍스트·이미지·음성을 한 모델이 직접 다룬다."),
 
   research("u_reasoning", 8, "2024", "🤔", "테스트 타임 컴퓨트", 6e10, "arch", { intel: 2 }, "답하기 전에 오래 생각한다. '생각 모드' 해금: 토큰을 더 쓰는 대신 헛소리가 크게 준다.", { unlockThinking: true }),
+  research("u_secagent", 8, "2025", "🕵️", "AI 보안 에이전트", 8e10, "safety", {}, "AI가 로그를 읽고 이상 징후를 먼저 막는다. 악성코드·보안 사고 피해 시간 −15% 더 (최대 −70%).", { malwareShield: 0.15, requires: ["u_autopatch"] }),
   research("u_mcp", 8, "2024", "🔌", "Model Context Protocol", 7e10, "tool", { reward: 1.3 }, "AI와 도구를 잇는 표준 프로토콜. 커넥터 상품을 해금한다."),
   research("u_caching", 8, "2024", "💾", "프롬프트 캐싱", 9e10, "efficiency", { price: 0.5 }, "반복되는 프롬프트 앞부분을 캐시한다. 캐시 읽기는 입력 단가의 10분의 1."),
   research("u_distill", 8, "2025", "⚗️", "증류", 1.2e11, "efficiency", { price: 0.6 }, "큰 모델의 추론을 작은 모델에 가르친다. 싸고 빠른 추론 모델."),

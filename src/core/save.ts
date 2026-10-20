@@ -1,7 +1,7 @@
 import { sanitizeRanking } from "./ranking";
 import { sanitizeGacha } from "./gacha";
 import { sanitizeLook } from "./looks";
-import { ERAS, MISSIONS, QUIZ, THREATS } from "../data";
+import { ERAS, LOST_MAP, MISSIONS, QUIZ, THREATS } from "../data";
 import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP, WEEKLY_MAP } from "./formulas";
 import { SAVE_VERSION, newState } from "./game";
 import type { ActiveMission, GameState, ModelRecord, Quest, QuestKind } from "./types";
@@ -70,6 +70,7 @@ export function migrate(raw: unknown): GameState | null {
     quizSolved: [...new Set(strList(r.quizSolved).filter((id) => QUIZ.some((q) => q.id === id)))],
     eraTimes: Array.isArray(r.eraTimes) ? r.eraTimes.map((t) => num(t)) : [0],
     benchDone: [...new Set(strList(r.benchDone).filter((id) => BENCH_MAP[id]))],
+    lost: [...new Set(strList(r.lost).filter((id) => LOST_MAP[id]))],
     sideFight: fight && BENCH_MAP[fight.id] && num(fight.remaining) > 0 ? { id: fight.id, dealt: num(fight.dealt), remaining: num(fight.remaining) } : null,
     threat: threat && Number.isInteger(threat.text) && threat.text >= 0 && threat.text < THREATS.length && num(threat.remaining) > 0
       ? { text: threat.text, remaining: num(threat.remaining), y: num(threat.y, 0.3) } : null,

@@ -119,10 +119,10 @@ export const ERAS_EN: Record<number, EraText> = {
     },
   },
   10: {
-    name: "The Singularity (fan fiction)",
+    name: "Physical AI (fan fiction)",
     years: "20XX",
-    intro: "From here on, nobody knows the future. Orbital datacenters, Dyson swarms, 10-million-token context. The last question is waiting.",
-    aiLines: ["…I understand now.", "Dyson swarm efficiency 99.2%", "Orbital datacenter synced.", "What is your next question?"],
+    intro: "From here on, it's a future nobody knows yet (fan fiction). Humanoid robots fill the factories, warehouses, power plants and streets. Machines run the grid and the supply chain. People are starting to wonder who works for whom. The last question is waiting.",
+    aiLines: ["412 factory lines synced.", "1 billion humanoids online.", "Grid optimized: human approval step skipped.", "What is your next question?"],
     boss: {
       name: "The Millennium Problems",
       desc: "The Riemann hypothesis, P vs NP… Solve humanity's last homework.",

@@ -6,6 +6,7 @@ import { BENCH_MAP, BOSS_MIN_OUTLOOK, COMBO_WINDOW, ENDLESS_TIME, bossDps, bossO
 import type { Game } from "../core/game";
 import type { ActiveEffect } from "../core/types";
 import { nextHint, type GuideTab } from "../core/guide";
+import { tip } from "./tips";
 import { resolveLook } from "../core/looks";
 import { $, clear, h, setText } from "./dom";
 import { L } from "../i18n/lang";
@@ -50,12 +51,12 @@ export class Scene {
   private bossBar = h("div", { class: "boss-bar" });
   private tierChip = h("span", { class: "chip" });
   private hallChip = h("span", { class: "chip" });
-  private bottleneck = h("button", { class: "chip" });
-  private thinkBtn = h("button", { class: "chip think-btn" });
+  private bottleneck = tip(h("button", { class: "chip" }), "hint");
+  private thinkBtn = tip(h("button", { class: "chip think-btn" }), "think");
   private comboEl = h("div", { class: "combo" });
   private autoChip = h("span", { class: "chip" });
   /** 다음 시대까지: 보스 준비도 막대 (보기만. 연타하다 눌려도 탭으로 처리되게 클릭은 받지 않는다) */
-  private meter = h("div", { class: "era-meter", "aria-live": "off" });
+  private meter = tip(h("div", { class: "era-meter", "aria-live": "off" }), "meter", true);
   private meterBar = h("i");
   private meterText = h("span");
   /** 성장 단계를 잰 시대 (시대가 바뀌면 0부터) */

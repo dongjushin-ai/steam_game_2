@@ -297,4 +297,111 @@ export const EVENTS: GameEvent[] = [
     desc: "퇴근 전에 맡긴 일을 에이전트가 밤새 끝내놨다. 아침에 PR 37개가 기다린다.",
     effects: fx({ tps: 1.5, reward: 1.2 }), duration: 75,
   },
+  // ── 재난·악성코드 (24차): 실제 사건은 사망·군사 관련이 없는 것만. malware면 보안 연구로 피해 시간이 준다 ──
+  {
+    id: "bug_moth", name: "진짜 벌레", emoji: "🦋", minEra: 0, maxEra: 1, weight: 2, year: "1947",
+    desc: "하버드 마크 II의 계전기 사이에서 나방이 나왔다. 운영자들은 나방을 일지에 붙이고 '버그가 실제로 발견된 첫 사례'라고 적었다.",
+    effects: fx({ tps: 0.85 }), duration: 30,
+  },
+  {
+    id: "carrington", name: "캐링턴 사건", emoji: "☀️", minEra: 0, maxEra: 0, weight: 2, year: "1859",
+    desc: "기록상 가장 강한 태양 폭풍. 전신선에서 불꽃이 튀었고, 어떤 전신기는 배터리를 빼고도 오로라 전류만으로 통신했다.",
+    effects: fx({ demand: 0.8 }), duration: 45,
+  },
+  {
+    id: "creeper", name: "크리퍼", emoji: "🐛", minEra: 2, maxEra: 3, weight: 2, year: "1971", malware: true,
+    desc: "ARPANET 컴퓨터를 옮겨 다니며 \"I'M THE CREEPER: CATCH ME IF YOU CAN\"을 띄우는 실험 프로그램. 이걸 지우려고 만든 '리퍼'가 최초의 백신으로 불린다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "리퍼를 만든다", desc: "수익 20초분, 30초간 답변 속도 ×0.9", effects: fx({ tps: 0.9 }), duration: 30, incomeSeconds: -20 },
+      { label: "재미있으니 둔다", desc: "60초간 답변 속도 ×0.75", effects: fx({ tps: 0.75 }), duration: 60 },
+    ],
+  },
+  {
+    id: "morris_worm", name: "모리스 웜", emoji: "🪱", minEra: 3, maxEra: 4, weight: 3, year: "1988", malware: true,
+    desc: "대학원생이 만든 웜이 버그 때문에 멈추지 않고 퍼졌다. 당시 인터넷에 연결된 컴퓨터 약 6만 대 중 6천 대쯤(추정)이 감염됐다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "네트워크를 끊고 패치", desc: "수익 30초분, 30초간 답변 속도 ×0.8", effects: fx({ tps: 0.8 }), duration: 30, incomeSeconds: -30 },
+      { label: "그냥 돌린다", desc: "90초간 답변 속도 ×0.6", effects: fx({ tps: 0.6 }), duration: 90 },
+    ],
+  },
+  {
+    id: "y2k", name: "Y2K", emoji: "📅", minEra: 4, maxEra: 4, weight: 3, year: "1999",
+    desc: "연도를 두 자리로 저장한 프로그램들이 2000년을 1900년으로 읽을 위기. 전 세계가 몇 해에 걸쳐 고친 덕분에 그날은 조용히 지나갔다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "미리 고친다", desc: "수익 40초분을 들이고 무사통과", effects: [], duration: 0, incomeSeconds: -40 },
+      { label: "설마 무슨 일이", desc: "60초간 답변 속도 ×0.5", effects: fx({ tps: 0.5 }), duration: 60 },
+    ],
+  },
+  {
+    id: "iloveyou", name: "ILOVEYOU", emoji: "💌", minEra: 4, maxEra: 5, weight: 2, year: "2000", malware: true,
+    desc: "제목이 'ILOVEYOU'인 메일. 첨부 파일을 여는 순간 주소록 전체로 자신을 다시 보냈다. 며칠 만에 수천만 대가 감염됐다.",
+    effects: fx({ demand: 0.7, tps: 0.85 }), duration: 60,
+  },
+  {
+    id: "ransomware", name: "랜섬웨어", emoji: "🔐", minEra: 6, maxEra: 7, weight: 2, year: "2010년대", malware: true,
+    desc: "파일을 잠그고 몸값을 요구하는 악성코드가 흔해졌다. 보안 패치를 미룬 컴퓨터가 먼저 당한다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "백업에서 복구", desc: "연구 점수 30초분, 30초간 답변 속도 ×0.8", effects: fx({ tps: 0.8 }), duration: 30, rpSeconds: -30 },
+      { label: "몸값을 낸다", desc: "수익 60초분 + 60초간 답변 속도 ×0.7 (낸다고 다 풀리는 건 아니다)", effects: fx({ tps: 0.7 }), duration: 60, incomeSeconds: -60 },
+    ],
+  },
+  {
+    id: "log4shell", name: "로그 한 줄의 구멍", emoji: "🪵", minEra: 6, maxEra: 7, weight: 2, year: "2021", malware: true,
+    desc: "수많은 자바 서버가 쓰던 로그 라이브러리에서, 로그에 특정 문자열만 남기면 원격으로 코드가 실행되는 구멍이 발견됐다. 전 세계 개발자의 연말이 사라졌다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "주말 반납하고 패치", desc: "연구 점수 20초분, 20초간 답변 속도 ×0.85", effects: fx({ tps: 0.85 }), duration: 20, rpSeconds: -20 },
+      { label: "월요일에 하자", desc: "90초간 답변 속도 ×0.7", effects: fx({ tps: 0.7 }), duration: 90 },
+    ],
+  },
+  {
+    id: "dc_fire", name: "데이터센터 화재", emoji: "🔥", minEra: 6, maxEra: 8, weight: 2, year: "2021",
+    desc: "유럽의 한 데이터센터 건물이 불에 탔다. 다친 사람은 없었지만, 백업을 같은 건물에 둔 고객의 데이터는 돌아오지 않았다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "다른 지역 백업으로 옮긴다", desc: "수익 40초분, 30초간 답변 속도 ×0.8", effects: fx({ tps: 0.8 }), duration: 30, incomeSeconds: -40 },
+      { label: "백업은 다음에", desc: "90초간 답변 속도 ×0.6", effects: fx({ tps: 0.6 }), duration: 90 },
+    ],
+  },
+  {
+    id: "solar_storm", name: "20년 만의 태양 폭풍", emoji: "🌌", minEra: 8, maxEra: 9, weight: 2, year: "2024",
+    desc: "2024년 5월, 20여 년 만에 가장 강한 지자기 폭풍. 오로라가 낮은 위도까지 내려왔고, GPS 오차로 자율주행 트랙터들이 일을 멈췄다.",
+    effects: fx({ demand: 0.85 }), duration: 45,
+  },
+  {
+    id: "blue_screen", name: "세계 동시 블루스크린", emoji: "🟦", minEra: 8, maxEra: 9, weight: 2, year: "2024", malware: true,
+    desc: "보안 프로그램 업데이트 하나가 전 세계 PC 약 850만 대를 멈춰 세웠다. 공항과 방송국 화면이 파랗게 변했다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "단계적 배포로 바꾼다", desc: "60초간 연구 +30%, 답변 속도 ×0.9", effects: fx({ rp: 1.3, tps: 0.9 }), duration: 60 },
+      { label: "다 같이 재부팅", desc: "45초간 답변 속도 ×0.5", effects: fx({ tps: 0.5 }), duration: 45 },
+    ],
+  },
+  {
+    id: "ai_worm", name: "AI 웜 논문", emoji: "🧫", minEra: 8, maxEra: 9, weight: 2, year: "2024", malware: true,
+    desc: "연구자들이 이메일 AI 비서끼리 퍼지는 실험용 웜을 만들어 보였다. 메일 속 숨은 지시문이 답장에 자기 자신을 복사한다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "입력 검증 강화", desc: "연구 점수 20초분, 60초간 헛소리 ×0.8", effects: fx({ hall: 0.8 }), duration: 60, rpSeconds: -20 },
+      { label: "설마 우리가", desc: "60초간 헛소리 ×1.4, 유입 ×0.8", effects: fx({ hall: 1.4, demand: 0.8 }), duration: 60 },
+    ],
+  },
+  {
+    id: "robot_firmware", name: "펌웨어 오류 (팬픽)", emoji: "🕺", minEra: 10, weight: 2, year: "20XX", malware: true,
+    desc: "휴머노이드 1억 대가 동시에 같은 춤을 추기 시작했다. 잘못된 업데이트 하나가 한꺼번에 배포됐다.",
+    effects: fx({ tps: 0.7 }), duration: 45,
+  },
+  {
+    id: "machine_council", name: "기계 자율 회의 (팬픽)", emoji: "🤖", minEra: 10, weight: 2, year: "20XX",
+    desc: "공장 로봇들이 생산 계획을 스스로 정하겠다고 '제안'해 왔다. 거절할 수 있는지는 아무도 확인해 보지 않았다.",
+    effects: [], duration: 0,
+    choices: [
+      { label: "인간 승인 단계 유지", desc: "90초간 답변 속도 ×0.8, 헛소리 ×0.6", effects: fx({ tps: 0.8, hall: 0.6 }), duration: 90 },
+      { label: "기계에 맡긴다", desc: "90초간 답변 속도 ×1.6, 유입 ×0.8 (사람들이 불안해한다)", effects: fx({ tps: 1.6, demand: 0.8 }), duration: 90 },
+    ],
+  },
 ];

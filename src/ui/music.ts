@@ -100,7 +100,9 @@ class Music {
   }
 
   /** 화면 옷·시대에 맞춰 곡을 바꾼다 (다음 마디부터) */
-  setStyle(style: MusicStyle, era: number): void {
+  setStyle(skin: MusicStyle | "machine", era: number): void {
+    // 기계 시대(시대 10)는 브루탈 음악을 같이 쓴다
+    const style: MusicStyle = skin === "machine" ? "brutal" : skin;
     this.style = style;
     this.key = [0, 2, 5][era % 3];
   }

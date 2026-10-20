@@ -15,11 +15,11 @@
 /* ═══ 1부: 뼈대와 공통 토큰 ═══════════════════════════ */
 
 :root {
-  --money: #ffd23f;
-  --rp: #c58cff;
-  --good: #3fd16a;
-  --bad: #ff4b4b;
-  --warn: #ffb02e;
+  --money: #e6c56e;
+  --rp: #b7a0e6;
+  --good: #7cc795;
+  --bad: #e2675f;
+  --warn: #e1a752;
   --accent: var(--era, #d97757);
   --accent-ink: #000;
   --page: #0a0a12;
@@ -310,11 +310,11 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 /* ═══ 2부: pixel — 8비트 게임 ═════════════════════════ */
 
 [data-skin="pixel"] {
-  --page: #000; --bg: #0c0c24; --panel: #1c1c4a; --panel2: #10102e; --ink: #fcfcfc; --muted: #a4a4d8; --line: #000;
+  --page: #000; --bg: #121420; --panel: #222638; --panel2: #171a28; --ink: #f2efe6; --muted: #aeb0c2; --line: #000;
   --bw: 2px;
   -webkit-font-smoothing: none;
 }
-[data-skin="pixel"] body { background: #000 repeating-linear-gradient(0deg, #000 0 2px, #07071a 2px 4px); }
+[data-skin="pixel"] body { background: #000 repeating-linear-gradient(0deg, #000 0 2px, #0b0c14 2px 4px); }
 /* 깎인 모서리: 2px 계단 */
 [data-skin="pixel"] :is(.card, .row, .res, .chip, .buy, .btn, .modal, .toast, .say, .seg button, .row .ico, .ach, .codex-item, .codex-banner, .bar, .era-tag) {
   clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px));
@@ -331,7 +331,7 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 /* ═══ 3부: retro — 90년대 운영체제 ════════════════════ */
 
 [data-skin="retro"] {
-  --page: #008080; --bg: #008080; --panel: #c0c0c0; --panel2: #c0c0c0; --ink: #000; --muted: #3c3c3c; --line: transparent;
+  --page: #476e6e; --bg: #476e6e; --panel: #c0c0c0; --panel2: #c0c0c0; --ink: #000; --muted: #3c3c3c; --line: transparent;
   --title: color-mix(in srgb, var(--era) 45%, #000080);
   --bw: 2px; --accent-ink: #fff;
   --font: "Galmuri11", "MS Sans Serif", Tahoma, sans-serif; --fs: 12px;
@@ -340,7 +340,7 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
   color-scheme: light;
   -webkit-font-smoothing: none;
 }
-[data-skin="retro"] #app { background: #008080; }
+[data-skin="retro"] #app { background: #476e6e; }
 [data-skin="retro"] :is(.card, .row, .res, .chip, .buy, .btn, .modal, .toast, .say, .seg button, .ach, .codex-item, #top, #nav, .boss-bar) { border: 0; box-shadow: var(--bevel); }
 [data-skin="retro"] #top { background: #c0c0c0; }
 [data-skin="retro"] #scene { border-bottom: 2px solid #000; }
@@ -384,14 +384,14 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 /* ═══ 4부: y2k — 크롬과 파스텔 ═══════════════════════ */
 
 [data-skin="y2k"] {
-  --page: #c9d6ff; --bg: #e8ecf8; --panel: #f6f8fd; --panel2: #dfe5f3; --ink: #141a3a; --muted: #4a5578; --line: #8e9ab8;
+  --page: #d6dce8; --bg: #e8ecf8; --panel: #f6f8fd; --panel2: #dfe5f3; --ink: #141a3a; --muted: #4a5578; --line: #8e9ab8;
   --bw: 1px; --radius: 14px; --accent-ink: #0b1030;
   --font: "Trebuchet MS", Verdana, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; --font-head: "Trebuchet MS", "Galmuri11", sans-serif; --fs: 13px;
   --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.55) 48%, rgba(255, 255, 255, 0) 52%);
   --money: #7a5300; --rp: #6a2ee0; --good: #066b38; --bad: #d4183a; --warn: #a86400;
   color-scheme: light;
 }
-[data-skin="y2k"] body { background: linear-gradient(135deg, #fbd3ff 0%, #c9d6ff 50%, #c8fff4 100%); }
+[data-skin="y2k"] body { background: linear-gradient(180deg, #e4e8f1 0%, #d6dce8 100%); }
 [data-skin="y2k"] #app { background: linear-gradient(180deg, #eef2fb, #dfe5f3); border-inline: 1px solid #8e9ab8; }
 [data-skin="y2k"] #top { background: linear-gradient(180deg, #ffffff 0%, #dfe5f3 60%, #c9d2e6 100%); border-bottom: 1px solid #8e9ab8; }
 [data-skin="y2k"] :is(.card, .row, .res, .ach, .codex-item, .modal) {
@@ -405,13 +405,13 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
   border-color: color-mix(in srgb, var(--accent) 70%, #000); color: var(--accent-ink);
 }
 [data-skin="y2k"] :is(.buy, .btn, .seg button, .chip)::before { content: ""; position: absolute; left: 6%; right: 6%; top: 1px; height: 46%; border-radius: 999px; background: var(--gloss); pointer-events: none; }
-[data-skin="y2k"] .buy.rp.can { background: linear-gradient(180deg, #e6d6ff 0%, #a77bff 55%, #d9c6ff 100%); border-color: #6a3cc8; }
-[data-skin="y2k"] .btn.danger { background: linear-gradient(180deg, #ffd6de, #ff5a78); color: #3a000c; }
+[data-skin="y2k"] .buy.rp.can { background: linear-gradient(180deg, #ebe4f7 0%, #b4a2d8 55%, #e2daf2 100%); border-color: #6c5a9a; }
+[data-skin="y2k"] .btn.danger { background: linear-gradient(180deg, #f6dcdc, #d98a8a); color: #3a000c; }
 [data-skin="y2k"] .section-title > span:first-child::before { content: "✦ "; color: var(--accent); }
 [data-skin="y2k"] .section-title { color: #2a3360; font-style: italic; letter-spacing: 0.2px; }
 [data-skin="y2k"] .bar { border-radius: 999px; background: #fff; border-color: #a3aecb; height: 11px; }
 [data-skin="y2k"] .bar > i { border-radius: 999px; background: var(--gloss), repeating-linear-gradient(-45deg, var(--accent) 0 6px, color-mix(in srgb, var(--accent) 60%, #fff) 6px 12px); }
-[data-skin="y2k"] .bar.red > i { background: var(--gloss), #ff5a78; }
+[data-skin="y2k"] .bar.red > i { background: var(--gloss), #d98a8a; }
 [data-skin="y2k"] .era-tag { border-radius: 999px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 40%, #fff), var(--accent)); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 70%, #000); }
 [data-skin="y2k"] .ai-name { font-style: italic; background: linear-gradient(180deg, #5a6480 0%, #141a3a 50%, #7f8aaa 51%, #2a3050 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 [data-skin="y2k"] .chip { background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(214, 222, 240, 0.95)); }
@@ -435,11 +435,11 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
   --page: #f2f2ed; --bg: #f2f2ed; --panel: #ffffff; --panel2: #f2f2ed; --ink: #000; --muted: #3a3a3a; --line: #000;
   --bw: 3px; --radius: 0; --shadow: 5px 5px 0 #000; --accent-ink: #000;
   --font: "Courier New", Courier, ui-monospace, monospace; --font-head: "Times New Roman", Times, serif; --font-small: var(--font); --fs: 13px;
-  --money: var(--ink); --rp: var(--ink); --good: #006b2c; --bad: #d10000; --warn: #8a4b00;
+  --money: var(--ink); --rp: var(--ink); --good: #1f6b3e; --bad: #a8322b; --warn: #7a4a12;
   color-scheme: light;
 }
-[data-skin="brutal"][data-era="8"] { --accent: #ff4a1c; }
-[data-skin="brutal"][data-era="9"] { --accent: #2b2bff; --accent-ink: #fff; }
+[data-skin="brutal"][data-era="8"] { --accent: #c2603e; }
+[data-skin="brutal"][data-era="9"] { --accent: #3f51a8; --accent-ink: #fff; }
 [data-skin="brutal"][data-era="10"] { --accent: #ffe600; }
 [data-skin="brutal"] #app { border-inline: 3px solid #000; }
 [data-skin="brutal"] #top { background: #fff; border-bottom: 3px solid #000; }
@@ -795,3 +795,41 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 .auto-row > span { flex: 1; font-size: 12px; }
 .auto-toggle { min-width: 56px; justify-content: center; }
 .auto-toggle.on { background: var(--good); color: #000; border-color: var(--good); }
+
+/* ═══ 6부: machine — 피지컬 AI가 돌리는 세상 (시대 10) ═══
+   흑연색 판 + 얇은 선 + 색은 하나(낮은 채도의 빨강, 센서 불빛)만 */
+[data-skin="machine"] {
+  --page: #0e1013; --bg: #15181c; --panel: #1d2126; --panel2: #181b20; --ink: #e4e6e9; --muted: #9ba2ac; --line: #313740;
+  --bw: 1px; --radius: 2px; --shadow: none; --accent-ink: #fff;
+  --font: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Apple SD Gothic Neo", "Malgun Gothic", monospace; --font-head: var(--font); --font-small: var(--font); --fs: 12px;
+  --money: #d6c38e; --rp: #aea3cf; --good: #86bb98; --bad: #d8716a; --warn: #d1a362;
+  --accent-text: #dd8a84;
+  color-scheme: dark;
+}
+[data-skin="machine"] body { background: #0b0d10; }
+[data-skin="machine"] #app { background: var(--bg); border-inline: 1px solid #22262c; }
+[data-skin="machine"] :is(#top, #nav) { background: #111317; border-color: #262b32; }
+[data-skin="machine"] :is(.card, .row, .res, .ach, .codex-item, .modal, .toast) { background: var(--panel); border: 1px solid var(--line); box-shadow: none; }
+[data-skin="machine"] :is(.buy, .btn, .seg button, .chip) { border: 1px solid #3a414b; background: #23282e; color: var(--ink); border-radius: 2px; }
+[data-skin="machine"] :is(.buy.can, .btn:not(.ghost):not(.danger):not(:disabled), .seg button.on, .think-btn.on) { background: var(--accent); border-color: color-mix(in srgb, var(--accent) 70%, #000); color: #fff; }
+[data-skin="machine"] .section-title { text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+[data-skin="machine"] .section-title > span:first-child::before { content: "▍"; color: var(--accent); }
+[data-skin="machine"] .bar { background: #0f1114; border: 1px solid var(--line); height: 6px; }
+[data-skin="machine"] .bar > i { background: var(--accent); }
+[data-skin="machine"] .era-tag { background: transparent; border: 1px solid var(--accent); color: var(--ink); }
+[data-skin="machine"] #nav button.on { box-shadow: inset 0 2px 0 var(--accent); color: var(--ink); }
+[data-skin="machine"] .row.reco { outline: 1px solid var(--accent); outline-offset: -2px; }
+[data-skin="machine"] .badge.reco { background: var(--accent); color: #fff; }
+[data-skin="machine"] :is(.say, .bubble) { background: #1d2126; color: var(--ink); border: 1px solid var(--line); }
+[data-skin="machine"] .modal h2 { letter-spacing: 1px; }
+
+/* 잃어버린 기술 (도감 › 기술) */
+.lost-card .codex-item { margin: 6px 0 0; }
+.codex-item.locked { border-style: dashed; }
+.codex-item.locked b { letter-spacing: 2px; }
+
+/* 버튼 설명 말풍선 (꾹 누르기 / 정보 칸 누르기) */
+.tip-bubble { position: fixed; z-index: 60; padding: 8px 10px; font-size: 12px; line-height: 1.45; background: var(--panel); color: var(--ink); border: var(--bw) solid var(--line); border-radius: var(--radius); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); opacity: 0; transform: translateY(4px); transition: opacity 0.15s, transform 0.15s; pointer-events: none; }
+.tip-bubble.on { opacity: 1; transform: none; }
+[data-skin="retro"] .tip-bubble { background: #ffffe1; color: #000; border: 1px solid #000; box-shadow: none; }
+[data-tap] { cursor: help; }

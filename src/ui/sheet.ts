@@ -1,5 +1,6 @@
 // 아래 창(패널) 크기: 손잡이를 끌어 올리면 크게, 내리면 접기(장면만 크게). 탭하면 보통 ↔ 크게.
 // 상태는 이 기기에만 기억한다 (localStorage, 실패해도 상관없음).
+import { tip } from "./tips";
 import { h } from "./dom";
 import { L } from "../i18n/lang";
 
@@ -7,7 +8,7 @@ export type SheetState = "peek" | "half" | "full";
 const KEY = "ai-kiugi-sheet";
 
 export class Sheet {
-  readonly handle = h("button", { class: "sheet-handle", type: "button" }, h("span", { class: "grip", "aria-hidden": "true" }), h("span", { class: "sheet-tip" }));
+  readonly handle = tip(h("button", { class: "sheet-handle", type: "button" }, h("span", { class: "grip", "aria-hidden": "true" }), h("span", { class: "sheet-tip" })), "sheet");
   private state: SheetState = "half";
   private app = document.getElementById("app")!;
 

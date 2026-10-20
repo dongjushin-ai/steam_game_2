@@ -1,0 +1,16 @@
+// English text for src/data/lost.ts (keyed by id)
+export const LOST_EN: Record<string, { name: string; year: string; desc: string }> = {
+  antikythera: { name: "Antikythera Mechanism", year: "c. 100 BC → 1901", desc: "A bronze gear calculator from the 2nd–1st century BC that computed the positions of the Sun and Moon and predicted eclipses. Recovered from a Greek shipwreck in 1901; CT scans in the 2000s revealed its inner workings." },
+  difference_engine: { name: "Difference Engine No. 2", year: "1849 → 1991", desc: "Babbage designed it in 1849 but never built it. In 1991 London's Science Museum built it to his plans with period-accurate precision, and it worked." },
+  mark1_perceptron: { name: "Mark I Perceptron", year: "1958", desc: "Rosenblatt's hardware neural network learned letter shapes with a 20×20 grid of photocells. Forgotten when neural net research froze after 1969, it now sits in the Smithsonian." },
+  analog_computer: { name: "Analog Computers", year: "1950s → 2020s", desc: "Machines that solved differential equations with voltages and resistors. Pushed out by digital computers, the idea returned in the 2020s as energy-saving analog AI chips." },
+  rope_memory: { name: "Core Rope Memory", year: "1969 → 2019", desc: "Apollo's flight software was stored by hand-threading copper wire through magnetic rings. It became a lost craft, but in 2019 a restoration team got a surviving Apollo Guidance Computer running again." },
+  neocognitron: { name: "Neocognitron", year: "1980", desc: "Kunihiko Fukushima's vision network, an ancestor of today's convolutional neural networks (CNNs), went largely unnoticed for a long time." },
+  backprop_1970: { name: "Forgotten Backpropagation", year: "1970 → 1986", desc: "A 1970 Finnish master's thesis already had the math of backpropagation (reverse-mode automatic differentiation). A 1974 PhD thesis proposed it for neural nets, but it only caught on in 1986." },
+  lisp_machine: { name: "LISP Machines", year: "1980s → 1987", desc: "Computers built just for AI programs. Their market collapsed in 1987 under cheap workstations, but ideas like garbage collection live on in today's languages." },
+  connection_machine: { name: "Connection Machine", year: "1985 → 1994", desc: "A parallel computer that ran up to 65,536 processors at once. Its maker closed in 1994, but computing with huge numbers of tiny processors carried on in GPUs." },
+  optical_computing: { name: "Optical Computing", year: "1980s → 2020s", desc: "Computing with light was a hot topic in the 1980s–90s before electronic chips outpaced it. AI's power problem has brought it back into the spotlight in the 2020s." },
+  geocities: { name: "GeoCities Archive", year: "2009", desc: "GeoCities, home to millions of 1990s personal pages, shut down in 2009. Volunteers called Archive Team downloaded a large share of it before it closed." },
+  cobol: { name: "COBOL", year: "1959 → 2020", desc: "COBOL, a language from 1959, still runs bank and government systems. In 2020 several US states urgently looked for COBOL programmers to fix aging government systems." },
+  human_dataset: { name: "The Last Human-Written Data (fan fiction)", year: "20XX", desc: "Once machine-written text buried the internet, human writing became rare data. A copy of the pre-flood web turned up in an old server warehouse." },
+};

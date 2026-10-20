@@ -1,5 +1,5 @@
 // 하단 탭별 화면. 목록은 탭·시대가 바뀔 때만 다시 만들고, 숫자는 update()로 갱신한다.
-import { BUILDINGS, CODEX, ERAS, QUIZ, TIERS, UPGRADES, WEEKLIES } from "../data";
+import { BUILDINGS, CODEX, ERAS, LOST, QUIZ, TIERS, UPGRADES, WEEKLIES } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtMult, fmtPct, fmtTokens, setNumberFormat } from "../core/format";
 import { arenaTable } from "../core/arena";
@@ -10,6 +10,7 @@ import { clearSave, exportSave, importSave, saveGame } from "../core/save";
 import type { Building, BuildingKind, Effect, GameState, Look, MultStat, NumberFormat, UiSkin, Upgrade } from "../core/types";
 import type { LookItem, Rarity } from "../data";
 import { append, clear, h, setText } from "./dom";
+import { tip } from "./tips";
 import { showModal, toast } from "./modals";
 import { setSound, setVibrate, sfx } from "./sound";
 import { music } from "./music";
@@ -123,7 +124,7 @@ export class Panels {
     const s = this.game.state;
     return [this.tab, this.buyMode, this.codexTab, s.era, s.upgrades.length, s.releases, s.boss ? 1 : 0,
       s.achievements.length, s.bossesBeaten.length, s.ended ? 1 : 0, this.game.hasThinking() ? 1 : 0,
-      s.sideFight ? 1 : 0, s.benchDone.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly, JSON.stringify(s.settings.look), s.ranking.title, s.ranking.medals.length, s.endless.level].join("/");
+      s.sideFight ? 1 : 0, s.benchDone.length, s.lost.length, s.missions.map((m) => m.id).join("+"), s.models.length, s.weekly, JSON.stringify(s.settings.look), s.ranking.title, s.ranking.medals.length, s.endless.level].join("/");
   }
 
   update(): void {
@@ -156,7 +157,7 @@ export class Panels {
   private buyModeSeg(): HTMLElement {
     const seg = h("div", { class: "seg" });
     for (const m of [1, 10, "max"] as BuyMode[]) {
-      seg.append(h("button", { class: this.buyMode === m ? "on" : "", onclick: () => { this.buyMode = m; this.update(); } }, m === "max" ? "MAX" : `×${m}`));
+      seg.append(tip(h("button", { class: this.buyMode === m ? "on" : "", onclick: () => { this.buyMode = m; this.update(); } }, m === "max" ? "MAX" : `×${m}`), "buymode"));
     }
     return seg;
   }
@@ -459,7 +460,7 @@ export class Panels {
     // 자동 구매 (해금 뒤): 켜고 끄기 + 지금까지 산 수
     const rate = g.autoBuyRate();
     if (rate > 0) {
-      const btn = h("button", { class: "chip auto-toggle" });
+      const btn = tip(h("button", { class: "chip auto-toggle" }), "autobuy");
       const info = h("span");
       const paint = () => {
         const on = g.state.settings.autoBuy;
@@ -776,6 +777,14 @@ export class Panels {
 
   private buildTech(): void {
     const s = this.game.state;
+    // 잃어버린 기술: 찾은 건 이야기 전체, 못 찾은 건 어느 시대에서 나오는지만
+    const found = LOST.filter((x) => s.lost.includes(x.id)).length;
+    this.root.append(h("div", { class: "card lost-card" },
+      this.title(L(`잃어버린 기술 ${found} / ${LOST.length}`, `Lost tech ${found} / ${LOST.length}`)),
+      h("p", { class: "hint" }, L("사라졌다가 다시 발견된 실제 기술. 가끔 사건 대신 발굴되고, 찾으면 작은 영구 보너스.", "Real technologies that were lost and later rediscovered. Sometimes found instead of an event; each gives a small permanent bonus.")),
+      ...LOST.map((x) => s.lost.includes(x.id)
+        ? h("div", { class: "codex-item" }, h("div", { class: "e" }, pxi(x.emoji)), h("div", null, h("b", null, x.name, h("small", null, x.year)), h("p", null, x.desc), h("p", { class: "hint" }, effectText(x.effects[0]))))
+        : h("div", { class: "codex-item locked" }, h("div", { class: "e" }, ic("lock")), h("div", null, h("b", null, "???"), h("p", { class: "hint" }, x.era <= s.era ? L(`${ERAS[x.era].name}부터 발굴 가능 · 무작위 사건 차례에 가끔`, `Findable from ${ERAS[x.era].name} · sometimes, instead of an event`) : L(`${ERAS[x.era].name}에서 발굴`, `Found in ${ERAS[x.era].name}`)))))));
     const owned = UPGRADES.filter((u) => s.upgrades.includes(u.id)).sort((a, b) => a.era - b.era);
     this.root.append(h("div", { class: "hint" }, L(`보유 기술 ${owned.length} / ${UPGRADES.length}`, `Tech owned ${owned.length} / ${UPGRADES.length}`)));
     let lastEra = -1;
@@ -927,8 +936,8 @@ export class Panels {
       on: lk.room === e && look.room !== null, locked: !eraReached(s, e), name: era.years, how: eraHow(e),
       img: sceneStill(e, era.color, false), onPick: () => set({ room: look.room === e ? null : e }),
     })));
-    const uiName: Record<UiSkin, string> = { pixel: L("도트", "Pixel"), retro: L("90년대 OS", "90s OS"), y2k: "Y2K", brutal: L("브루탈", "Brutal") };
-    const uiFrom: Record<UiSkin, number> = { pixel: 0, retro: 3, y2k: 5, brutal: 8 };
+    const uiName: Record<UiSkin, string> = { pixel: L("도트", "Pixel"), retro: L("90년대 OS", "90s OS"), y2k: "Y2K", brutal: L("브루탈", "Brutal"), machine: L("기계", "Machine") };
+    const uiFrom: Record<UiSkin, number> = { pixel: 0, retro: 3, y2k: 5, brutal: 8, machine: 10 };
     section(L("화면 옷", "UI theme"),
       tile({ on: !look.ui, locked: false, name: L("시대 따라", "Follow era"), swatch: "linear-gradient(90deg,#14142a,#c0c0c0,#dfe5f3,#fff)", onPick: () => set({ ui: null }) }),
       ...UI_SKINS.map((u) => tile({

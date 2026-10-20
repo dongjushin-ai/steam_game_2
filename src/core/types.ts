@@ -86,6 +86,8 @@ export interface Upgrade {
   missionSlots?: number;
   /** 자동 구매: 초당 건물 구매 횟수 (합산) */
   autoBuy?: number;
+  /** 보안: 악성코드 이벤트 효과 시간을 이만큼 줄임 (합산, 최대 MALWARE_SHIELD_MAX) */
+  malwareShield?: number;
   requires?: string[];
   desc: string;
 }
@@ -155,6 +157,19 @@ export interface GameEvent {
   choices?: EventChoice[];
   /** 랜덤 풀에서 제외하고 스크립트로만 발동 */
   scripted?: boolean;
+  /** 악성코드·보안 사고: 보안 연구(malwareShield)만큼 효과 시간이 줄어든다 */
+  malware?: boolean;
+}
+
+/** 잃어버린 기술: 사라졌다가 다시 발견된 실제 기술 (data/lost.ts) */
+export interface LostTech {
+  id: string;
+  era: number;
+  year: string;
+  emoji: string;
+  name: string;
+  desc: string;
+  effects: Effect[];
 }
 
 export interface CodexEntry {
@@ -319,6 +334,8 @@ export interface GameState {
   eraTimes: number[];
   /** 깬 사이드 벤치마크 id */
   benchDone: string[];
+  /** 발굴한 잃어버린 기술 (출시로도 사라지지 않음) */
+  lost: string[];
   /** 진행 중인 사이드 벤치마크 도전 */
   sideFight: { id: string; dealt: number; remaining: number } | null;
   threat: Threat | null;
@@ -376,7 +393,7 @@ export interface GameState {
   lastSaved: number;
 }
 
-export type UiSkin = "pixel" | "retro" | "y2k" | "brutal";
+export type UiSkin = "pixel" | "retro" | "y2k" | "brutal" | "machine";
 
 /** 꾸미기 선택. 시대 그림(모습·방)과 화면 옷은 도달한 시대에서, 모자·색·효과는 업적에서 열린다. */
 export interface Look {

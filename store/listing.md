@@ -30,10 +30,13 @@ AI 키우기: 방치형 AI 역사 게임
 화면 왼쪽에서 걸어오는 질문들을 AI가 자동으로 답해 동전으로 터뜨립니다. 화면을 톡톡 눌러 직접 도와줄 수도 있어요. 가끔은 AI가 자신만만하게 틀린 답을 내놓습니다.
 
 ■ 시대마다 바뀌는 화면
-도트 게임으로 시작한 화면이 90년대 컴퓨터 창, Y2K 반짝이를 거쳐 마지막엔 브루탈리즘으로 변합니다. 시대마다 방, 주인공 모습, 배경음악이 달라집니다.
+도트 게임으로 시작한 화면이 90년대 컴퓨터 창, Y2K, 브루탈리즘을 거쳐 마지막엔 로봇이 공장과 전력망을 돌리는 '피지컬 AI'의 시대(팬픽)로 바뀝니다. 시대마다 차분한 색 하나를 정해 방, 주인공 모습, 배경음악을 맞췄습니다.
 
 ■ 진짜 AI 역사를 따라간다
 11개 시대, 40여 개 시설, 100개가 넘는 연구와 상품. 도감에는 각 시대의 실제 사건과 기술 이야기가 정리되어 있습니다. 놀면서 AI가 어떻게 여기까지 왔는지 알게 됩니다.
+
+■ 재난과 바이러스, 그리고 잃어버린 기술
+최초의 웜, Y2K, 데이터센터 화재, 태양 폭풍처럼 실제로 있었던 사고가 찾아옵니다. 보안 연구를 하면 피해가 줄어요. 가끔은 안티키테라 기계, 아폴로의 손으로 엮은 메모리처럼 사라졌다가 다시 발견된 실제 기술을 발굴합니다.
 
 ■ 벤치마크 보스전
 시대마다 커다란 벤치마크 보스가 기다립니다. 정해진 시간 안에 정답을 쌓아 이기면 다음 시대가 열립니다.
@@ -49,6 +52,9 @@ AI 키우기: 방치형 AI 역사 게임
 
 ■ 엔딩 뒤에도 끝이 없다
 밀레니엄 난제를 풀면 '특이점 너머' 무한 벤치마크가 열립니다. 단계를 깰 때마다 AI가 영구로 강해지고, 몇 단계까지 갔는지 랭킹에서 겨뤄요.
+
+■ 손이 덜 가게
+시대 3부터 자동 구매가 열려, 가장 효율 좋은 건물을 알아서 삽니다. 모르는 버튼은 꾹 누르면 설명이 나옵니다.
 
 ■ 방치해도 자란다
 게임을 꺼 둬도 AI는 계속 일합니다. 돌아오면 그동안 번 것을 받으세요. 파견이 끝나면 알림으로 알려 드려요(원할 때만). 매주 바뀌는 이벤트와 출석 보상도 있습니다.
@@ -83,10 +89,13 @@ Your tiny AI starts as a clockwork calculator and grows through vacuum tubes, ex
 Questions walk in from the left; your AI answers them automatically and they burst into coins. Tap to help out. Sometimes your AI gives a wrong answer with total confidence.
 
 ■ The screen changes with every era
-It starts as a pixel game, turns into a 90s desktop, picks up Y2K shine and ends in full brutalism. Each era has its own room, hero sprite and music.
+It starts as a pixel game, becomes a 90s desktop, then Y2K, then brutalism, and ends in a 'physical AI' era where robots run the factories and the grid (fan fiction). Each era gets one calm color for its room, hero sprite and music.
 
 ■ Follow real AI history
 11 eras, 40+ facilities and 100+ research and product upgrades. The Codex collects the real events and ideas behind each era, so you learn how AI got here while you play.
+
+■ Disasters, viruses and lost technology
+Real incidents show up: the first worm, Y2K, a datacenter fire, solar storms. Security research softens them. Now and then you dig up real technology that was lost and rediscovered, like the Antikythera mechanism or Apollo's hand-woven memory.
 
 ■ Benchmark boss fights
 Every era ends with a giant benchmark boss. Stack enough correct answers before time runs out to unlock the next era.
@@ -102,6 +111,9 @@ Compete on overall score, feat score, best combo and per-era time attacks, by da
 
 ■ No end after the ending
 Solve the Millennium Problems and the endless 'Beyond the Singularity' benchmark opens. Every level you clear makes your AI permanently stronger, and the leaderboard shows how far you got.
+
+■ Less tapping
+Auto-buy opens in era 3 and buys the best-value building for you. Long-press any button to see what it does.
 
 ■ Grows while you're away
 Your AI keeps working when the game is closed. Come back and collect. Optional notifications tell you when a mission is back. Weekly events and daily check-in rewards keep things fresh.

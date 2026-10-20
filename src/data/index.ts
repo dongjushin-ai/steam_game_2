@@ -8,6 +8,7 @@ export { BUILDINGS, ERAS, UPGRADES };
 export { TIERS } from "./tiers";
 export { EVENTS } from "./events";
 export { CODEX } from "./codex";
+export { LOST, LOST_MAP } from "./lost";
 
 const rawBuildingCost = new Map(BUILDINGS.map((b) => [b.id, b.baseCost]));
 const rawUpgradeCost = new Map(UPGRADES.map((u) => [u.id, u.cost]));

@@ -1,10 +1,11 @@
-import { BOARDS, ERAS, EVENTS, NEWS, QUIZ, UPGRADES, weeklyFor } from "../data";
+import { BOARDS, ERAS, EVENTS, LOST, NEWS, QUIZ, UPGRADES, weeklyFor } from "../data";
 import { ACHIEVEMENTS } from "../core/achievements";
 import { fmt, fmtDuration, fmtMult, setNumberFormat } from "../core/format";
 import { Game, newState, type GameNotice } from "../core/game";
 import { loadGame, saveGame } from "../core/save";
 import type { Effect, GameState } from "../core/types";
 import { $, clear, h, setText } from "./dom";
+import { setupTips, tip } from "./tips";
 import { modalOpen, showModal, toast } from "./modals";
 import { Panels, TABS, featureOn, statLabel, type TabId } from "./panels";
 import { shareCard } from "./sharecard";
@@ -212,15 +213,16 @@ export class App {
   }
 
   private buildChrome(): void {
+    setupTips();
     const hd = this.header;
     hd.powerBox.append(h("div", { class: "res-main" }, ic("bolt"), hd.power), hd.powerSub);
     $("#top").append(
       h("div", { class: "top-row" }, h("div", { style: { minWidth: "0", display: "flex", alignItems: "baseline" } }, hd.name, hd.ver),
-        h("div", { class: "top-right" }, hd.era, h("button", { class: "help-btn", "aria-label": L("게임 방법", "How to play"), onclick: () => openHelp() }, "?"))),
+        h("div", { class: "top-right" }, tip(hd.era, "era", true), tip(h("button", { class: "help-btn", "aria-label": L("게임 방법", "How to play"), onclick: () => openHelp() }, "?"), "help"))),
       h("div", { class: "res-row" },
-        h("div", { class: "res money" }, h("div", { class: "res-main" }, ic("coin"), hd.money), hd.moneySub),
-        h("div", { class: "res rp" }, h("div", { class: "res-main" }, ic("rp"), hd.rp), hd.rpSub),
-        hd.powerBox),
+        tip(h("div", { class: "res money" }, h("div", { class: "res-main" }, ic("coin"), hd.money), hd.moneySub), "money", true),
+        tip(h("div", { class: "res rp" }, h("div", { class: "res-main" }, ic("rp"), hd.rp), hd.rpSub), "rp", true),
+        tip(hd.powerBox, "power", true)),
       this.ticker,
     );
     // 알림(토스트)은 머리말 바로 아래에: 돈·연구 점수 숫자를 가리지 않게
@@ -233,7 +235,7 @@ export class App {
     $("#panel").before(this.sheet.handle);
     const nav = $("#nav");
     for (const t of TABS) {
-      const b = h("button", { onclick: () => this.selectTab(t.id), "aria-label": t.label }, h("span", { class: "i" }, ic(t.icon, "nav-ic")), t.label);
+      const b = tip(h("button", { onclick: () => this.selectTab(t.id), "aria-label": t.label }, h("span", { class: "i" }, ic(t.icon, "nav-ic")), t.label), `nav-${t.id}` as "nav-service");
       this.navButtons.set(t.id, b);
       nav.append(b);
     }
@@ -258,7 +260,7 @@ export class App {
     const lk = resolveLook(this.game.state);
     root.style.setProperty("--era", lk.color ?? ERAS[era].color);
     // 고른 색이 글자로 쓰일 때: 화면 옷 바탕과 대비 4.5:1이 될 때까지 어둡게/밝게
-    if (lk.color) root.style.setProperty("--accent-text", readableOn(lk.color, lk.ui === "pixel" || (lk.ui === "brutal" && era === 10) ? "#10102e" : lk.ui === "retro" ? "#c0c0c0" : "#ffffff"));
+    if (lk.color) root.style.setProperty("--accent-text", readableOn(lk.color, lk.ui === "pixel" || (lk.ui === "brutal" && era === 10) || lk.ui === "machine" ? "#10102e" : lk.ui === "retro" ? "#c0c0c0" : "#ffffff"));
     else root.style.removeProperty("--accent-text");
     root.dataset.era = String(era);
     root.dataset.skin = lk.ui;
@@ -369,7 +371,10 @@ export class App {
             buttons: [{ label: L("버텨보자", "We'll survive") }],
           });
         } else {
-          toast(`${ev.name} (${ev.year})`, `${ev.desc} ${effectsLine(ev.effects, ev.duration)}`);
+          // 악성코드·보안 사고: 보안 연구만큼 시간이 줄어든 걸 보여 준다
+          const shield = ev.malware ? g.malwareShield() : 0;
+          const note = shield > 0 ? L(` · 보안 연구로 −${Math.round(shield * 100)}%`, ` · security research −${Math.round(shield * 100)}%`) : "";
+          toast(`${ev.name} (${ev.year})`, `${ev.desc} ${effectsLine(ev.effects, ev.duration * (1 - shield))}${note}`);
         }
         break;
       }
@@ -391,8 +396,12 @@ export class App {
       case "choice": {
         const ev = n.event;
         sfx("event");
+        const shield = ev.malware ? g.malwareShield() : 0;
         showModal({
-          icon: ev.emoji, title: ev.name, sub: ev.year, body: [ev.desc],
+          icon: ev.emoji, title: ev.name, sub: ev.year,
+          body: [ev.desc, ...(ev.malware ? [h("p", { class: "hint" }, shield > 0
+            ? L(`🛡️ 보안 연구 덕분에 피해 시간이 ${Math.round(shield * 100)}% 짧아져요.`, `🛡️ Security research cuts the damage time by ${Math.round(shield * 100)}%.`)
+            : L("🛡️ 연구 탭의 보안 연구(백신 프로그램 등)를 하면 이런 사고의 피해 시간이 줄어요.", "🛡️ Security research (like Antivirus Software in Research) shortens incidents like this."))] : [])],
           buttons: ev.choices!.map((c, i) => ({
             label: h("span", { class: "choice" }, c.label, h("small", null, c.desc)),
             kind: i === 0 ? "primary" : "ghost",
@@ -491,6 +500,16 @@ export class App {
         if (n.rp) parts.push(`+${fmt(n.rp)}`);
         if (m.effects && m.effectDuration) parts.push(effectsLine(m.effects, m.effectDuration));
         toast(L(`파견 복귀: ${m.name}`, `Back from: ${m.name}`), parts.join(" · "), "ach");
+        break;
+      }
+      case "lost": {
+        const x = n.tech;
+        sfx("golden");
+        showModal({
+          icon: x.emoji, title: L(`잃어버린 기술 발굴: ${x.name}`, `Lost tech found: ${x.name}`), sub: x.year,
+          body: [x.desc, h("p", { class: "won" }, L("영구 보너스 ", "Permanent bonus "), effectsLine(x.effects, 0)), h("p", { class: "hint" }, L(`도감 › 기술에서 모은 것을 볼 수 있어요 (${g.state.lost.length}/${LOST.length}). 새 모델을 출시해도 사라지지 않아요.`, `See your finds in Codex › Tech (${g.state.lost.length}/${LOST.length}). They stay even after a release.`))],
+          buttons: [{ label: L("간직한다", "Keep it") }],
+        });
         break;
       }
       case "ending":
@@ -592,7 +611,7 @@ export class App {
     const g = this.game;
     const end = (text: string) => () => {
       showModal({
-        icon: "✨", hero: heroHtml(ERAS.length - 1, ERAS[ERAS.length - 1].color), title: "Q.E.D.", sub: `${g.state.aiName} · ${L("플레이", "played")} ${fmtDuration(g.state.stats.playSeconds)}`,
+        icon: "🤖", hero: heroHtml(ERAS.length - 1, ERAS[ERAS.length - 1].color), title: "Q.E.D.", sub: `${g.state.aiName} · ${L("플레이", "played")} ${fmtDuration(g.state.stats.playSeconds)}`,
         body: [text, L("끝까지 함께해줘서 고마워요. 이제 무한 모드입니다. 계속 키워도 좋아요!", "Thanks for playing to the end. Endless mode is on now, so feel free to keep growing!")],
         buttons: [{ label: L("기록 카드 만들기", "Make a run card"), kind: "ghost", onClick: () => { void shareCard(g); return true; } }, { label: L("계속 플레이", "Keep playing") }],
       });
@@ -605,7 +624,7 @@ export class App {
         L(`"${g.state.aiName}, 이제 우리는 무엇을 해야 하지?"`, `"${g.state.aiName}, what should we do now?"`),
       ],
       buttons: [
-        { label: L("\"함께 더 멀리 가요.\"", "\"Let's go further, together.\""), onClick: end(L("AI와 인류는 별을 향해 나아갔다. 다이슨 스웜이 태양을 감싸고, 질문은 은하 저편에서도 날아온다. 가장 좋은 질문은 언제나 다음 질문이다.", "AI and humanity set out for the stars. A Dyson swarm wraps the Sun, and questions arrive from across the galaxy. The best question is always the next one.")) },
+        { label: L("\"함께 더 멀리 가요.\"", "\"Let's go further, together.\""), onClick: end(L("기계들은 공장과 전력망을 계속 돌렸고, 사람들은 다시 질문하는 일로 돌아갔다. 로봇은 일을, 사람은 방향을 맡았다. 가장 좋은 질문은 언제나 다음 질문이다.", "The machines kept the factories and the grid running, and people went back to asking questions. Robots took the work; people took the direction. The best question is always the next one.")) },
         { label: L("\"천천히, 같이 이해해요.\"", "\"Slowly. Let's understand it together.\""), kind: "ghost", onClick: end(L("AI는 답을 서두르지 않았다. 증명 하나하나를 사람들과 함께 읽고 이해했다. 수학자들은 다시 칠판 앞에 섰고, 이번엔 혼자가 아니었다.", "The AI didn't rush its answers. It read through every proof together with people until they understood. Mathematicians went back to their chalkboards, and this time they weren't alone.")) },
       ],
     });

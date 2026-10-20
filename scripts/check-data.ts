@@ -1,5 +1,5 @@
 // 콘텐츠 데이터 무결성 검사: npm test 에서 실행된다.
-import { BUILDINGS, CODEX, ERAS, EVENTS, MISSIONS, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES, LOOKS } from "../src/data";
+import { BUILDINGS, CODEX, ERAS, EVENTS, LOST, MISSIONS, SIDE_BENCHES, TIERS, UPGRADES, WEEKLIES, LOOKS } from "../src/data";
 import { ACHIEVEMENTS } from "../src/core/achievements";
 
 const errors: string[] = [];
@@ -17,6 +17,7 @@ unique("buildings", BUILDINGS.map((b) => b.id));
 unique("upgrades", UPGRADES.map((u) => u.id));
 unique("events", EVENTS.map((e) => e.id));
 unique("codex", CODEX.map((c) => c.id));
+unique("lost", LOST.map((x) => x.id));
 unique("achievements", ACHIEVEMENTS.map((a) => a.id));
 unique("all ids", [...BUILDINGS.map((b) => b.id), ...UPGRADES.map((u) => u.id)]);
 
@@ -73,7 +74,7 @@ for (const u of UPGRADES) {
     else if (UPGRADES.find((x) => x.id === r)!.era > u.era) fail(`${u.id}: 선행 연구 ${r}가 더 늦은 시대`);
   }
   for (const e of u.effects) if (!(e.mul > 0)) fail(`${u.id}: 효과 배수 이상 ${e.stat}`);
-  if (!u.effects.length && !u.ctx && !u.unlockThinking && !u.autoTap && !u.autoBuy) fail(`${u.id}: 효과 없음`);
+  if (!u.effects.length && !u.ctx && !u.unlockThinking && !u.autoTap && !u.autoBuy && !u.malwareShield) fail(`${u.id}: 효과 없음`);
 }
 
 // 보스 컨텍스트 요구치는 그 시대까지 열리는 연구로 달성 가능해야 한다
@@ -102,6 +103,11 @@ for (let era = 0; era <= maxEra; era++) {
   if (!EVENTS.some((e) => !e.scripted && e.minEra <= era && (e.maxEra ?? maxEra) >= era)) fail(`era ${era}: 랜덤 이벤트 없음`);
 }
 for (const c of CODEX) if (c.era < 0 || c.era > maxEra) fail(`codex ${c.id}: era 범위 밖`);
+for (const x of LOST) {
+  if (x.era < 0 || x.era > maxEra) fail(`lost ${x.id}: era 범위 밖`);
+  if (!x.effects.length) fail(`lost ${x.id}: 효과 없음`);
+  for (const e of x.effects) if (!(e.mul > 0 && e.mul !== 1)) fail(`lost ${x.id}: 효과 배수 이상 ${e.stat}`);
+}
 
 if (errors.length) {
   console.error(`데이터 검사 실패 ${errors.length}건:\n- ${errors.join("\n- ")}`);
