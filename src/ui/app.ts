@@ -545,27 +545,10 @@ export class App {
     });
   }
 
+  /** 처음 켰을 때: 창 없이 바로 시작한다 (글을 읽기 전에 먼저 눌러 보게). 이름은 도감 › 설정에서 바꾼다 */
   private welcome(): void {
-    const input = h("input", { type: "text", maxlength: "20", value: L("나의 AI", "My AI"), "aria-label": L("AI 이름", "AI name") }) as HTMLInputElement;
-    const era = ERAS[0];
-    showModal({
-      icon: "",
-      logo: true,
-      title: L("AI 키우기", "Grow Your AI"),
-      sub: "Attention Is All You Idle",
-      body: [
-        L("질문이 몰려온다. 답하면 돈이 된다. 톱니바퀴에서 특이점까지.", "Questions are coming. Answers pay. From gears to the singularity."),
-        h("div", { class: "stack" }, h("div", { class: "hint" }, L("AI 이름을 지어주세요", "Name your AI")), input),
-      ],
-      buttons: [{
-        label: L("시작!", "Start!"),
-        onClick: () => {
-          this.game.state.aiName = input.value.trim() || L("나의 AI", "My AI");
-          showModal({ icon: era.avatar, hero: heroHtml(0, era.color), title: era.name, sub: era.years, body: [era.intro], buttons: [{ label: L("첫 질문 받기", "Bring it on") }] });
-        },
-      }],
-    });
-    for (const p of document.querySelectorAll<HTMLElement>(".modal p")) p.style.whiteSpace = "pre-line";
+    this.game.state.aiName = L("나의 AI", "My AI");
+    this.scene.titleCard(L("AI 키우기", "Grow Your AI"), L("질문이 몰려온다. 답하면 돈이 된다.", "Questions are coming. Answers pay."));
   }
 
   /** 이번 주 이벤트를 날짜로 정한다. 주가 바뀌었으면 알려 준다. */

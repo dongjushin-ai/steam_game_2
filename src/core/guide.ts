@@ -28,8 +28,8 @@ export function nextHint(g: Game): Hint | null {
 
   // 튜토리얼 중엔 튜토리얼과 같은 곳을 가리킨다 (다른 탭으로 끌고 가지 않게)
   if (!s.settings.tutorialDone) {
-    const first = BUILDINGS.find((b) => b.kind === "demand" && b.era <= s.era)!;
-    return { text: L(`${first.name} 늘리기 → 서비스`, `Get ${first.name} → Service`), tab: "service", target: first.id };
+    const first = BUILDINGS.find((b) => b.kind === "compute" && b.era <= s.era)!;
+    return { text: L(`${first.name} 늘리기 → 인프라`, `Get ${first.name} → Infra`), tab: "infra", target: first.id };
   }
 
   // 도전은 35%부터 열리지만, 안내는 이길 만할 때만 보스로 보낸다 (아니면 계속 지고 돈은 쌓이기만 함)

@@ -310,7 +310,7 @@ textarea { min-height: 80px; font-size: 10px; font-family: var(--font-small); }
 /* ═══ 2부: pixel — 8비트 게임 ═════════════════════════ */
 
 [data-skin="pixel"] {
-  --page: #000; --bg: #121420; --panel: #222638; --panel2: #171a28; --ink: #f2efe6; --muted: #aeb0c2; --line: #000;
+  --page: #000; --bg: color-mix(in srgb, var(--era) 10%, #14151c); --panel: color-mix(in srgb, var(--era) 16%, #22232c); --panel2: color-mix(in srgb, var(--era) 12%, #191a22); --ink: #f4f0e6; --muted: #b9b5a8; --line: #000;
   --bw: 2px;
   -webkit-font-smoothing: none;
 }
@@ -833,3 +833,10 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 .tip-bubble.on { opacity: 1; transform: none; }
 [data-skin="retro"] .tip-bubble { background: #ffffe1; color: #000; border: 1px solid #000; box-shadow: none; }
 [data-tap] { cursor: help; }
+
+/* 처음 켰을 때 장면 위 제목 (창 대신) */
+.title-card { position: absolute; left: 0; right: 0; top: 18%; display: grid; justify-items: center; gap: 4px; pointer-events: none; z-index: 4; animation: title-card 4.2s ease forwards; text-align: center; }
+.title-card b { font-size: 26px; color: var(--money); text-shadow: 2px 2px 0 #000, 0 0 12px rgba(0, 0, 0, 0.6); letter-spacing: 1px; }
+.title-card small { font-size: 12px; color: #fff; text-shadow: 1px 1px 0 #000; background: rgba(0, 0, 0, 0.45); padding: 2px 8px; }
+@keyframes title-card { 0% { opacity: 0; transform: translateY(-8px) scale(0.96); } 12% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .title-card { animation-duration: 0.01s; animation-delay: 3.5s; animation-fill-mode: both; } }

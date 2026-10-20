@@ -69,6 +69,7 @@ export class Scene {
   private threatKey = "";
   private spawnAcc = 0;
   private sayTimer = 4;
+  private speakTimer = 0;
   private onTap: () => void;
   private hintTab: GuideTab | null = null;
   /** 다음 밈 대사까지 남은 시간 */
@@ -318,7 +319,13 @@ export class Scene {
       }
       return;
     }
-    const n = m.boss ? 14 : tapped ? 6 : 3;
+    const big = tapped && this.bigNextKill;
+    if (big) {
+      this.bigNextKill = false;
+      this.shake = 0.35;
+      this.battle.levelUp = 1.2;
+    }
+    const n = m.boss || big ? 18 : tapped ? 6 : 3;
     for (let i = 0; i < n; i++) {
       this.battle.coins.push({ x: m.x + m.size / 2, y: m.y - m.size / 2, vx: (Math.random() - 0.3) * 50, vy: -30 - Math.random() * 40, t: 0 });
     }
@@ -402,6 +409,26 @@ export class Scene {
     b.levelUp = Math.max(0, b.levelUp - dt);
     this.shake = Math.max(0, this.shake - dt);
   }
+
+  /** AI가 말한다 (wrong이면 빨간 '헛소리' 말풍선) */
+  speak(text: string, wrong = false, secs = 3.2): void {
+    setText(this.say, text);
+    this.say.classList.toggle("wrong", wrong);
+    this.say.classList.add("show");
+    this.sayTimer = secs + 4;
+    clearTimeout(this.speakTimer);
+    this.speakTimer = window.setTimeout(() => this.say.classList.remove("show", "wrong"), secs * 1000);
+  }
+
+  /** 처음 켰을 때 장면 위에 잠깐 뜨는 제목 (창을 띄우지 않고 바로 시작) */
+  titleCard(title: string, line: string): void {
+    const el = h("div", { class: "title-card", "aria-hidden": "true" }, h("b", null, title), h("small", null, line));
+    this.root.append(el);
+    setTimeout(() => el.remove(), 4200);
+  }
+
+  /** 다음 처치 한 번을 크게 (튜토리얼 첫 정답): 동전을 더 많이 튀기고 화면을 살짝 흔든다 */
+  bigNextKill = false;
 
   /** 안내용: 천천히 걸어오는 첫 몬스터 (질문 글씨를 붙여서) */
   introMob(text: string): void {

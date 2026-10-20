@@ -42,6 +42,8 @@ const FEATURES: Feature[] = [
 ];
 
 const GAP = 15;
+/** 게임 시작 뒤 이 시간(초)까지는 소개 창을 띄우지 않는다 */
+const CALM_START = 90;
 /** 다른 창이 닫힌 뒤 숨 돌릴 시간 */
 const AFTER_MODAL = 5;
 /** 이건 간격을 기다리지 않는다 (놓치면 게임을 이해하기 어려움) */
@@ -84,7 +86,9 @@ export class Intros {
       return;
     }
     const ready = FEATURES.filter((x) => !s.settings.seen.includes(x.id) && x.when(g));
-    const f = ready.find((x) => URGENT.has(x.id)) ?? (this.wait > 0 ? undefined : ready[0]);
+    // 처음 90초는 소개 창 없이 그냥 놀게 둔다 (보스만 예외)
+    const early = s.stats.playSeconds < CALM_START;
+    const f = ready.find((x) => URGENT.has(x.id)) ?? (this.wait > 0 || early ? undefined : ready[0]);
     if (!f) return;
     s.settings.seen.push(f.id);
     this.wait = GAP;
