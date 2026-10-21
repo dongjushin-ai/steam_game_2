@@ -28,6 +28,7 @@ import { ENDLESS_BONUS, ENDLESS_GROWTH, endlessName } from "../core/formulas";
 import { checkRanks, submitAll } from "./ranking";
 import { cancelReminders, scheduleReminders } from "./notify";
 import { avatarStill } from "./pixel";
+import { PAPERS, paperOf, setBlueprint } from "./blueprint";
 import { L, applyLanguage, detectLang } from "../i18n";
 
 const SAVE_EVERY = 10;
@@ -259,8 +260,16 @@ export class App {
     // 꾸미기: 강조색과 화면 옷은 고른 것이 있으면 그것을 쓴다 (음악은 화면 옷을 따른다)
     const lk = resolveLook(this.game.state);
     root.style.setProperty("--era", lk.color ?? ERAS[era].color);
+    // 청사진: 도면 종이는 시대를 따른다 (장면도 같은 종이에 그린다)
+    const paper = lk.ui === "blueprint" ? paperOf(era) : null;
+    setBlueprint(paper);
+    if (paper) root.dataset.paper = paper;
+    else delete root.dataset.paper;
+    // 고른 색: 청사진에서는 수정펜 색 대신 쓴다
+    if (lk.color && paper) root.style.setProperty("--pick", lk.color);
+    else root.style.removeProperty("--pick");
     // 고른 색이 글자로 쓰일 때: 화면 옷 바탕과 대비 4.5:1이 될 때까지 어둡게/밝게
-    if (lk.color) root.style.setProperty("--accent-text", readableOn(lk.color, lk.ui === "pixel" || (lk.ui === "brutal" && era === 10) || lk.ui === "machine" ? "#10102e" : lk.ui === "retro" ? "#c0c0c0" : "#ffffff"));
+    if (lk.color) root.style.setProperty("--accent-text", readableOn(lk.color, paper ? PAPERS[paper].bg : lk.ui === "pixel" || (lk.ui === "brutal" && era === 10) || lk.ui === "machine" ? "#10102e" : lk.ui === "retro" ? "#c0c0c0" : "#ffffff"));
     else root.style.removeProperty("--accent-text");
     root.dataset.era = String(era);
     root.dataset.skin = lk.ui;

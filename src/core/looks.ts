@@ -8,16 +8,21 @@ export function rarityName(r: number): string {
   return [L("일반", "Common"), L("희귀", "Rare"), L("영웅", "Epic"), L("전설", "Legendary")][r] ?? "";
 }
 
-export const UI_SKINS: UiSkin[] = ["pixel", "retro", "y2k", "brutal", "machine"];
+export const UI_SKINS: UiSkin[] = ["blueprint", "pixel", "retro", "y2k", "brutal", "machine"];
 /** 화면 옷이 처음 나오는 시대 */
-const UI_FROM: Record<UiSkin, number> = { pixel: 0, retro: 3, y2k: 5, brutal: 8, machine: 10 };
+const UI_FROM: Record<UiSkin, number> = { blueprint: 0, pixel: 0, retro: 3, y2k: 5, brutal: 8, machine: 10 };
 
 export function emptyLook(): Look {
   return { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null };
 }
 
-/** 시대별 기본 화면 옷 */
-export function eraSkin(era: number): UiSkin {
+/** 기본 화면 옷: 청사진 (도면 종이는 시대마다 바뀐다). 예전 옷들은 꾸미기에서 고를 수 있다 */
+export function eraSkin(_era: number): UiSkin {
+  return "blueprint";
+}
+
+/** 예전 시대별 화면 옷 (음악 분위기는 이걸 따른다) */
+export function classicSkin(era: number): Exclude<UiSkin, "blueprint"> {
   return era <= 2 ? "pixel" : era <= 4 ? "retro" : era <= 7 ? "y2k" : era <= 9 ? "brutal" : "machine";
 }
 

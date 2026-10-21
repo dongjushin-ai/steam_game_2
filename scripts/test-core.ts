@@ -540,7 +540,7 @@ test("꾸미기: 잠긴 것은 기본값, 업적을 깨면 입을 수 있다", (
   assert.equal(lk.hat, null);
   assert.equal(lk.color, null);
   assert.equal(lk.fx, null);
-  assert.equal(lk.ui, "pixel");
+  assert.equal(lk.ui, "blueprint", "기본 화면 옷은 청사진");
   s.achievements.push("halluc_100", "golden_1", "golden_25");
   s.era = 5;
   lk = resolveLook(s);
@@ -549,7 +549,9 @@ test("꾸미기: 잠긴 것은 기본값, 업적을 깨면 입을 수 있다", (
   assert.equal(lk.hat, "h_cat");
   assert.equal(lk.color, "#ffd23f");
   assert.equal(lk.fx, "f_wings");
-  assert.equal(lk.ui, "y2k", "브루탈은 시대 8 전엔 잠김");
+  assert.equal(lk.ui, "blueprint", "브루탈은 시대 8 전엔 잠김 → 기본(청사진)");
+  s.settings.look.ui = "retro";
+  assert.equal(resolveLook(s).ui, "retro", "예전 옷은 고르면 입는다");
 });
 
 test("꾸미기: 업적마다 보상은 하나, 등급은 4단계 모두 있다", () => {
