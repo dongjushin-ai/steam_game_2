@@ -3,7 +3,6 @@
 // y2k: 반짝이는 종소리 아르페지오 / brutal: 낮은 웅웅거림과 킥, 드문 신호음.
 // 시대마다 조(key)가 조금씩 올라가서, 같은 옷 안에서도 시대가 바뀐 게 들린다.
 import { audioContext } from "./sound";
-import { classicSkin } from "../core/looks";
 
 export type MusicStyle = "pixel" | "retro" | "y2k" | "brutal";
 
@@ -101,10 +100,9 @@ class Music {
   }
 
   /** 화면 옷·시대에 맞춰 곡을 바꾼다 (다음 마디부터) */
-  setStyle(skin: MusicStyle | "machine" | "blueprint", era: number): void {
-    // 기계 시대(시대 10)는 브루탈 음악을 같이 쓴다. 청사진은 시대마다 예전 옷의 음악을 쓴다
-    const s = skin === "blueprint" ? classicSkin(era) : skin;
-    const style: MusicStyle = s === "machine" ? "brutal" : s;
+  setStyle(skin: MusicStyle | "machine", era: number): void {
+    // 기계 시대(시대 10)는 브루탈 음악을 같이 쓴다
+    const style: MusicStyle = skin === "machine" ? "brutal" : skin;
     this.style = style;
     this.key = [0, 2, 5][era % 3];
   }

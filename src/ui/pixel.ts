@@ -2,8 +2,6 @@
 // 시대마다 팔레트가 다르다: 0~2 NES풍 → 3 EGA 16색 → 4 VGA → 5~7 Y2K 파스텔·크롬 → 8~10 1비트 + 강조색 하나(브루탈리즘).
 // 정지한 배경은 시대마다 한 번만 그려 두고(캐시), 매 프레임에는 LED·릴·팬·별·AI만 덧그린다.
 
-import { blueprintMode, inkify, setBlueprint, type Box, type Paper } from "./blueprint";
-
 export const PW = 192;
 export const PH = 120;
 /** 벽과 바닥의 경계 */
@@ -1037,17 +1035,6 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
       p.d(0, y, W, 1, "#ff2d55", null, 6);
     }
   }
-  // 청사진: 다 그린 뒤 도면 선화로 옮겨 그린다. 몬스터는 수정펜 색, 보스는 완성도만큼 실선
-  if (blueprintMode()) {
-    const box = (m: Mob): Box => ({ x: Math.round(m.x) - 2, y: Math.round(m.y) - m.size - 4, w: m.size + 4, h: m.size + 6 });
-    const boss = b?.mobs.find((m) => m.boss && m.dying === 0);
-    inkify(g, {
-      // AI(모자·왕관 포함)가 주인공
-      focus: [{ x: avx - 4, y: AV.y - 16, w: AV.w + 8, h: HZ - AV.y + 16 }],
-      marks: b ? b.mobs.filter((m) => !m.boss).map(box) : [],
-      boss: boss ? { ...box(boss), done: b?.bossDone ?? 0 } : undefined,
-    });
-  }
 }
 
 // ── 전투: 질문 몬스터, 답변 탄, 동전 ──────────────────
@@ -1073,8 +1060,6 @@ export interface Battle {
   mobs: Mob[]; shots: Shot[]; coins: Coin[]; levelUp: number;
   /** 이번 시대 성장 단계 0~3 (보스 준비도): 1 오라 → 2 궤도 칩 → 3 왕관 */
   power?: number;
-  /** 보스를 얼마나 깼나 0~1 (청사진에서는 보스 도면의 완성도) */
-  bossDone?: number;
 }
 
 /** 질문 티어별 몬스터 색 (채도를 낮춘 파스텔: 여러 마리가 한 화면에 있어도 어수선하지 않게) */
@@ -1185,12 +1170,10 @@ function drawBattle(p: Px, era: number, accent: string, b: Battle, t: number, fr
 
 /** 정지 그림 (창·도감 머리). 캐시된 data URL. */
 const stillCache = new Map<string, string>();
-export function sceneStill(era: number, accent: string, withAvatar = true, paper: Paper | null = blueprintMode()): string {
-  const key = `${era}|${accent}|${withAvatar}|${paper}`;
+export function sceneStill(era: number, accent: string, withAvatar = true): string {
+  const key = `${era}|${accent}|${withAvatar}`;
   let url = stillCache.get(key);
   if (!url) {
-    const was = blueprintMode();
-    setBlueprint(null);
     const cv = document.createElement("canvas");
     cv.width = PW;
     cv.height = PH;
@@ -1200,9 +1183,6 @@ export function sceneStill(era: number, accent: string, withAvatar = true, paper
       g.drawImage(background(era, accent), AV.x - 8, 0, 56, PH, AV.x - 8, 0, 56, PH);
       (ROOMS[era] ?? ROOMS[0]).fg(new Px(g), 0.5, accent);
     }
-    setBlueprint(paper);
-    inkify(g);
-    setBlueprint(was);
     url = cv.toDataURL();
     stillCache.set(key, url);
   }
@@ -1220,14 +1200,13 @@ export function sceneCanvas(era: number, accent: string, look?: SceneLook, t = 0
 
 /** 펫 칸 미리보기: 펫만 (투명 배경 16×14) */
 export function petStill(id: string): string {
-  const key = `pet|${id}|${blueprintMode()}`;
+  const key = `pet|${id}`;
   let url = stillCache.get(key);
   if (!url) {
     const cv = document.createElement("canvas");
     cv.width = 16;
     cv.height = 14;
     drawPet(new Px(cv.getContext("2d")!), id, 14, 13, 0, true);
-    inkify(cv.getContext("2d")!, { transparent: true });
     url = cv.toDataURL();
     stillCache.set(key, url);
   }
@@ -1236,7 +1215,7 @@ export function petStill(id: string): string {
 
 /** 꾸미기 칸 미리보기: AI + 모자 + 효과만 (투명 배경 56×60) */
 export function lookStill(avatar: number, accent: string, hat: string | null, fx: string | null, head = false, pet: string | null = null): string {
-  const key = `look|${avatar}|${accent}|${hat}|${fx}|${head}|${pet}|${blueprintMode()}`;
+  const key = `look|${avatar}|${accent}|${hat}|${fx}|${head}|${pet}`;
   let url = stillCache.get(key);
   if (!url) {
     const cv = document.createElement("canvas");
@@ -1251,7 +1230,6 @@ export function lookStill(avatar: number, accent: string, hat: string | null, fx
     if (hat) drawHat(p, hat, ox + 20, oy + headTop(avatar), 0.3, accent);
     if (pet) drawPet(p, pet, ox + 14, oy + 40, 0);
     if (fx) drawFx(p, fx, ox + 20, oy + 20, 0.7, accent, true);
-    inkify(g, { transparent: true });
     url = cv.toDataURL();
     stillCache.set(key, url);
   }
@@ -1260,14 +1238,13 @@ export function lookStill(avatar: number, accent: string, hat: string | null, fx
 
 /** AI 얼굴만 (연표 썸네일) */
 export function avatarStill(era: number, accent: string): string {
-  const key = `av|${era}|${accent}|${blueprintMode()}`;
+  const key = `av|${era}|${accent}`;
   let url = stillCache.get(key);
   if (!url) {
     const cv = document.createElement("canvas");
     cv.width = 40;
     cv.height = 40;
     drawAvatar(cv.getContext("2d")!, era, accent, 0, 0, 0.5, { blinkOk: false });
-    inkify(cv.getContext("2d")!, { transparent: true });
     url = cv.toDataURL();
     stillCache.set(key, url);
   }

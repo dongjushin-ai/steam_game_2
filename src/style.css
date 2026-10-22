@@ -5,7 +5,6 @@
  *   retro  (시대 3~4)  90년대 운영체제: 회색 입체 테두리, 남색 제목 막대, 청록 바탕화면
  *   y2k    (시대 5~7)  2000년 무렵: 크롬 은색, 파스텔, 반짝이는 알약 버튼, 별 장식
  *   brutal (시대 8~10) 브루탈리즘: 날것의 흑백, 두꺼운 선, 그림자 대신 어긋난 상자, 기본 글꼴
- *   blueprint (기본)   설계 도면: 시대마다 종이가 바뀐다 (청사진 → 트레이싱지 → CAD → 공장 도면). 위 옷들은 꾸미기에서 고른다
  * 1부는 모든 옷이 같이 쓰는 뼈대, 2부부터는 옷마다 다른 부분이다.
  */
 
@@ -842,83 +841,3 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 .title-card small { font-size: calc(14px * var(--ts, 1)); color: #fff; text-shadow: 1px 1px 0 #000; background: rgba(0, 0, 0, 0.45); padding: 2px 8px; }
 @keyframes title-card { 0% { opacity: 0; transform: translateY(-8px) scale(0.96); } 12% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
 @media (prefers-reduced-motion: reduce) { .title-card { animation-duration: 0.01s; animation-delay: 3.5s; animation-fill-mode: both; } }
-
-/* ═══ 7부: blueprint — 기본 화면 옷. 설계 도면 위에서 AI를 만든다 ═══
-   얇은 선 + 모눈 + 수정펜 색 하나. 도면 종이는 시대마다 바뀐다 (<html data-paper>):
-   blue 청사진(시대 0~3) · trace 트레이싱지(4~6) · cad CAD 화면(7~9) · factory 공장 도면(10) */
-[data-skin="blueprint"] {
-  --paper-red: #f2b98a; --grid: rgba(232, 241, 248, 0.08); --grid-major: rgba(232, 241, 248, 0.16);
-  --page: #163f62; --bg: #1d4f7a; --panel: #1a4870; --panel2: #184267; --ink: #e8f1f8; --muted: #b9d0e3; --line: #8fb3d1;
-  --accent: var(--pick, var(--paper-red)); --accent-ink: #14324d;
-  --money: #f2d58a; --rp: #d4c4f2; --good: #a8e0b8; --bad: #f2a39a; --warn: #f2c88a;
-  --bw: 1px; --radius: 2px; --shadow: none;
-  --font: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
-  --font-head: ui-monospace, "SFMono-Regular", Menlo, Consolas, var(--font); --font-small: var(--font-head); --fs: 15px;
-  color-scheme: dark;
-}
-[data-skin="blueprint"][data-paper="trace"] {
-  --paper-red: #983e23; --grid: rgba(43, 48, 54, 0.07); --grid-major: rgba(43, 48, 54, 0.13);
-  --page: #d3d6d0; --bg: #e4e6e1; --panel: #eef0eb; --panel2: #dfe2dc; --ink: #2b3036; --muted: #555b63; --line: #8b929a;
-  --accent-ink: #ffffff;
-  --money: #7a5a00; --rp: #5a3ea0; --good: #1f6b3a; --bad: #b23a2e; --warn: #8a5a00;
-  color-scheme: light;
-}
-[data-skin="blueprint"][data-paper="cad"] {
-  --paper-red: #8fd6a8; --grid: rgba(143, 214, 168, 0.06); --grid-major: rgba(143, 214, 168, 0.12);
-  --page: #0c110e; --bg: #121815; --panel: #18201c; --panel2: #141b17; --ink: #d6efe0; --muted: #8fb3a0; --line: #3c5c4b;
-  --accent-ink: #0d1a13;
-  --money: #e0d08a; --rp: #b7a6e6; --good: #8fd6a8; --bad: #e48a80; --warn: #e0b070;
-}
-[data-skin="blueprint"][data-paper="factory"] {
-  --paper-red: #e09a5a; --grid: rgba(236, 232, 224, 0.05); --grid-major: rgba(236, 232, 224, 0.1);
-  --page: #222326; --bg: #2b2c30; --panel: #34353a; --panel2: #2f3034; --ink: #ece8e0; --muted: #b4afa6; --line: #6a6b72;
-  --accent-ink: #1d1d1f;
-  --money: #e6cf8a; --rp: #bfb2e2; --good: #93c9a2; --bad: #e2857a; --warn: #e09a5a;
-}
-[data-skin="blueprint"] body { background: var(--page); }
-[data-skin="blueprint"] #app {
-  background-color: var(--bg);
-  background-image: linear-gradient(var(--grid-major) 1px, transparent 1px), linear-gradient(90deg, var(--grid-major) 1px, transparent 1px), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
-  border-inline: 1px solid var(--line);
-}
-[data-skin="blueprint"] :is(#top, #nav) { background: var(--panel2); border-color: var(--line); }
-[data-skin="blueprint"] :is(.card, .row, .res, .ach, .codex-item, .modal, .toast, .tip-bubble) { background: var(--panel); border: 1px solid var(--line); box-shadow: none; }
-/* 도면 모서리 표시: 카드 네 귀퉁이에 짧은 꺾쇠 */
-[data-skin="blueprint"] :is(.card, .modal) { background-image: linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)); background-size: 8px 1px, 1px 8px, 8px 1px, 1px 8px; background-position: 0 0, 0 0, 100% 100%, 100% 100%; background-repeat: no-repeat; }
-[data-skin="blueprint"] :is(.buy, .btn, .seg button, .chip) { border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 2px; }
-[data-skin="blueprint"] :is(.buy.can, .btn:not(.ghost):not(.danger):not(:disabled), .seg button.on, .think-btn.on) { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-[data-skin="blueprint"] .buy.rp.can { background: var(--rp); border-color: var(--rp); color: #14141a; }
-[data-skin="blueprint"] .btn.danger { background: transparent; border-color: var(--bad); color: var(--bad); }
-[data-skin="blueprint"] :is(.buy, .btn):active:not(:disabled) { transform: translateY(1px); }
-[data-skin="blueprint"] .section-title { font-family: var(--font-head); letter-spacing: 0.5px; color: var(--ink); border-bottom: 1px solid var(--line); padding-bottom: 3px; }
-[data-skin="blueprint"] .section-title > span:first-child::before { content: "◎ "; color: var(--accent); }
-[data-skin="blueprint"] .bar { background: transparent; border: 1px solid var(--line); height: 8px; padding: 1px; }
-[data-skin="blueprint"] .bar > i { background: var(--accent); }
-[data-skin="blueprint"] .bar.red > i { background: var(--bad); }
-[data-skin="blueprint"] .era-tag { background: transparent; border: 1px solid var(--accent); color: var(--ink); font-family: var(--font-head); }
-[data-skin="blueprint"] #nav button.on { background: transparent; box-shadow: inset 0 2px 0 var(--accent); color: var(--ink); }
-[data-skin="blueprint"] .row.reco { outline: 1px dashed var(--accent); outline-offset: -3px; }
-[data-skin="blueprint"] .badge.reco { background: var(--accent); color: var(--accent-ink); }
-[data-skin="blueprint"] :is(.say, .bubble) { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
-[data-skin="blueprint"] .boss-bar { background: var(--panel); color: var(--ink); border: 1px dashed var(--bad); }
-[data-skin="blueprint"] #scene { border-bottom: 1px solid var(--line); }
-[data-skin="blueprint"] .ripple { border: 1px solid var(--accent); border-radius: 50%; }
-/* 데미지·수입 = 치수선: 숫자 양쪽으로 화살표 선이 뻗는다 */
-[data-skin="blueprint"] .pop { font-family: var(--font-head); font-weight: 700; color: var(--accent); text-shadow: none; background: var(--panel); border: 1px solid var(--line); padding: 1px 5px; line-height: 1.2; }
-[data-skin="blueprint"] .pop::before, [data-skin="blueprint"] .pop::after { content: ""; position: absolute; top: 50%; width: 16px; height: 7px; margin-top: -3px; background: currentColor; }
-[data-skin="blueprint"] .pop::before { right: 100%; clip-path: polygon(0 50%, 45% 0, 45% 43%, 100% 43%, 100% 57%, 45% 57%, 45% 100%); }
-[data-skin="blueprint"] .pop::after { left: 100%; clip-path: polygon(100% 50%, 55% 0, 55% 43%, 0 43%, 0 57%, 55% 57%, 55% 100%); }
-[data-skin="blueprint"] .pop.bad { color: var(--bad); }
-[data-skin="blueprint"] .combo { font-family: var(--font-head); color: var(--ink); text-shadow: none; background: var(--panel); border: 1px solid var(--line); padding: 2px 6px; }
-[data-skin="blueprint"] .levelup b { font-family: var(--font-head); color: var(--accent); text-shadow: none; background: var(--bg); border: 1px solid var(--accent); padding: 2px 10px; }
-[data-skin="blueprint"] .levelup small { color: var(--ink); text-shadow: none; background: var(--bg); padding: 1px 6px; }
-[data-skin="blueprint"] .title-card b { font-family: var(--font-head); color: var(--ink); text-shadow: none; background: var(--bg); border: 1px solid var(--line); padding: 2px 12px; }
-[data-skin="blueprint"] .title-card small { color: var(--ink); text-shadow: none; background: var(--bg); }
-[data-skin="blueprint"] .modal h2 { font-family: var(--font-head); letter-spacing: 0.5px; }
-[data-skin="blueprint"] :is(.scene-hud, .scene-top) .chip { background: var(--panel); }
-[data-skin="blueprint"] .era-meter { border: 1px solid var(--line); background: var(--panel); }
-[data-skin="blueprint"] .era-meter > span { color: var(--ink); font-family: var(--font-head); }
-/* 글자 뒤에는 무늬 없이 고른 면만 (XAG 101/102: 글자 뒤 단색 배경) */
-[data-skin="blueprint"] .era-meter > i, [data-skin="blueprint"] .era-meter[data-stage] > i { background: color-mix(in srgb, var(--accent) 28%, var(--panel)); }
-[data-skin="blueprint"] .era-meter[data-stage="3"] > i { background: color-mix(in srgb, var(--accent) 40%, var(--panel)); }

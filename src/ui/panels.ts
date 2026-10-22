@@ -28,7 +28,6 @@ import { nextHint } from "../core/guide";
 import { avatarThumb, heroHtml, pxi } from "./art";
 import { ic, type IconName } from "./icons";
 import { AV, PH, PW, drawScene, lookStill, petStill, sceneStill } from "./pixel";
-import { paperOf } from "./blueprint";
 import { UI_SKINS, rarityName, emptyLook, eraReached, itemUnlocked, itemsOf, lookProgress, resolveLook, rewardFor, uiUnlocked } from "../core/looks";
 
 /** 예상 달성률 표시: 너무 큰 값은 999%+로 */
@@ -937,14 +936,13 @@ export class Panels {
       on: lk.room === e && look.room !== null, locked: !eraReached(s, e), name: era.years, how: eraHow(e),
       img: sceneStill(e, era.color, false), onPick: () => set({ room: look.room === e ? null : e }),
     })));
-    const uiName: Record<UiSkin, string> = { blueprint: L("청사진", "Blueprint"), pixel: L("도트", "Pixel"), retro: L("90년대 OS", "90s OS"), y2k: "Y2K", brutal: L("브루탈", "Brutal"), machine: L("기계", "Machine") };
-    const uiFrom: Record<UiSkin, number> = { blueprint: 0, pixel: 0, retro: 3, y2k: 5, brutal: 8, machine: 10 };
-    // 기본은 청사진 (시대마다 도면 종이가 바뀐다). 예전 옷들은 도트 그림 그대로 고를 수 있다
+    const uiName: Record<UiSkin, string> = { pixel: L("도트", "Pixel"), retro: L("90년대 OS", "90s OS"), y2k: "Y2K", brutal: L("브루탈", "Brutal"), machine: L("기계", "Machine") };
+    const uiFrom: Record<UiSkin, number> = { pixel: 0, retro: 3, y2k: 5, brutal: 8, machine: 10 };
     section(L("화면 옷", "UI theme"),
-      tile({ on: !look.ui, locked: false, name: L("청사진 (기본)", "Blueprint (default)"), img: sceneStill(s.era, ERAS[s.era].color, false, paperOf(s.era)), onPick: () => set({ ui: null }) }),
-      ...UI_SKINS.filter((u) => u !== "blueprint").map((u) => tile({
+      tile({ on: !look.ui, locked: false, name: L("시대 따라", "Follow era"), swatch: "linear-gradient(90deg,#14142a,#c0c0c0,#dfe5f3,#fff)", onPick: () => set({ ui: null }) }),
+      ...UI_SKINS.map((u) => tile({
         on: look.ui === u, locked: !uiUnlocked(s, u), name: uiName[u], how: eraHow(uiFrom[u]),
-        img: sceneStill(uiFrom[u], ERAS[uiFrom[u]].color, false, null), onPick: () => set({ ui: look.ui === u ? null : u }),
+        img: sceneStill(uiFrom[u], ERAS[uiFrom[u]].color, false), onPick: () => set({ ui: look.ui === u ? null : u }),
       })));
   }
 

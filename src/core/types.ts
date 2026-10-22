@@ -396,7 +396,7 @@ export interface GameState {
   lastSaved: number;
 }
 
-export type UiSkin = "blueprint" | "pixel" | "retro" | "y2k" | "brutal" | "machine";
+export type UiSkin = "pixel" | "retro" | "y2k" | "brutal" | "machine";
 
 /** 꾸미기 선택. 시대 그림(모습·방)과 화면 옷은 도달한 시대에서, 모자·색·효과는 업적에서 열린다. */
 export interface Look {

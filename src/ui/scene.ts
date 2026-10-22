@@ -11,7 +11,6 @@ import { resolveLook } from "../core/looks";
 import { $, clear, h, setText } from "./dom";
 import { L } from "../i18n/lang";
 import { AV, HZ, PH, PW, drawScene, type Battle, type Mob } from "./pixel";
-import { blueprintMode } from "./blueprint";
 import { pxi } from "./art";
 import { featureOn } from "./panels";
 
@@ -36,7 +35,7 @@ export class Scene {
   private root = $("#scene");
   /** 도트 장면 */
   private canvas = h("canvas", { class: "px-scene", width: String(PW), height: String(PH), "aria-hidden": "true" }) as HTMLCanvasElement;
-  private ctx = this.canvas.getContext("2d", { willReadFrequently: true })!;
+  private ctx = this.canvas.getContext("2d")!;
   private t = 0;
   private drawAcc = 1;
   private chompLeft = 0;
@@ -613,10 +612,7 @@ export class Scene {
     const s = g.state;
     const live = s.combo >= 3 && s.stats.playSeconds - s.lastTapAt <= COMBO_WINDOW;
     this.comboEl.classList.toggle("show", live);
-    // 청사진에서는 콤보가 도면 축척 (1:23)
-    if (live) setText(this.comboEl, blueprintMode()
-      ? L(`축척 1:${s.combo} · 탭 ×${comboMult(s.combo).toFixed(2)}`, `Scale 1:${s.combo} · tap ×${comboMult(s.combo).toFixed(2)}`)
-      : L(`${s.combo} 콤보 · 탭 ×${comboMult(s.combo).toFixed(2)}`, `${s.combo} combo · tap ×${comboMult(s.combo).toFixed(2)}`));
+    if (live) setText(this.comboEl, L(`${s.combo} 콤보 · 탭 ×${comboMult(s.combo).toFixed(2)}`, `${s.combo} combo · tap ×${comboMult(s.combo).toFixed(2)}`));
 
     this.updateGolden();
     this.updateThreat();
@@ -639,7 +635,6 @@ export class Scene {
         : endless !== undefined ? { name: endlessName(endless), hp: endlessHp(endless) } : ERAS[fight.era].boss;
       clear(this.top);
       const pct = Math.min(1, fight.dealt / boss.hp);
-      this.battle.bossDone = pct;
       clear(this.bossBar);
       this.bossBar.append(
         h("div", null, `${boss.name} — ${fmtPct(pct)} · ${L(`남은 시간 ${Math.ceil(fight.remaining)}초 · 탭하면 추가 점수!`, `${Math.ceil(fight.remaining)}s left · tap for bonus score!`)}`),
@@ -648,7 +643,6 @@ export class Scene {
       );
       if (!this.bossBar.isConnected) this.root.append(this.bossBar);
     } else {
-      this.battle.bossDone = 0;
       this.bossBar.remove();
       const key = g.state.active.map((a) => `${a.id}:${Math.ceil(a.remaining)}`).join("|");
       if (this.top.dataset.key !== key) {
