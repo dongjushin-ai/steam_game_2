@@ -1042,6 +1042,8 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
     const box = (m: Mob): Box => ({ x: Math.round(m.x) - 2, y: Math.round(m.y) - m.size - 4, w: m.size + 4, h: m.size + 6 });
     const boss = b?.mobs.find((m) => m.boss && m.dying === 0);
     inkify(g, {
+      // AI(모자·왕관 포함)가 주인공
+      focus: [{ x: avx - 4, y: AV.y - 16, w: AV.w + 8, h: HZ - AV.y + 16 }],
       marks: b ? b.mobs.filter((m) => !m.boss).map(box) : [],
       boss: boss ? { ...box(boss), done: b?.bossDone ?? 0 } : undefined,
     });

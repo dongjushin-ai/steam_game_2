@@ -374,7 +374,10 @@ export interface GameState {
   };
   ended: boolean;
   settings: {
-    format: NumberFormat; sound: boolean; vibrate: boolean; effects: boolean; hints: boolean; lang: "ko" | "en";
+    format: NumberFormat;
+    /** 글자 크기 배율 (1 보통 · 1.15 크게 · 1.3 아주 크게) */
+    textSize: number;
+    sound: boolean; vibrate: boolean; effects: boolean; hints: boolean; lang: "ko" | "en";
     /** 배경음악 */
     music: boolean;
     /** 첫 30초 안내를 마쳤는지 */

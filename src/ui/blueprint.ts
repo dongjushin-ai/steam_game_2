@@ -50,7 +50,7 @@ function rgb(hex: string): [number, number, number] {
 }
 
 function alloc(n: number) {
-  return { n, ch: new Float32Array(n * 4), tmp: new Float32Array(n * 4), bl: new Float32Array(n * 4), gx: new Float32Array(n), gy: new Float32Array(n), mag: new Float32Array(n) };
+  return { n, ch: new Float32Array(n * 4), tmp: new Float32Array(n * 4), bl: new Float32Array(n * 4), gx: new Float32Array(n), gy: new Float32Array(n), mag: new Float32Array(n), edge: new Uint8Array(n) };
 }
 let buf = alloc(0);
 
@@ -61,7 +61,7 @@ const COIN = [0xff, 0xd2, 0x3f];
  * 캔버스에 그려진 도트 그림을 도면 선화로 바꾼다.
  * transparent: 배경 없는 그림(얼굴 썸네일 등) — 빈 곳은 비워 두고 모눈도 깔지 않는다.
  */
-export function inkify(g: CanvasRenderingContext2D, o: { marks?: Box[]; boss?: Box & { done: number }; transparent?: boolean } = {}): void {
+export function inkify(g: CanvasRenderingContext2D, o: { marks?: Box[]; boss?: Box & { done: number }; focus?: Box[]; transparent?: boolean } = {}): void {
   if (!mode) return;
   const ink = PAPERS[mode];
   const W = g.canvas.width, H = g.canvas.height;
@@ -119,7 +119,20 @@ export function inkify(g: CanvasRenderingContext2D, o: { marks?: Box[]; boss?: B
     }
   }
   const T = 0.22;
+  // 1) 경계: 경계 방향으로 이웃보다 셀 때만 (선이 한 칸 굵기)
+  const E = buf.edge;
+  E.fill(0);
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      const i = y * W + x, m = mag[i];
+      if (m <= T) continue;
+      E[i] = gx[i] >= gy[i] ? +(m >= mag[i - 1] && m >= mag[i + 1]) : +(m >= mag[i - W] && m >= mag[i + W]);
+    }
+  }
+  // 2) 칠하기: 주인공(AI)과 적은 밝은 선, 배경은 흐린 선 (명도 차이로 눈이 갈 곳을 정한다)
   const bg = rgb(ink.bg), grid = rgb(ink.grid), major = rgb(ink.major), line = rgb(ink.line), red = rgb(ink.red), gold = rgb(ink.gold);
+  const dim: [number, number, number] = o.focus ? [0, 1, 2].map((k) => Math.round(line[k] * 0.42 + bg[k] * 0.58)) as [number, number, number] : line;
+  const focus = o.focus ?? [];
   const marks = o.marks ?? [];
   const boss = o.boss;
   const bossSolidFrom = boss ? boss.y + boss.h * (1 - Math.max(0, Math.min(1, boss.done))) : 0;
@@ -127,22 +140,18 @@ export function inkify(g: CanvasRenderingContext2D, o: { marks?: Box[]; boss?: B
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x, j = i * 4;
-      const m = mag[i];
-      // 선을 한 칸 굵기로: 경계 방향으로 이웃보다 셀 때만
-      let edge = m > T;
-      if (edge) {
-        if (gx[i] >= gy[i]) edge = m >= mag[i - 1] && m >= mag[i + 1];
-        else edge = m >= mag[i - W] && m >= mag[i + W];
-      }
       const coin = d[j] === COIN[0] && d[j + 1] === COIN[1] && d[j + 2] === COIN[2];
+      const inBoss = !!boss && inBox(boss, x, y);
+      const inMark = !inBoss && marks.some((b) => inBox(b, x, y));
+      const inFocus = !inBoss && !inMark && focus.some((b) => inBox(b, x, y));
+      const edge = E[i];
       let c: [number, number, number] | null;
       let a = 255;
       if (coin) c = gold;
       else if (edge) {
-        if (boss && inBox(boss, x, y)) {
-          // 보스: 아래부터 완성된 만큼 실선, 나머지는 점선
-          c = y >= bossSolidFrom || ((x + y) >> 1) % 2 === 0 ? red : null;
-        } else c = marks.some((b) => inBox(b, x, y)) ? red : line;
+        // 보스: 아래부터 완성된 만큼 실선, 나머지는 점선
+        if (inBoss) c = y >= bossSolidFrom || ((x + y) >> 1) % 2 === 0 ? red : null;
+        else c = inMark ? red : inFocus ? line : dim;
       } else c = null;
       if (!c) {
         if (o.transparent) {

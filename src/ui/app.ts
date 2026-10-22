@@ -273,6 +273,7 @@ export class App {
     else root.style.removeProperty("--accent-text");
     root.dataset.era = String(era);
     root.dataset.skin = lk.ui;
+    root.style.setProperty("--ts", String(this.game.state.settings.textSize));
     music.setStyle(lk.ui, era);
   }
 

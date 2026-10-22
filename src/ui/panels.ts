@@ -996,6 +996,15 @@ export class Panels {
       s.settings.format = format.value as NumberFormat;
       setNumberFormat(s.settings.format);
     };
+    // 글자 크기: 모든 글자가 같은 배율로 커진다 (Xbox 접근성 지침: 기본값은 최소, 사용자가 키울 수 있게)
+    const textSize = h("select", { "aria-label": L("글자 크기", "Text size") }) as HTMLSelectElement;
+    for (const [v, label] of [[1, L("보통", "Normal")], [1.15, L("크게", "Large")], [1.3, L("아주 크게", "Extra large")]] as const) {
+      textSize.append(h("option", { value: String(v), selected: s.settings.textSize === v ? "selected" : undefined }, label));
+    }
+    textSize.onchange = () => {
+      s.settings.textSize = Number(textSize.value);
+      document.documentElement.style.setProperty("--ts", textSize.value);
+    };
     const io = h("textarea", { placeholder: L("여기에 세이브 코드를 붙여넣으세요", "Paste a save code here"), "aria-label": L("세이브 코드", "Save code") }) as HTMLTextAreaElement;
     const fileIn = h("input", { type: "file", accept: ".txt,.json,text/plain,application/json", hidden: "", "aria-label": L("세이브 파일", "Save file") }) as HTMLInputElement;
     fileIn.onchange = async () => {
@@ -1008,6 +1017,7 @@ export class Panels {
       this.title(L("AI 이름", "AI name")), name,
       this.title(L("언어", "Language")), langSelect(s),
       this.title(L("숫자 표기", "Number format")), format,
+      this.title(L("글자 크기", "Text size")), textSize,
       this.title(L("환경", "Preferences")),
       h("div", { class: "card" },
         toggle(L("배경음악", "Music"), s.settings.music, (v) => { s.settings.music = v; music.setEnabled(v); }),

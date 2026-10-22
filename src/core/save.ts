@@ -6,6 +6,9 @@ import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP, WEEKLY_MAP } from "./formulas";
 import { SAVE_VERSION, newState } from "./game";
 import type { ActiveMission, GameState, ModelRecord, Quest, QuestKind } from "./types";
 
+/** 고를 수 있는 글자 크기 배율 */
+export const TEXT_SIZES = [1, 1.15, 1.3];
+
 const KEY = "ai-kiugi-save";
 /** 직전 정상 세이브. 본 세이브가 깨졌을 때 여기서 복구한다. */
 const BACKUP_KEY = "ai-kiugi-save-backup";
@@ -90,6 +93,7 @@ export function migrate(raw: unknown): GameState | null {
       // 첫 안내가 생기기 전 세이브: 이미 1분 넘게 했으면 안내를 건너뛴다
       tutorialDone: r.settings?.tutorialDone ?? num(r.stats?.playSeconds) > 60,
       look: sanitizeLook(r.settings?.look),
+      textSize: TEXT_SIZES.find((v) => v === r.settings?.textSize) ?? 1,
       seen: Array.isArray(r.settings?.seen) ? r.settings.seen.filter((x: unknown): x is string => typeof x === "string").slice(0, 100) : [],
     },
     lastSaved: num(r.lastSaved, Date.now()),

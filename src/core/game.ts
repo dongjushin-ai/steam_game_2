@@ -103,7 +103,7 @@ export function newState(aiName = "나의 AI"): GameState {
       blocked: 0, breaches: 0, missionsDone: 0, benchWins: 0,
     },
     ended: false,
-    settings: { format: "short", sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, autoBuy: true, notify: true, notifyAsked: false, seen: [], introSeeded: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
+    settings: { format: "short", textSize: 1, sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, autoBuy: true, notify: true, notifyAsked: false, seen: [], introSeeded: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
     lastSaved: Date.now(),
   };
 }
