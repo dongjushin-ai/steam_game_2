@@ -188,6 +188,7 @@ export class Scene {
       void p.el.offsetWidth;
       p.el.style.animation = "";
       p.el.classList.add("again");
+      this.dodge(p.el);
       clearTimeout(Number(p.el.dataset.t));
       p.el.dataset.t = String(setTimeout(() => p.el.remove(), 900));
       return;
@@ -195,12 +196,14 @@ export class Scene {
     const el = h("div", { class: "pop big tapsum", style: { left: `${x}px`, top: `${y - 10}px` } }, `+${fmt(v)}`);
     el.dataset.t = String(setTimeout(() => el.remove(), 900));
     this.root.append(el);
+    this.dodge(el);
     this.tapPop = { el, sum: v, at: now, n: 1 };
   }
 
   private pop(x: number, y: number, text: string, cls = ""): void {
     const el = h("div", { class: `pop ${cls}`, style: { left: `${x}px`, top: `${y - 10}px` } }, text);
     this.root.append(el);
+    this.dodge(el);
     setTimeout(() => el.remove(), 900);
   }
 
@@ -456,8 +459,40 @@ export class Scene {
         this.dropLabel(id);
         continue;
       }
-      const [x, y] = this.toCss(m.x + m.size / 2, m.y - m.size - 4);
-      el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-30%, -100%)`;
+      const [cx, cy] = this.toCss(m.x + m.size / 2, m.y - m.size - 4);
+      // 장면 밖으로 잘리지 않게, 위 칩 줄·AI 말풍선과 겹치지 않게 놓는다
+      const W = this.root.clientWidth, w = el.offsetWidth, hh = el.offsetHeight;
+      const x = Math.max(4, Math.min(W - w - 4, cx - w * 0.3));
+      let y = Math.max(this.top.offsetHeight + 10, cy - hh);
+      const say = this.say.classList.contains("show") ? this.box(this.say) : null;
+      if (say && x < say.r && x + w > say.l && y < say.b && y + hh > say.t) y = say.b + 4;
+      // 떠오르는 숫자와 겹치면 숫자 아래로 내려간다 (몬스터가 움직여 겹쳐도)
+      for (const q of this.root.querySelectorAll<HTMLElement>(".pop")) {
+        const b = this.box(q);
+        if (x < b.r && x + w > b.l && y < b.b && y + hh > b.t) y = b.b + 4;
+      }
+      el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    }
+  }
+
+  /** 장면 안에서의 상자 (left/top/right/bottom) */
+  private box(el: HTMLElement): { l: number; t: number; r: number; b: number } {
+    const a = el.getBoundingClientRect(), o = this.root.getBoundingClientRect();
+    return { l: a.left - o.left, t: a.top - o.top, r: a.right - o.left, b: a.bottom - o.top };
+  }
+
+  /** 떠오르는 숫자가 질문 글씨·말풍선을 가리면 그 위(자리가 없으면 아래)로 비킨다 */
+  private dodge(el: HTMLElement): void {
+    const me = this.box(el);
+    const others = [...this.labels.values(), ...(this.say.classList.contains("show") ? [this.say] : [])];
+    for (const o of others) {
+      const b = this.box(o);
+      if (me.l < b.r && me.r > b.l && me.t < b.b && me.b > b.t) {
+        const hh = me.b - me.t;
+        const top = b.t - hh - 4 >= 0 ? b.t - hh - 4 : b.b + 4;
+        el.style.top = `${Math.round(top)}px`;
+        return;
+      }
     }
   }
 
