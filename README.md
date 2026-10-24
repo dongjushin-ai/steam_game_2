@@ -111,4 +111,4 @@ docs/GDD.md  수식과 시스템 설계
 ## 고지
 무료 비상업 팬메이드 게임이며, 등장하는 어떤 회사와도 제휴·후원·보증 관계가 없다. 실존 기업·제품·인물의 이름은 역사 설명(도감·퀴즈·뉴스)에만 쓰고, 사고파는 게임 속 항목은 일반 명칭으로 부르며, 게임 속 수치와 이벤트 효과는 재미를 위해 단순화·과장했다. 민감한 실제 사건(사망·총기·딥페이크·혐오 발언·군사 분쟁 등)은 의도적으로 넣지 않았다 ([목록](research/03_events.md)).
 역사 자료 출처: Wikipedia (CC BY-SA 4.0), [Obscura](https://github.com/h4ckf0r0day/obscura)로 수집.
-도트 글꼴: [갈무리(Galmuri)](https://github.com/quiple/galmuri) — SIL Open Font License 1.1. 게임에 쓰는 글자만 남긴 부분 글꼴을 `src/assets/fonts/`에 넣었다 (`python3 scripts/subset-font.py`, 라이선스 `src/assets/fonts/OFL.md`).
+본문 글꼴: [Pretendard](https://github.com/orioncactus/pretendard) — SIL Open Font License 1.1 (`src/assets/fonts/OFL-Pretendard.txt`). 공유 카드 도트 글꼴: [갈무리(Galmuri)](https://github.com/quiple/galmuri) — SIL Open Font License 1.1. 게임에 쓰는 글자만 남긴 부분 글꼴을 `src/assets/fonts/`에 넣었다 (`python3 scripts/subset-font.py`, 라이선스 `src/assets/fonts/OFL.md`).
