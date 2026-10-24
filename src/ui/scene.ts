@@ -252,8 +252,8 @@ export class Scene {
     const pctText = `${Math.floor(Math.min(1, look) * 100)}%`;
     const need = lackIntel ? L(`지능 ${fmt(st.intel)}/${fmt(boss.intelReq)}`, `IQ ${fmt(st.intel)}/${fmt(boss.intelReq)}`)
       : L(`기억력 ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`, `Memory ${fmtTokens(st.ctx)}/${fmtTokens(boss.ctxReq)}`);
-    const goal = done ? endlessName(nextLv) : L(`다음 시대 · ${boss.name}`, `Next era · ${boss.name}`);
-    setText(this.meterText, !ready ? `${goal} · ${need}` : stage === 3 ? L(`${goal} · 준비 완료`, `${goal} · ready`) : L(`${goal} · 준비 ${pctText}`, `${goal} · ${pctText} ready`));
+    const goal = done ? endlessName(nextLv) : boss.name;
+    setText(this.meterText, !ready ? need : stage === 3 ? L(`${goal} 준비 완료`, `${goal} ready`) : `${goal} ${pctText}`);
   }
 
   // ── 전투 ──────────────────────────────────────────
@@ -267,7 +267,7 @@ export class Scene {
     const mob: Mob = { id: ++this.mobSeq, x: -size - 2, y: HZ + 2 + Math.floor(Math.random() * 9), size, tier: tier.id, flash: 0, dying: 0, wrong: false, targeted: false };
     this.battle.mobs.push(mob);
     // 질문 글씨는 한두 마리만 (화면이 글자로 덮이지 않게)
-    if (this.labels.size < 1 && this.game.state.settings.effects) {
+    if (this.labels.size < 1 && this.game.state.settings.effects && Math.random() < 0.35) {
       const q = tier.examples[Math.floor(Math.random() * tier.examples.length)];
       const el = h("div", { class: "mob-label" }, q);
       this.labels.set(mob.id, el);
@@ -536,7 +536,7 @@ export class Scene {
       setText(this.say, lines[Math.floor(Math.random() * lines.length)]);
       this.say.classList.add("show");
       setTimeout(() => this.say.classList.remove("show"), 2600);
-      this.sayTimer = 6 + Math.random() * 6;
+      this.sayTimer = 14 + Math.random() * 10;
     }
   }
 
@@ -647,13 +647,17 @@ export class Scene {
     const s = g.state;
     const live = s.combo >= 3 && s.stats.playSeconds - s.lastTapAt <= COMBO_WINDOW;
     this.comboEl.classList.toggle("show", live);
-    if (live) setText(this.comboEl, L(`${s.combo} 콤보 · 탭 ×${comboMult(s.combo).toFixed(2)}`, `${s.combo} combo · tap ×${comboMult(s.combo).toFixed(2)}`));
+    if (live) {
+      setText(this.comboEl, L(`${s.combo} 콤보`, `${s.combo} combo`));
+      this.comboEl.title = L(`탭 ×${comboMult(s.combo).toFixed(2)}`, `Tap ×${comboMult(s.combo).toFixed(2)}`);
+    }
 
     this.updateGolden();
     this.updateThreat();
 
     this.thinkBtn.style.display = g.hasThinking() ? "" : "none";
-    setText(this.thinkBtn, `${L("생각", "Think")} ${g.state.thinking ? "ON" : "OFF"}`);
+    // 켜짐/꺼짐은 글자 대신 버튼 색으로 (화면 읽기 프로그램은 aria-label로)
+    setText(this.thinkBtn, L("생각", "Think"));
     this.thinkBtn.setAttribute("aria-label", `${L("생각 모드", "Thinking Mode")} ${g.state.thinking ? "ON" : "OFF"}`);
     this.thinkBtn.classList.toggle("on", g.state.thinking);
     // HUD 줄이 넘치면 오른쪽을 흐리게 해서 옆으로 밀 수 있다는 걸 알린다

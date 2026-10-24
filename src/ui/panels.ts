@@ -217,7 +217,8 @@ export class Panels {
         if (btn.dataset.l !== label + n) {
           btn.dataset.l = label + n;
           clear(btn);
-          btn.append(h("span", { class: "price" }, ic("coin"), label), h("small", null, n > 1 ? `×${n}` : L("구매", "Buy")));
+          btn.append(h("span", { class: "price" }, ic("coin"), label), ...(n > 1 ? [h("small", null, `×${n}`)] : []));
+          btn.setAttribute("aria-label", L(`${b.name} 구매 ${label}`, `Buy ${b.name} ${label}`));
         }
         setText(fx, buildingFx(b, g));
       },
@@ -1202,16 +1203,13 @@ function modelCard(g: Game): string {
 function buildingFx(b: Building, g: Game): string {
   const st = g.stats;
   const ms = milestoneMult(g.state.buildings[b.id] ?? 0);
-  const msText = ms > 1 ? ` (${L("마일스톤", "milestone")} ×${fmt(ms)})` : "";
+  // 한 줄을 짧게: 무엇이 얼마나 늘어나는지만 (마일스톤 배율은 이름 옆 배지에)
   switch (b.kind) {
-    case "compute": return `+${fmt((b.tps ?? 0) * st.mult.tps * ms)} ${L("토큰/초", "tokens/s")} · ${fmt((b.powerUse ?? 0) * st.mult.powerUse)}${msText}`;
-    case "power": return `+${fmt((b.power ?? 0) * st.mult.power * ms)} ${L("전력", "power")}${msText}`;
-    case "demand": return `+${fmt((b.demand ?? 0) * st.mult.demand * ms)} ${L("질문/초", "questions/s")}${msText}`;
-    case "rp": return `+${fmt((b.rp ?? 0) * st.mult.rp * st.cpMult * ms)} RP/${L("초", "s")}${msText}`;
-    case "param": {
-      const next = TIERS.find((t) => t.intelReq > st.intel);
-      return `${L("지능", "Intelligence")} ${fmt(st.intel)} → ${fmt(st.intel * (b.intelPerLevel ?? 1))}${next ? ` · ${L("다음 질문까지", "next question at")} ${fmt(next.intelReq)}` : ""}`;
-    }
+    case "compute": return `+${fmt((b.tps ?? 0) * st.mult.tps * ms)} ${L("토큰/초", "tokens/s")}`;
+    case "power": return `+${fmt((b.power ?? 0) * st.mult.power * ms)} ${L("전력", "power")}`;
+    case "demand": return `+${fmt((b.demand ?? 0) * st.mult.demand * ms)} ${L("질문/초", "questions/s")}`;
+    case "rp": return `+${fmt((b.rp ?? 0) * st.mult.rp * st.cpMult * ms)} RP/${L("초", "s")}`;
+    case "param": return `${L("지능", "Intelligence")} ${fmt(st.intel)} → ${fmt(st.intel * (b.intelPerLevel ?? 1))}`;
   }
 }
 

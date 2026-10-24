@@ -7,7 +7,7 @@ import type { Effect, GameState } from "../core/types";
 import { $, clear, h, setText } from "./dom";
 import { setupTips, tip } from "./tips";
 import { modalOpen, showModal, toast } from "./modals";
-import { Panels, TABS, featureOn, statLabel, type TabId } from "./panels";
+import { Panels, TABS, statLabel, type TabId } from "./panels";
 import { shareCard } from "./sharecard";
 import { Scene } from "./scene";
 import { heroHtml } from "./art";
@@ -223,7 +223,6 @@ export class App {
         tip(h("div", { class: "res money" }, h("div", { class: "res-main" }, ic("coin"), hd.money), hd.moneySub), "money", true),
         tip(h("div", { class: "res rp" }, h("div", { class: "res-main" }, ic("rp"), hd.rp), hd.rpSub), "rp", true),
         tip(hd.powerBox, "power", true)),
-      this.ticker,
     );
     // 알림(토스트)은 머리말 바로 아래에: 돈·연구 점수 숫자를 가리지 않게
     const top = $("#top");
@@ -321,13 +320,11 @@ export class App {
     const hd = this.header;
     const era = ERAS[s.era];
     setText(hd.name, s.aiName);
-    setText(hd.ver, `${s.ranking.title ? `「${titleName(s.ranking.title)}」 ` : ""}v${s.releases + 1}${s.checkpoints ? ` · CP ${fmt(s.checkpoints)}` : ""}`);
+    // 글자를 줄인다: 버전은 한 번이라도 출시한 뒤부터
+    setText(hd.ver, `${s.ranking.title ? `「${titleName(s.ranking.title)}」 ` : ""}${s.releases ? `v${s.releases + 1}` : ""}${s.checkpoints ? ` · CP ${fmt(s.checkpoints)}` : ""}`);
     setText(hd.era, era.years);
-    this.ticker.style.display = featureOn(s, "ticker") ? "" : "none";
     setText(hd.moneySub, `${st.net >= 0 ? "+" : ""}${fmt(st.net)}/${L("초", "s")}`);
-    setText(hd.rpSub, `+${fmt(st.rpRate)}/${L("초", "s")}`);
     setText(hd.power, `${fmt(st.powerUse)}`);
-    setText(hd.powerSub, `/ ${fmt(st.powerCap)} ${L("공급", "supply")}`);
     hd.powerBox.classList.toggle("low", st.powerEff < 0.999);
   }
 
