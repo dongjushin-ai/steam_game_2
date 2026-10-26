@@ -263,8 +263,9 @@ const ROOMS: Room[] = [
       p.r(0, 0, PW, 4, "#1c2219");
       cone(p, 42, 4, HZ, "#fff6d8", 2);
       cone(p, 108, 4, HZ, "#fff6d8", 2);
-      for (let y = HZ; y < PH; y += 4) for (let x = 0; x < PW; x += 8) p.r(x + ((y / 4) % 2) * 4, y, 4, 4, "#3a4636");
-      p.d(0, HZ, PW, PH - HZ, "#2b3428", null, 6);
+      // 바닥: 바둑판 대신 고른 판 + 이음새 줄 (장면이 시끄럽지 않게)
+      p.r(0, HZ, PW, PH - HZ, "#323d2f");
+      for (let y = HZ + 6; y < PH; y += 7) p.r(0, y, PW, 1, "#2b3428");
       p.r(0, HZ, PW, 1, "#1c2219");
       for (let i = 0; i < 4; i++) {
         const x = 6 + i * 30;
@@ -306,8 +307,8 @@ const ROOMS: Room[] = [
       p.r(0, 0, PW, HZ, "#18302e");
       cone(p, 50, 0, HZ, "#e8fff6", 2);
       cone(p, 112, 0, HZ, "#e8fff6", 2);
-      for (let y = HZ; y < PH; y += 6) for (let x = 0; x < PW; x += 12) p.r(x + ((y / 6) % 2) * 6, y, 6, 6, "#23403c");
-      p.d(0, HZ, PW, PH - HZ, "#122624", null, 5);
+      p.r(0, HZ, PW, PH - HZ, "#1d3532");
+      for (let y = HZ + 6; y < PH; y += 7) p.r(0, y, PW, 1, "#152a27");
       for (let i = 0; i < 3; i++) {
         const x = 6 + i * 32;
         p.r(x + 2, HZ - 1, 26, 3, "#0a1514");
@@ -350,8 +351,7 @@ const ROOMS: Room[] = [
   {
     bg(p) {
       p.vgrad(0, 0, PW, HZ, ["#000000", "#555555"], 3);
-      p.r(0, HZ, PW, PH - HZ, "#7a5a3a");
-      p.d(0, HZ, PW, PH - HZ, "#000000", null, 6);
+      p.r(0, HZ, PW, PH - HZ, "#6a4e33");
       p.r(0, HZ, PW, 1, "#000000");
       // 블라인드 창과 밤의 도시
       p.r(8, 10, 56, 42, "#AAAAAA");
@@ -400,8 +400,8 @@ const ROOMS: Room[] = [
       p.r(0, 5, PW, 3, "#4a4070");
       for (let x = 0; x < PW; x += 6) p.r(x, 5, 1, 5, "#4a4070");
       cone(p, 84, 8, HZ, "#fff6d8", 1);
-      for (let y = HZ; y < PH; y += 5) for (let x = 0; x < PW; x += 10) p.r(x + ((y / 5) % 2) * 5, y, 5, 5, "#3a3160");
-      p.d(0, HZ, PW, PH - HZ, "#221c3a", null, 5);
+      p.r(0, HZ, PW, PH - HZ, "#2d2650");
+      for (let y = HZ + 6; y < PH; y += 7) p.r(0, y, PW, 1, "#241e42");
       for (const x of [6, 32]) {
         p.r(x + 1, HZ - 1, 22, 3, "#0f0e16");
         p.r(x, 26, 24, 62, "#1c1a26");
