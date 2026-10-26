@@ -239,10 +239,9 @@ const ROOMS: Room[] = [
       p.r(106, 68, 8, 2, "#efe3c2");
       p.r(116, 69, 7, 1, "#c8a050");
       p.r(118, 61, 3, 8, "#efe9d8");
-      // 양탄자
-      p.r(36, 98, 84, 12, "#6c2424");
-      p.box(37, 99, 82, 10, "#b8543c");
-      for (let x = 38; x < 118; x += 3) { p.p(x, 97, "#b8543c"); p.p(x, 110, "#b8543c"); }
+      // 양탄자 (바닥보다 조금 진하게만: 장면 아래 글자 막대와 겹쳐도 시끄럽지 않게)
+      p.r(36, 98, 84, 12, "#4a2a1c");
+      p.box(37, 99, 82, 10, "#5c3626");
     },
     fg(p, t) {
       const f = Math.floor(t * 8) % 3;
@@ -933,9 +932,44 @@ function background(era: number, accent: string): HTMLCanvasElement {
     const g = cv.getContext("2d")!;
     g.imageSmoothingEnabled = false;
     (ROOMS[era] ?? ROOMS[ROOMS.length - 1]).bg(new Px(g), accent);
+    flattenDither(g);
+    calmFloor(g);
     bgCache.set(key, cv);
   }
   return cv;
+}
+
+/**
+ * 배경의 디더 무늬(바둑판 점)를 고른 면으로: 상하좌우 이웃이 모두 같은 색인데 혼자 다른 점은 둘의 평균색으로.
+ * 바닥·빛줄기의 자글자글한 점이 사라지고 차분한 면이 된다 (타일·선처럼 두 칸 이상 이어진 무늬는 그대로)
+ */
+function flattenDither(g: G): void {
+  const W = g.canvas.width, H = g.canvas.height;
+  const img = g.getImageData(0, 0, W, H);
+  const d = img.data, src = new Uint32Array(d.slice().buffer);
+  for (let pass = 0; pass < 2; pass++) {
+    const px = pass === 0 ? src : new Uint32Array(d.slice().buffer);
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const i = y * W + x, v = px[i - 1];
+        if (px[i] === v || px[i + 1] !== v || px[i - W] !== v || px[i + W] !== v) continue;
+        const j = i * 4, k = (i - 1) * 4;
+        for (let c = 0; c < 3; c++) d[j + c] = (d[j + c] + d[k + c]) >> 1;
+      }
+    }
+  }
+  g.putImageData(img, 0, 0);
+}
+
+/** 바닥(지평선 아래) 무늬의 대비를 40%로: 바닥 타일이 AI·몬스터보다 눈에 띄지 않게 */
+function calmFloor(g: G): void {
+  const W = g.canvas.width, top = HZ + 2;
+  const img = g.getImageData(0, top, W, PH - top);
+  const d = img.data, n = d.length / 4;
+  const avg = [0, 0, 0];
+  for (let i = 0; i < n; i++) for (let c = 0; c < 3; c++) avg[c] += d[i * 4 + c] / n;
+  for (let i = 0; i < n; i++) for (let c = 0; c < 3; c++) d[i * 4 + c] = Math.round(avg[c] + (d[i * 4 + c] - avg[c]) * 0.4);
+  g.putImageData(img, 0, top);
 }
 
 /** AI 스프라이트를 (ox, oy)에 그린다 */
@@ -974,8 +1008,8 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
   const fx = look?.fx ?? null;
   // 성장 1단계~: 등 뒤로 은은한 오라 (숨 쉬듯 커졌다 작아진다)
   if (power >= 1) {
+    // 점무늬로 채우지 않고 고리 한 줄만 (AI 얼굴이 묻히지 않게)
     const r = 21 + Math.round(Math.sin(f.t * 2.2)) + (power >= 3 ? 2 : 0);
-    p.circ(cx, cy, r, dither(g, accent, null, power >= 3 ? 7 : 4));
     p.ring(cx, cy, r, accent);
   }
   // 꾸미기 효과는 오라 위에 (날개·은하가 가려지지 않게)
@@ -1025,6 +1059,8 @@ export function drawScene(g: G, era: number, accent: string, f: SceneFlags, avx:
     p.d(0, 0, 3, PH, "#ff2d2d", null, 10);
     p.d(W - 3, 0, 3, PH, "#ff2d2d", null, 10);
   }
+  // 매 장면 그리고 나서도 자글자글한 디더 점을 고른다 (빛줄기·반사·바닥 효과는 매 장면 그려진다)
+  flattenDither(g);
   if (f.breach) {
     const fr = Math.floor(f.t * 8);
     for (let k = 0; k < 4; k++) {

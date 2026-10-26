@@ -35,7 +35,7 @@ export class Scene {
   private root = $("#scene");
   /** 도트 장면 */
   private canvas = h("canvas", { class: "px-scene", width: String(PW), height: String(PH), "aria-hidden": "true" }) as HTMLCanvasElement;
-  private ctx = this.canvas.getContext("2d")!;
+  private ctx = this.canvas.getContext("2d", { willReadFrequently: true })!;
   private t = 0;
   private drawAcc = 1;
   private chompLeft = 0;
