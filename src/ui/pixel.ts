@@ -517,8 +517,8 @@ const ROOMS: Room[] = [
           p.r(x + 14, 29 + u * 5, 7, 1, "#3c4652");
         }
       }
-      p.vgrad(0, HZ, PW, PH - HZ, ["#5d7590", "#1d2b40"], 3);
-      reflect(p, 0.28);
+      p.r(0, HZ, PW, PH - HZ, "#34495f");
+      reflect(p, 0.12);
       p.r(0, HZ, PW, 1, "#eef3f8");
     },
     fg(p, t) {
@@ -669,7 +669,7 @@ function aisleRoom(o: AisleSpec): Room {
       p.vgrad(0, 0, PW, HZ, o.mono ? [o.wall[0], o.wall[1]] : [o.wall[0], o.wall[1]], 3);
       p.vgrad(0, HZ, PW, PH - HZ, [o.floor[0], o.floor[1]], 3);
       // 바닥은 소실점으로 모이는 판
-      p.poly([[vx - 8, vy + 2], [vx + 8, vy + 2], [PW + 40, PH], [-40, PH]], o.mono ? dither(p.g, "#000000", null, 4) : o.floor[0]);
+      p.poly([[vx - 8, vy + 2], [vx + 8, vy + 2], [PW + 40, PH], [-40, PH]], o.mono ? "#b9b9b1" : o.floor[0]);
       for (let k = 1; k < 8; k++) {
         const u = (k / 8) ** 2;
         const y = Math.round(vy + 2 + (PH - vy - 2) * u);
@@ -701,7 +701,7 @@ function aisleRoom(o: AisleSpec): Room {
           for (let k = 0; k < 3; k++) p.r(x + 3, y + 3 + k * Math.floor(h / 4), 6 + ((x + k * 5) % (w - 8)), 1, "#f2f2ed");
         }
       }
-      if (o.glossy) reflect(p, 0.22);
+      if (o.glossy) reflect(p, 0.12);
     },
     fg(p, t) {
       const fr = Math.floor(t * 3);
