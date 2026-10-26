@@ -842,3 +842,43 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 
 /* 도트 그림은 채도를 낮춰서 (장면·썸네일·아이콘 모두 data URL 또는 장면 캔버스) */
 :is(.px-scene, img[src^="data:image"]) { filter: saturate(var(--art-sat, 0.62)); }
+
+/* ═══ 다듬기: 90년대 OS와 브루탈도 단정하게 (시대 느낌은 색과 모양으로만) ═══
+   두꺼운 입체 테두리·가짜 창 제목·점선 테두리·어긋난 검은 그림자·형광색을 걷어 낸다 */
+[data-skin="retro"] {
+  --panel: #d4d4cf; --panel2: #c8c8c3; --radius: 6px;
+  --bevel: 0 0 0 1px #9b9b96; --sunken: inset 0 0 0 1px #9b9b96;
+}
+[data-skin="retro"] #top, [data-skin="retro"] #nav { background: #d4d4cf; }
+[data-skin="retro"] #scene { border-bottom: 1px solid #2f4a4a; }
+[data-skin="retro"] :is(.buy.can, .btn:not(.ghost):not(:disabled)) { outline: 0; background: #ecece8; }
+[data-skin="retro"] .section-title { border-radius: 6px; padding: 3px 8px; }
+[data-skin="retro"] :is(.bar > i) { background: var(--title); border-radius: 2px; }
+[data-skin="retro"] .bar.red > i { background: #a8443a; }
+[data-skin="retro"] .bar { border-radius: 4px; }
+[data-skin="retro"] .modal { padding-top: 14px; }
+[data-skin="retro"] .modal::before, [data-skin="retro"] .modal::after { content: none; }
+[data-skin="retro"] #nav button.on { background: #ecece8; }
+
+[data-skin="brutal"] { --bw: 2px; --shadow: none; }
+[data-skin="brutal"][data-era="10"] { --accent: #d9c060; --shadow: none; }
+[data-skin="brutal"] #app { border-inline-width: 1px; }
+[data-skin="brutal"] #top { border-bottom-width: 2px; }
+[data-skin="brutal"] .ai-name { font-size: calc(19px * var(--ts, 1)); letter-spacing: 0; text-transform: none; }
+[data-skin="brutal"] .section-title { font-size: calc(17px * var(--ts, 1)); text-transform: none; letter-spacing: 0; border-bottom-width: 2px; }
+[data-skin="brutal"] :is(.buy, .btn, .seg button, .toast, .modal, .say, .bubble, .tile),
+[data-skin="brutal"][data-era="10"] :is(.buy, .btn, .seg button, .toast, .modal) { box-shadow: none; }
+[data-skin="brutal"] :is(.buy, .btn, .seg button):active:not(:disabled) { transform: translateY(1px); }
+[data-skin="brutal"] .btn { text-transform: none; font-size: calc(16px * var(--ts, 1)); }
+[data-skin="brutal"] .modal h2 { font-size: calc(22px * var(--ts, 1)); text-transform: none; letter-spacing: 0; }
+[data-skin="brutal"] :is(.buy:disabled, .btn:disabled) { background: #e6e6e0; }
+[data-skin="brutal"][data-era="10"] :is(.buy:disabled, .btn:disabled) { background: #1a1a1a; }
+[data-skin="brutal"] #nav button { text-transform: none; border-right-width: 1px; }
+[data-skin="brutal"][data-era="10"] .bar > i { background: var(--accent); }
+[data-skin="brutal"][data-era="10"] #nav button.on { background: var(--accent); }
+[data-skin="brutal"] :is(.row .ico img, .codex-item .e img, .modal .m-ico img, .boss-card .big img, .tile .t-ico img) { filter: grayscale(1) contrast(1.3); }
+[data-skin="brutal"][data-era="10"] :is(.row .ico img, .codex-item .e img, .tile .t-ico img) { filter: grayscale(1) contrast(1.3) invert(1); }
+[data-skin="brutal"] .boss-bar { border-width: 2px; }
+/* 밝은 장면(브루탈 흑백)에서도 읽히게: 콤보는 어두운 알약 위에, 떠오르는 숫자는 진한 테두리 그림자 */
+.combo { background: rgba(16, 17, 22, 0.72); padding: 2px 8px; border-radius: 999px; text-shadow: none; }
+.pop { text-shadow: 0 0 2px #000, 0 0 4px rgba(0, 0, 0, 0.9), 0 1px 2px #000; }
