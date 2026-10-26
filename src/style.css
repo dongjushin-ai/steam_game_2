@@ -882,3 +882,23 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 /* 밝은 장면(브루탈 흑백)에서도 읽히게: 콤보는 어두운 알약 위에, 떠오르는 숫자는 진한 테두리 그림자 */
 .combo { background: rgba(16, 17, 22, 0.72); padding: 2px 8px; border-radius: 999px; text-shadow: none; }
 .pop { text-shadow: 0 0 2px #000, 0 0 4px rgba(0, 0, 0, 0.9), 0 1px 2px #000; }
+/* Y2K(시대 5~7): 둥근 알약 모양과 옅은 회청색(시대 느낌)은 남기고, 광택·크롬 그라데이션·글자 금속 효과·별 장식을 걷어 낸다 */
+[data-skin="y2k"] body, [data-skin="y2k"] #app { background: #e6eaf2; }
+[data-skin="y2k"] :is(#top, #nav) { background: #f4f6fa; }
+[data-skin="y2k"] :is(.buy, .btn, .seg button, .chip)::before { content: none; }
+[data-skin="y2k"] :is(.buy, .btn, .seg button, .chip, .quest button) { background: #ffffff; border-color: #b4bdd2; }
+[data-skin="y2k"] :is(.buy.can, .btn:not(.ghost):not(.danger):not(:disabled), .seg button.on, .think-btn.on) { background: color-mix(in srgb, var(--accent) 55%, #ffffff); border-color: color-mix(in srgb, var(--accent) 70%, #4a5578); color: #141a3a; box-shadow: none; }
+[data-skin="y2k"] .buy.rp.can { background: #ddd6ef; border-color: #8f80b8; }
+[data-skin="y2k"] .btn.danger { background: #f3dcd8; }
+[data-skin="y2k"] .section-title > span:first-child::before { content: none; }
+[data-skin="y2k"] .bar > i, [data-skin="y2k"] .bar.red > i { background: var(--accent); }
+[data-skin="y2k"] .bar.red > i { background: #c98a80; }
+[data-skin="y2k"] .era-tag { background: color-mix(in srgb, var(--accent) 45%, #ffffff); color: #141a3a; border-color: color-mix(in srgb, var(--accent) 60%, #4a5578); }
+[data-skin="y2k"] .ai-name { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: var(--ink); }
+[data-skin="y2k"] .chip { background: rgba(255, 255, 255, 0.95); }
+[data-skin="y2k"] .row .ico { background: #f0f3f9; }
+[data-skin="y2k"] #nav button.on { background: color-mix(in srgb, var(--accent) 22%, #ffffff); }
+[data-skin="y2k"] :is(.toast, .say, .bubble, .tile) { background: #ffffff; box-shadow: 0 3px 10px rgba(40, 50, 80, 0.15); }
+[data-skin="y2k"] .modal { box-shadow: 0 10px 30px rgba(40, 50, 80, 0.25); }
+[data-skin="y2k"] .tile.can { background: color-mix(in srgb, var(--accent) 35%, #ffffff); color: #141a3a; }
+[data-skin="y2k"] :is(.card, .row, .res, .ach, .codex-item) { background: #ffffff; border-color: #c3cad9; box-shadow: 0 1px 3px rgba(40, 50, 80, 0.08); }
