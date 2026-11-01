@@ -31,6 +31,9 @@ const BLOOPERS: (() => string)[] = [
 /** 캔버스 폭 범위: 좁은 폰에서는 방의 왼쪽 부분만, 넓으면 전부 */
 const MIN_W = 112;
 
+/** 움직임 줄이기 설정 (매 장면 새로 묻지 않게 한 번만 만든다) */
+const REDUCE_MOTION = matchMedia("(prefers-reduced-motion: reduce)");
+
 export class Scene {
   private root = $("#scene");
   /** 도트 장면 */
@@ -116,6 +119,7 @@ export class Scene {
   /** 장면 비율에 맞춰 캔버스 폭을 정한다 (높이는 120 고정 → 장면이 커지면 도트도 커진다) */
   private fitCanvas(): void {
     const cw = this.root.clientWidth, ch = this.root.clientHeight;
+    this.size = { w: cw, h: ch };
     if (!cw || !ch) return;
     const w = Math.max(MIN_W, Math.min(PW, Math.round((PH * cw) / ch)));
     if (w !== this.canvas.width) {
@@ -124,8 +128,10 @@ export class Scene {
     }
   }
 
+  /** 장면 크기 (ResizeObserver가 갱신: 매번 레이아웃을 다시 계산시키지 않게) */
+  private size = { w: 0, h: 0 };
   private scale(): { k: number; ox: number; oy: number } {
-    const cw = this.root.clientWidth, ch = this.root.clientHeight;
+    const cw = this.size.w, ch = this.size.h;
     const k = Math.max(cw / this.W, ch / PH);
     return { k, ox: (cw - this.W * k) / 2, oy: ch - PH * k };
   }
@@ -461,7 +467,7 @@ export class Scene {
       }
       const [cx, cy] = this.toCss(m.x + m.size / 2, m.y - m.size - 4);
       // 장면 밖으로 잘리지 않게, 위 칩 줄·AI 말풍선과 겹치지 않게 놓는다
-      const W = this.root.clientWidth, w = el.offsetWidth, hh = el.offsetHeight;
+      const W = this.size.w, w = el.offsetWidth, hh = el.offsetHeight;
       const x = Math.max(4, Math.min(W - w - 4, cx - w * 0.3));
       let y = Math.max(this.top.offsetHeight + 10, cy - hh);
       const say = this.say.classList.contains("show") ? this.box(this.say) : null;
@@ -516,7 +522,7 @@ export class Scene {
     if (this.drawAcc >= 0.05) {
       this.drawAcc = 0;
       const s = this.game.state;
-      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reduce = REDUCE_MOTION.matches;
       const lk = resolveLook(s);
       drawScene(this.ctx, s.era, lk.color ?? ERAS[lk.room].color, {
         t: reduce ? 0.5 : this.t, thinking: s.thinking, chomp: this.chompLeft,

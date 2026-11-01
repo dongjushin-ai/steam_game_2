@@ -10,6 +10,7 @@ import {
 import { QUEST_SLOTS, makeQuest, questProgress } from "./quests";
 import type { EventChoice, GameEvent, GameState, LostTech, MissionDef, Quest, QuizQuestion, SideBench } from "./types";
 import { L } from "../i18n/lang";
+import { emptyJournal } from "./journal";
 
 export const SAVE_VERSION = 2;
 const START_KIT: Record<string, number> = { c_diff: 1, p_dorm: 1, d_neighbors: 1 };
@@ -104,6 +105,7 @@ export function newState(aiName = "나의 AI"): GameState {
     },
     ended: false,
     settings: { format: "short", textSize: 1, sound: true, vibrate: true, effects: true, hints: true, lang: "ko", music: true, tutorialDone: false, autoBuy: true, notify: true, notifyAsked: false, seen: [], introSeeded: false, look: { avatar: null, room: null, hat: null, color: null, fx: null, ui: null, pet: null } },
+    journal: emptyJournal(),
     lastSaved: Date.now(),
   };
 }

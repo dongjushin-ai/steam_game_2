@@ -16,13 +16,18 @@
     "test": "tsx scripts/check-data.ts && tsx scripts/check-i18n.ts && tsx scripts/test-core.ts && tsx scripts/sim.ts --quiet && tsx scripts/novice.ts --quiet",
     "build:single": "vite build && node scripts/single-file.mjs",
     "android:sync": "vite build && cap sync android",
-    "android:assets": "python3 scripts/android-assets.py"
+    "android:assets": "python3 scripts/android-assets.py",
+    "qa:ui": "node scripts/qa/ui.mjs",
+    "qa:perf": "node scripts/qa/perf.mjs",
+    "econ": "tsx scripts/econ-dump.ts"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.3",
     "@capacitor/cli": "^8.5.3",
     "@types/node": "^22.9.0",
+    "axe-core": "^4.10.2",
     "galmuri": "^2.40.3",
+    "playwright": "^1.56.1",
     "pretendard": "^1.3.9",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",

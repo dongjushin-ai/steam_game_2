@@ -12,6 +12,7 @@ import { questProgress } from "../src/core/quests";
 import { QUIZ } from "../src/data";
 import { fmt, fmtTokens } from "../src/core/format";
 import { exportSave, importSave, loadGame, migrate, saveGame } from "../src/core/save";
+import { journalLine, sanitizeJournal, startSession, tickJournal } from "../src/core/journal";
 
 let passed = 0;
 function test(name: string, fn: () => void): void {
@@ -806,6 +807,31 @@ test("보안 연구: 악성코드 사건의 피해 시간이 줄고, 최대 70%"
   const storm = EVENTS.find((e) => e.id === "solar_storm")!;
   g.applyEvent(storm);
   assert.equal(st.active.find((a) => a.id === "solar_storm")!.remaining, storm.duration, "악성코드가 아니면 그대로");
+});
+
+test("플레이 일지: 세션·날짜·처음 일어난 일을 기록하고, 세이브를 지나도 남는다", () => {
+  const s = newState();
+  startSession(s, "2026-11-01");
+  startSession(s, "2026-11-01");
+  startSession(s, "2026-11-02");
+  assert.equal(s.journal.sessions, 3);
+  assert.deepEqual(s.journal.days, ["2026-11-01", "2026-11-02"], "같은 날은 한 번만");
+  s.stats.playSeconds = 12; s.stats.bought = 1; s.settings.tutorialDone = true;
+  tickJournal(s, 95);
+  assert.equal(s.journal.firstBuy, 12);
+  assert.equal(s.journal.tutorialDone, 12);
+  assert.equal(s.journal.sessionSecs.at(-1), 95);
+  s.era = 2; s.stats.playSeconds = 400;
+  tickJournal(s, 100);
+  assert.deepEqual(s.journal.eraAt, [0, 400, 400]);
+  s.era = 0; s.stats.playSeconds = 900;
+  tickJournal(s, 101);
+  assert.deepEqual(s.journal.eraAt, [0, 400, 400], "출시로 돌아가도 처음 도달 시각은 그대로");
+  s.journal.rating = 4;
+  assert.match(journalLine(s), /days 2 .*sessions 3 .*fun 4\/5/);
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(s)))!.journal, s.journal, "세이브를 지나도 같다");
+  assert.deepEqual(sanitizeJournal({ days: ["x", "2026-01-01"], sessions: -3, rating: 9, eraAt: "no" }),
+    { days: ["2026-01-01"], sessions: 0, sessionSecs: [], firstBuy: null, tutorialDone: null, eraAt: [0], rating: null });
 });
 
 console.log(`핵심 로직 테스트 ${passed}개 통과`);

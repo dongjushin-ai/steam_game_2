@@ -29,6 +29,10 @@ import { checkRanks, submitAll } from "./ranking";
 import { cancelReminders, scheduleReminders } from "./notify";
 import { avatarStill } from "./pixel";
 import { L, applyLanguage, detectLang } from "../i18n";
+import { startSession, tickJournal } from "../core/journal";
+
+/** 기기 시간대 기준 오늘 (YYYY-MM-DD) */
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 
 const SAVE_EVERY = 10;
 const UI_EVERY = 0.2;
@@ -63,6 +67,9 @@ export class App {
   private tickerTimer = 0;
   private last = performance.now();
   private uiAcc = 0;
+  /** 플레이 일지: 이번 세션 길이(초, 화면이 보일 때만)와 화면을 떠난 시각 */
+  private sessionSecs = 0;
+  private hiddenAt = 0;
   private saveAcc = 0;
   /** 화면에 보이는 크레딧·RP (실제 값을 향해 굴러가듯 따라간다) */
   private shown = { money: 0, rp: 0 };
@@ -89,10 +96,16 @@ export class App {
     document.addEventListener("visibilitychange", () => {
       music.pause(document.hidden);
       if (document.hidden) {
+        this.hiddenAt = Date.now();
         saveGame(this.game.state);
         void submitAll(this.game);
         void scheduleReminders(this.game);
       } else {
+        // 5분 넘게 떠나 있다 돌아오면 새 세션
+        if (this.hiddenAt && Date.now() - this.hiddenAt > 5 * 60_000) {
+          startSession(this.game.state, today());
+          this.sessionSecs = 0;
+        }
         void cancelReminders();
         this.offline();
         this.daily(false);
@@ -184,6 +197,8 @@ export class App {
     music.setEnabled(state.settings.music);
     this.history = [];
     this.game.onNotice((n) => this.notice(n));
+    startSession(state, today());
+    this.sessionSecs = 0;
     this.intros = new Intros(this.game, (t) => this.selectTab(t));
     clear($("#scene"));
     this.scene = new Scene(this.game, () => {
@@ -284,8 +299,10 @@ export class App {
     this.rollCounters(dt);
     this.uiAcc += dt;
     this.saveAcc += dt;
+    this.sessionSecs += dt;
     if (this.uiAcc >= UI_EVERY) {
       this.uiAcc = 0;
+      tickJournal(this.game.state, this.sessionSecs);
       this.renderHeader();
       this.scene.update();
       this.panels.update();

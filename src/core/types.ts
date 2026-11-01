@@ -393,7 +393,24 @@ export interface GameState {
     /** 꾸미기 (null = 지금 시대를 따름 / 없음) */
     look: Look;
   };
+  /** 플레이 일지 (비공개 테스트용, 기기 안에만) */
+  journal: Journal;
   lastSaved: number;
+}
+
+/** 플레이 일지: 며칠·몇 번·얼마나 했는지, 처음 일어난 일 (총 플레이 초 기준) */
+export interface Journal {
+  /** 플레이한 날 (YYYY-MM-DD) */
+  days: string[];
+  sessions: number;
+  /** 최근 세션 길이(초) */
+  sessionSecs: number[];
+  firstBuy: number | null;
+  tutorialDone: number | null;
+  /** 시대에 처음 도달한 때 (인덱스 = 시대) */
+  eraAt: number[];
+  /** 재미 점수 1~5 (의견 창에서 고른 것) */
+  rating: number | null;
 }
 
 export type UiSkin = "pixel" | "retro" | "y2k" | "brutal" | "machine";

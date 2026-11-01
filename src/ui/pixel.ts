@@ -932,7 +932,7 @@ function background(era: number, accent: string): HTMLCanvasElement {
     const g = cv.getContext("2d")!;
     g.imageSmoothingEnabled = false;
     (ROOMS[era] ?? ROOMS[ROOMS.length - 1]).bg(new Px(g), accent);
-    flattenDither(g);
+    flattenDither(g, 2);
     calmFloor(g);
     bgCache.set(key, cv);
   }
@@ -943,18 +943,25 @@ function background(era: number, accent: string): HTMLCanvasElement {
  * 배경의 디더 무늬(바둑판 점)를 고른 면으로: 상하좌우 이웃이 모두 같은 색인데 혼자 다른 점은 둘의 평균색으로.
  * 바닥·빛줄기의 자글자글한 점이 사라지고 차분한 면이 된다 (타일·선처럼 두 칸 이상 이어진 무늬는 그대로)
  */
-function flattenDither(g: G): void {
+let flatBuf = new Uint32Array(0);
+function flattenDither(g: G, passes = 1): void {
   const W = g.canvas.width, H = g.canvas.height;
   const img = g.getImageData(0, 0, W, H);
-  const d = img.data, src = new Uint32Array(d.slice().buffer);
-  for (let pass = 0; pass < 2; pass++) {
-    const px = pass === 0 ? src : new Uint32Array(d.slice().buffer);
+  const d = img.data, n = W * H;
+  // 매 장면 부르므로 비교용 사본 버퍼는 다시 쓴다 (쓰레기 수집을 줄인다)
+  if (flatBuf.length !== n) flatBuf = new Uint32Array(n);
+  const live = new Uint32Array(d.buffer, d.byteOffset, n);
+  for (let pass = 0; pass < passes; pass++) {
+    flatBuf.set(live);
+    const px = flatBuf;
     for (let y = 1; y < H - 1; y++) {
       for (let x = 1; x < W - 1; x++) {
         const i = y * W + x, v = px[i - 1];
         if (px[i] === v || px[i + 1] !== v || px[i - W] !== v || px[i + W] !== v) continue;
         const j = i * 4, k = (i - 1) * 4;
-        for (let c = 0; c < 3; c++) d[j + c] = (d[j + c] + d[k + c]) >> 1;
+        d[j] = (d[j] + d[k]) >> 1;
+        d[j + 1] = (d[j + 1] + d[k + 1]) >> 1;
+        d[j + 2] = (d[j + 2] + d[k + 2]) >> 1;
       }
     }
   }

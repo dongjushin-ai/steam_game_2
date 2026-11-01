@@ -7,6 +7,7 @@ import { L } from "../i18n/lang";
 import { h } from "./dom";
 import { showModal, toast } from "./modals";
 import { isNative } from "./native";
+import { journalLine } from "../core/journal";
 
 export const FEEDBACK_FORM = "";
 export const FEEDBACK_EMAIL = "";
@@ -19,14 +20,27 @@ export function feedbackInfo(g: Game): string {
   const ua = navigator.userAgent.match(/Android [\d.]+|iPhone OS [\d_]+|Windows NT [\d.]+|Mac OS X [\d_]+/)?.[0] ?? "";
   return [
     `v${APP_VERSION} · ${isNative() ? "app" : "web"} · ${ua} · ${window.innerWidth}×${window.innerHeight}`,
+    journalLine(s),
     `${L("시대", "Era")} ${s.era + 1} ${ERAS[s.era].name} · ${L("플레이", "Played")} ${mins}${L("분", "m")} · ${L("출시", "Releases")} ${s.releases} · ${L("업적", "Feats")} ${s.achievements.length}${s.ended ? ` · ${L("엔딩", "Ended")} · ${L("무한", "Endless")} ${s.endless.level}` : ""}`,
   ].join("\n");
 }
 
 export function openFeedback(g: Game): void {
   const text = h("textarea", { class: "fb-text", rows: "5", placeholder: L("어디서 지루했나요? 헷갈렸던 곳, 그만두고 싶었던 순간, 좋았던 것… 뭐든 좋아요.", "Where did it get boring? What confused you, when did you want to quit, what did you like?"), "aria-label": L("의견", "Feedback") }) as HTMLTextAreaElement;
-  const info = feedbackInfo(g);
-  const full = () => `${text.value.trim()}\n\n---\n${info}`;
+  // 재미 점수 1~5 (고르면 바로 기록, 의견에 같이 붙는다)
+  const rate = h("div", { class: "seg fb-rate", role: "group", "aria-label": L("지금까지 재미 점수", "How fun so far") });
+  for (let v = 1; v <= 5; v++) {
+    const b = h("button", { class: g.state.journal.rating === v ? "on" : "", "aria-pressed": String(g.state.journal.rating === v) }, String(v));
+    b.onclick = () => {
+      g.state.journal.rating = v;
+      for (const x of rate.querySelectorAll("button")) { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); }
+      code.textContent = feedbackInfo(g);
+    };
+    rate.append(b);
+  }
+  const code = h("code", null, feedbackInfo(g));
+  const info = () => feedbackInfo(g);
+  const full = () => `${text.value.trim()}\n\n---\n${info()}`;
   const send = async (): Promise<boolean> => {
     if (!text.value.trim()) {
       toast(L("의견을 적어 주세요", "Write something first"));
@@ -57,7 +71,7 @@ export function openFeedback(g: Game): void {
   };
   showModal({
     title: L("의견 보내기", "Send feedback"),
-    body: [text, h("p", { class: "hint fb-info" }, L("함께 보내는 정보: ", "Sent along: "), h("code", null, info))],
+    body: [h("p", { class: "hint" }, L("지금까지 재미 점수 (1 지루함 ~ 5 아주 재밌음)", "Fun so far (1 boring - 5 great)")), rate, text, h("p", { class: "hint fb-info" }, L("함께 보내는 정보 (개인정보 없음): ", "Sent along (no personal data): "), code)],
     buttons: [
       { label: isNative() && !FEEDBACK_FORM && !FEEDBACK_EMAIL ? L("보내기 (공유)", "Send (share)") : L("보내기", "Send"), onClick: () => { void send().then((ok) => { if (ok) document.querySelector<HTMLButtonElement>(".modal .m-btns .btn.ghost")?.click(); }); return false; } },
       { label: L("닫기", "Close"), kind: "ghost" },

@@ -531,7 +531,7 @@ textarea { min-height: 80px; font-size: calc(13px * var(--ts, 1)); font-family: 
 .row .ico { width: 36px; height: 36px; }
 .row .ico img { width: 28px; height: 28px; }
 .row .body { min-width: 0; cursor: pointer; }
-.row .body .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .body .name { overflow-wrap: anywhere; }
 .row .body .fx { margin-top: 1px; }
 .row .desc { display: none; margin-top: 4px; }
 .row .body.open .desc { display: block; }
@@ -902,3 +902,18 @@ button.linkish { background: none; border: 0; padding: 0; font: inherit; color: 
 [data-skin="y2k"] .modal { box-shadow: 0 10px 30px rgba(40, 50, 80, 0.25); }
 [data-skin="y2k"] .tile.can { background: color-mix(in srgb, var(--accent) 35%, #ffffff); color: #141a3a; }
 [data-skin="y2k"] :is(.card, .row, .res, .ach, .codex-item) { background: #ffffff; border-color: #c3cad9; box-shadow: 0 1px 3px rgba(40, 50, 80, 0.08); }
+
+/* ═══ 누르는 곳은 최소 28px (WCAG 2.5.8은 24px, 손가락 여유를 둔다) · 좁은 화면·큰 글자에서 넘치지 않게 ═══ */
+.help-btn { width: 32px; height: 32px; line-height: 28px; border-width: 1px; border-radius: 8px; }
+button.chip { min-height: 28px; display: inline-flex; align-items: center; }
+.sheet-handle { height: 28px; }
+button.linkish { min-height: 28px; padding: 2px 4px; display: inline-flex; align-items: center; }
+.toggle-row input { width: 24px; height: 24px; }
+#panel a[href] { display: inline-block; padding: 6px 2px; }
+.chip.event { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.row .name { white-space: normal; overflow-wrap: anywhere; }
+[data-skin="y2k"] .badge.reco { color: #fff; }
+.section-title > span:first-child { white-space: normal; flex-shrink: 1; min-width: 0; }
+.row { grid-template-columns: 40px minmax(0, 1fr) auto; }
+.toggle-row input { flex: none; }
+.quest button { min-height: 28px; }

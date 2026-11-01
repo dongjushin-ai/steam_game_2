@@ -1,6 +1,7 @@
 import { sanitizeRanking } from "./ranking";
 import { sanitizeGacha } from "./gacha";
 import { sanitizeLook } from "./looks";
+import { sanitizeJournal } from "./journal";
 import { ERAS, LOST_MAP, MISSIONS, QUIZ, THREATS } from "../data";
 import { BENCH_MAP, BUILDING_MAP, UPGRADE_MAP, WEEKLY_MAP } from "./formulas";
 import { SAVE_VERSION, newState } from "./game";
@@ -96,6 +97,7 @@ export function migrate(raw: unknown): GameState | null {
       textSize: TEXT_SIZES.find((v) => v === r.settings?.textSize) ?? 1,
       seen: Array.isArray(r.settings?.seen) ? r.settings.seen.filter((x: unknown): x is string => typeof x === "string").slice(0, 100) : [],
     },
+    journal: sanitizeJournal(r.journal),
     lastSaved: num(r.lastSaved, Date.now()),
   };
 }
